@@ -1,2 +1,2 @@
-# Rotating-Sonar-Desjtop-Client
-A desctop client to visualise data from Rotating-Sonar-Arduino
+# Rotating-Sonar-Client
+A desktop client to visualise data from Rotating-Sonar-Arduino
