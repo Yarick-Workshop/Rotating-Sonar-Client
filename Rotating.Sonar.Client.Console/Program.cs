@@ -6,6 +6,8 @@ using Rotating.Sonar.ClientApp.Console.Extensions;
 
 class Program
 {
+    private const int DEFAULT_BAUD_RATE = 9600; // Standard Arduino speed
+
     static void Main(string[] args)
     {
         Console.WriteLine("Rotating Sonar Client Console");
@@ -20,6 +22,26 @@ class Program
         
             // Parse command line arguments
             string? targetPort = args.GetCommandOption("port");
+            string? baudRateStr = args.GetCommandOption("rate");
+
+            // Parse baud rate
+            int baudRate = DEFAULT_BAUD_RATE; // Default baud rate
+            if (string.IsNullOrEmpty(baudRateStr))
+            {
+                Console.WriteLine($"Baud rate not specified, using default: {DEFAULT_BAUD_RATE}");
+            }
+            else
+            {
+                if (!int.TryParse(baudRateStr, out baudRate))
+                {
+                    Console.WriteLine($"Error: Invalid baud rate '{baudRateStr}'. Using default: {DEFAULT_BAUD_RATE}");
+                    baudRate = DEFAULT_BAUD_RATE;
+                }
+                else
+                {
+                    Console.WriteLine($"Using baud rate: {baudRate}");
+                }
+            }
 
             // Fetch and display all available COM ports
             var portNames = SerialPort.GetPortNames();
@@ -29,8 +51,14 @@ class Program
             {
                 DisplayAvailablePorts();
                 Console.WriteLine();
-                Console.WriteLine("Usage: dotnet run -- -port <port_name>");
-                Console.WriteLine("Example: dotnet run -- -port /dev/ttyUSB0");
+                Console.WriteLine("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>]");
+                Console.WriteLine("Parameters:");
+                Console.WriteLine("  -port <port_name>    COM port to connect to (required)");
+                Console.WriteLine($"  -rate <baud_rate>    Baud rate (optional, default: {DEFAULT_BAUD_RATE})");
+                Console.WriteLine();
+                Console.WriteLine("Examples:");
+                Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0");
+                Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0 -rate 115200");
                 return;
             }
 
@@ -47,7 +75,7 @@ class Program
         
             using var serialPort = new SerialPort(targetPort)
             {
-                BaudRate = 9600,  // Standard Arduino speed
+                BaudRate = baudRate,
                 DataBits = 8,
                 Parity = Parity.None,
                 StopBits = StopBits.One,
