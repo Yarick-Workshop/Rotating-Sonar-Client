@@ -2,6 +2,7 @@ namespace Rotating.Sonar.ClientApp.Console;
 
 using System;
 using System.IO.Ports;
+using Rotating.Sonar.ClientApp.Console.Extensions;
 
 class Program
 {
@@ -12,30 +13,39 @@ class Program
         Console.WriteLine("Desktop client to visualize data from Rotating-Sonar-Arduino");
         Console.WriteLine();
 
-        // Fetch and display all available COM ports
-        var portNames = SerialPort.GetPortNames();
-        if (portNames.Length == 0)
-        {
-            Console.WriteLine("No COM ports found.");
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
-            return;
-        }
-
-        Console.WriteLine("Available COM ports:");
-        foreach (var portName in portNames)
-        {
-            Console.WriteLine($"- {portName}");
-        }
-        Console.WriteLine();
-
-        // Open the first available port and read data
-        var firstPortName = portNames.First();
-        Console.WriteLine($"Opening port: {firstPortName}");
-        
+        // Validate command line arguments
         try
         {
-            using var serialPort = new SerialPort(firstPortName)
+            args.ValidateCommandOptions();
+        
+            // Parse command line arguments
+            string? targetPort = args.GetCommandOption("port");
+
+            // Fetch and display all available COM ports
+            var portNames = SerialPort.GetPortNames();
+            
+            // Show help or list ports if no port specified or help requested
+            if (string.IsNullOrEmpty(targetPort) || targetPort.ToLower() == "help")
+            {
+                DisplayAvailablePorts();
+                Console.WriteLine();
+                Console.WriteLine("Usage: dotnet run -- -port <port_name>");
+                Console.WriteLine("Example: dotnet run -- -port /dev/ttyUSB0");
+                return;
+            }
+
+            // Check if the specified port exists
+            if (!portNames.Contains(targetPort))
+            {
+                Console.WriteLine($"Error: Port '{targetPort}' not found.");
+                DisplayAvailablePorts();
+                return;
+            }
+
+            // Open the specified port and read data
+            Console.WriteLine($"Opening port: {targetPort}");
+        
+            using var serialPort = new SerialPort(targetPort)
             {
                 BaudRate = 9600,  // Standard Arduino speed
                 DataBits = 8,
@@ -63,7 +73,7 @@ class Program
             };
 
             serialPort.Open();
-            Console.WriteLine($"Port {firstPortName} opened successfully at {serialPort.BaudRate} baud.");
+            Console.WriteLine($"Port {targetPort} opened successfully at {serialPort.BaudRate} baud.");
             Console.WriteLine("Reading data from port... (Press any key to stop)");
             Console.WriteLine("----------------------------------------");
 
@@ -75,10 +85,33 @@ class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error opening port {firstPortName}: {ex.Message}");
+            Console.WriteLine($"Error: {ex.Message}");
         }
+        finally
+        {
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
+        }        
+    }
 
-        Console.WriteLine("Press any key to exit...");
-        Console.ReadKey();
+    /// <summary>
+    /// Displays all available COM ports to the console
+    /// </summary>
+    static void DisplayAvailablePorts()
+    {
+        var portNames = SerialPort.GetPortNames();
+        
+        if (portNames.Length == 0)
+        {
+            Console.WriteLine("No COM ports found.");
+        }
+        else
+        {
+            Console.WriteLine("Available COM ports:");
+            foreach (var portName in portNames)
+            {
+                Console.WriteLine($"- {portName}");
+            }
+        }
     }
 } 
