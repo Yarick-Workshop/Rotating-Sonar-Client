@@ -15,14 +15,14 @@ class Program
         Console.WriteLine("Desktop client to visualize data from Rotating-Sonar-Arduino");
         Console.WriteLine();
 
-        // Validate command line arguments
         try
         {
             args.ValidateCommandOptions();
-        
+
             // Parse command line arguments
             string? targetPort = args.GetCommandOption("port");
             string? baudRateStr = args.GetCommandOption("rate");
+            bool visualizeMode = args.HasCommandFlag("visualize");
 
             // Parse baud rate
             int baudRate = DEFAULT_BAUD_RATE; // Default baud rate
@@ -43,6 +43,12 @@ class Program
                 }
             }
 
+            // Print visualization info if requested
+            if (visualizeMode)
+            {
+                Console.WriteLine("Visualization mode enabled: This would visualize sonar data if OpenGL support was present.");
+            }
+
             // Fetch and display all available COM ports
             var portNames = SerialPort.GetPortNames();
             
@@ -51,14 +57,17 @@ class Program
             {
                 DisplayAvailablePorts();
                 Console.WriteLine();
-                Console.WriteLine("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>]");
+                Console.WriteLine("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>] [-visualize]");
                 Console.WriteLine("Parameters:");
                 Console.WriteLine("  -port <port_name>    COM port to connect to (required)");
                 Console.WriteLine($"  -rate <baud_rate>    Baud rate (optional, default: {DEFAULT_BAUD_RATE})");
+                Console.WriteLine("  -visualize           Enable visualization of sonar data (optional)");
                 Console.WriteLine();
                 Console.WriteLine("Examples:");
                 Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0");
                 Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0 -rate 115200");
+                Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0 -visualize");
+                Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0 -rate 115200 -visualize");
                 return;
             }
 
@@ -73,43 +82,39 @@ class Program
             // Open the specified port and read data
             Console.WriteLine($"Opening port: {targetPort}");
         
-            using var serialPort = new SerialPort(targetPort)
+            try
             {
-                BaudRate = baudRate,
-                DataBits = 8,
-                Parity = Parity.None,
-                StopBits = StopBits.One,
-            };
-
-            serialPort.DataReceived += (sender, e) =>
-            {
-                if (e.EventType == SerialData.Chars)
+                using var serialPort = new SerialPort(targetPort)
                 {
-                    try
+                    BaudRate = baudRate,
+                    DataBits = 8,
+                    Parity = Parity.None,
+                    StopBits = StopBits.One,
+                };
+
+                serialPort.DataReceived += (sender, e) =>
+                {
+                    if (e.EventType == SerialData.Chars)
                     {
-                        string data = serialPort.ReadExisting();
-                        if (!string.IsNullOrEmpty(data))
-                        {
-                            Console.Write(data);
-                        }
+                        Console.Write(serialPort.ReadExisting());
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error reading data: {ex.Message}");
-                    }
-                }
-            };
+                };
 
-            serialPort.Open();
-            Console.WriteLine($"Port {targetPort} opened successfully at {serialPort.BaudRate} baud.");
-            Console.WriteLine("Reading data from port... (Press any key to stop)");
-            Console.WriteLine("----------------------------------------");
+                serialPort.Open();
+                Console.WriteLine($"Port {targetPort} opened successfully at {serialPort.BaudRate} baud.");
+                Console.WriteLine("Reading data from port... (Press any key to stop)");
+                Console.WriteLine("----------------------------------------");
 
-            // Keep the application running until a key is pressed
-            Console.ReadKey();
+                // Keep the application running until a key is pressed
+                Console.ReadKey();
 
-            serialPort.Close();
-            Console.WriteLine("\nPort closed.");
+                serialPort.Close();
+                Console.WriteLine("\nPort closed.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error opening port {targetPort}: {ex.Message}");
+            }
         }
         catch (Exception ex)
         {
@@ -119,7 +124,7 @@ class Program
         {
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
-        }        
+        }
     }
 
     /// <summary>

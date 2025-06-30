@@ -50,6 +50,18 @@ public static class CommandLineExtensions
             throw new ArgumentException($"Duplicate options found: {duplicateList}");
         }
     }
+
+    /// <summary>
+    /// Checks if a command-line flag is present (flag without value)
+    /// </summary>
+    /// <param name="args">Command-line arguments array</param>
+    /// <param name="flagName">Flag name without the '-' prefix</param>
+    /// <returns>True if the flag is present, false otherwise</returns>
+    public static bool HasCommandFlag(this string[] args, string flagName)
+    {
+        string flag = $"-{flagName}";
+        return args.Contains(flag);
+    }
 }
 
 /// <summary>
