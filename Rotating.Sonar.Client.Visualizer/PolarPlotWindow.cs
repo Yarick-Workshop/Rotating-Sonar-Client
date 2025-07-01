@@ -1,81 +1,88 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
-using OpenTK.Graphics.OpenGL;
+using Silk.NET.OpenGL.Legacy;
+using Silk.NET.Windowing;
 
-internal class PolarPlotWindow : GameWindow
+internal class PolarPlotWindow : IDisposable
 {
     private readonly PolarPlotData plotData;
-    public PolarPlotWindow(GameWindowSettings gws, NativeWindowSettings nws, PolarPlotData plotData)
-        : base(gws, nws)
+    private IWindow? window;
+    private GL? gl;
+    private int width, height;
+    private float cx, cy, radius;
+    private int maxDistance = 100;
+    private bool isDisposed = false;
+
+    public PolarPlotWindow(PolarPlotData plotData)
     {
         this.plotData = plotData;
     }
-  
-        protected override void OnLoad()
+
+    public void Run(int width, int height, string title)
+    {
+        var options = WindowOptions.Default;
+        options.Size = new Silk.NET.Maths.Vector2D<int>(width, height);
+        options.Title = title;
+        options.API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(2, 1));
+        window = Window.Create(options);
+        window.Load += OnLoad;
+        window.Render += OnRender;
+        window.Run();
+    }
+
+    private void OnLoad()
+    {
+        gl = GL.GetApi(window!);
+        width = window!.Size.X;
+        height = window!.Size.Y;
+        cx = width / 2f;
+        cy = height / 2f;
+        radius = MathF.Min(cx, cy) - 40;
+        gl!.ClearColor(0f, 0f, 0f, 1f);
+        gl.Disable(GLEnum.DepthTest);
+    }
+
+    private void OnRender(double delta)
+    {
+        if (gl == null) return;
+        gl.Viewport(0, 0, (uint)window!.Size.X, (uint)window!.Size.Y);
+        gl.Clear(ClearBufferMask.ColorBufferBit);
+        gl.MatrixMode(GLEnum.Projection);
+        gl.LoadIdentity();
+        // 2D orthographic projection
+        gl.Ortho(0, width, 0, height, -1, 1);
+        gl.MatrixMode(GLEnum.Modelview);
+        gl.LoadIdentity();
+        DrawPolarGrid();
+        DrawPoints();
+    }
+
+    private void DrawPolarGrid()
+    {
+        // Draw circles
+        gl!.Color3(0.3f, 0.3f, 0.3f);
+        for (int r = 1; r <= 4; r++)
         {
-            base.OnLoad();
-
-            // Set clear color
-            GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-            // Disable depth testing
-            GL.Disable(EnableCap.DepthTest);
+            DrawCircle(cx, cy, radius * r / 4);
         }
-
-        protected override void OnRenderFrame(FrameEventArgs args)
+        // Draw radial lines
+        for (int a = 0; a < 360; a += 30)
         {
-            base.OnRenderFrame(args);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            DrawPolarPlot();
-            SwapBuffers();
-        }
-
-        private void DrawPolarPlot()
-        {
-            int w = Size.X;
-            int h = Size.Y;
-            float cx = w / 2f;
-            float cy = h / 2f;
-            float radius = Math.Min(cx, cy) - 40;
-            int maxDistance = 100;
-
-            // Set up 2D projection
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadIdentity();
-            //GL.Ortho(0, w, 0, h, -1, 1);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-
-            // Draw polar grid
-            GL.Color3(0.3f, 0.3f, 0.3f);
-            for (int r = 1; r <= 4; r++)
-            {
-                DrawCircle(cx, cy, radius * r / 4);
-            }
-            for (int a = 0; a < 360; a += 30)
-            {
-                double rad = a * Math.PI / 180.0;
-                float x = cx + (float)(radius * 
-    Math.Cos(rad));
+            double rad = a * Math.PI / 180.0;
+            float x = cx + (float)(radius * Math.Cos(rad));
             float y = cy + (float)(radius * Math.Sin(rad));
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex2(cx, cy);
-            GL.Vertex2(x, y);
-            GL.End();
+            gl.Begin(GLEnum.Lines);
+            gl.Vertex2(cx, cy);
+            gl.Vertex2(x, y);
+            gl.End();
         }
+    }
 
-        GL.Begin(PrimitiveType.Lines);
-        GL.Color3(1.0f, 1.0f, 0.0);
-        GL.Vertex2(1, 1);
-        GL.Vertex2(0, 0);
-        GL.End();
-
-        // Draw points
+    private void DrawPoints()
+    {
         var points = plotData.GetPoints();
-        GL.PointSize(6f);
-        GL.Begin(PrimitiveType.Points);
+        gl!.PointSize(6f);
+        gl.Begin(GLEnum.Points);
         foreach (var (angle, distance) in points)
         {
             double rad = angle * Math.PI / 180.0;
@@ -86,24 +93,32 @@ internal class PolarPlotWindow : GameWindow
             float t = Math.Clamp((float)distance / maxDistance, 0f, 1f);
             float red = t;
             float green = 1f - t;
-            GL.Color3(0.6, 0.9, 0f);
-            GL.Vertex2(x, y);
+            gl.Color3(red, green, 0f);
+            gl.Vertex2(x, y);
         }
-        // Test: Draw a white point at the center
-        GL.Color3(1.0, 1.0, 1.0);
-        GL.Vertex2(cx, cy);
-        GL.End();
+        // Draw a white point at the center
+        gl.Color3(1.0f, 1.0f, 1.0f);
+        gl.Vertex2(cx, cy);
+        gl.End();
     }
+
     private void DrawCircle(float cx, float cy, float r)
     {
-        GL.Begin(PrimitiveType.LineLoop);
+        gl!.Begin(GLEnum.LineLoop);
         for (int i = 0; i < 64; i++)
         {
             double theta = 2.0 * Math.PI * i / 64;
             float x = cx + (float)(r * Math.Cos(theta));
             float y = cy + (float)(r * Math.Sin(theta));
-            GL.Vertex2(x, y);
+            gl.Vertex2(x, y);
         }
-        GL.End();
+        gl.End();
+    }
+
+    public void Dispose()
+    {
+        if (isDisposed) return;
+        isDisposed = true;
+        window.Dispose();
     }
 }

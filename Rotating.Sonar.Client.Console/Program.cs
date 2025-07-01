@@ -95,44 +95,45 @@ class Program
 
                 if (visualizeMode)
                 {
-                    PolarPlotVisualizer visualizer = new PolarPlotVisualizer();
-                    CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-                    var serialThread = new Thread(() =>
-                        comPortListener.Listen(
-                            () => cancellationTokenSource.Token.IsCancellationRequested,
-                            line => lineBuffer.Enqueue(line)))
+                    using (var visualizer = new PolarPlotVisualizer())
+                    using (var cancellationTokenSource = new CancellationTokenSource())
                     {
-                        IsBackground = true
-                    };
-                    serialThread.Start();
-                    visualizer.Start();
-
-                    while (!cancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        while (lineBuffer.TryDequeue(out var line))
+                        var serialThread = new Thread(() =>
+                            comPortListener.Listen(
+                                () => cancellationTokenSource.Token.IsCancellationRequested,
+                                line => lineBuffer.Enqueue(line)))
                         {
-                            Console.WriteLine($"Dequeued \"{line}\".");
+                            IsBackground = true
+                        };
+                        serialThread.Start();
+                        visualizer.Start();
 
-                            var match = regex.Match(line);
-                            if (match.Success)
+                        while (!cancellationTokenSource.Token.IsCancellationRequested)
+                        {
+                            while (lineBuffer.TryDequeue(out var line))
                             {
-                                int angle = int.Parse(match.Groups[1].Value);
-                                int distance = int.Parse(match.Groups[2].Value);
-                                visualizer.FeedData(angle, distance);
+                                Console.WriteLine($"Dequeued \"{line}\".");
+
+                                var match = regex.Match(line);
+                                if (match.Success)
+                                {
+                                    int angle = int.Parse(match.Groups[1].Value);
+                                    int distance = int.Parse(match.Groups[2].Value);
+                                    visualizer.FeedData(angle, distance);
+                                }
+                            }
+                            if (Console.KeyAvailable)
+                            {
+                                cancellationTokenSource.Cancel();
                             }
                         }
-                        if (Console.KeyAvailable)
-                        {
-                            cancellationTokenSource.Cancel();
-                        }
                     }
-
                     // TODO: Optionally, stop the visualizer if needed
                 }
                 else
                 {
                     comPortListener.Listen(() => Console.KeyAvailable);
-                }                
+                }
             }
             catch (Exception ex)
             {
