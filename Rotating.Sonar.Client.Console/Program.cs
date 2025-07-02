@@ -5,6 +5,7 @@ using System.IO.Ports;
 using Rotating.Sonar.ClientApp.Console.Extensions;
 using System.Text.RegularExpressions;
 using Rotating.Sonar.Client.Visualizer;
+using Serilog;
 
 class Program
 {
@@ -12,10 +13,14 @@ class Program
 
     static void Main(string[] args)
     {
-        Console.WriteLine("Rotating Sonar Client Console");
-        Console.WriteLine("=============================");
-        Console.WriteLine("Desktop client to visualize data from Rotating-Sonar-Arduino");
-        Console.WriteLine();
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Async(a => a.Console())
+            .CreateLogger();
+        
+        Log.Information("Rotating Sonar Client Console");
+        Log.Information("=============================");
+        Log.Information("Desktop client to visualize data from Rotating-Sonar-Arduino");
+        Log.Information("");
 
         try
         {
@@ -30,25 +35,25 @@ class Program
             int baudRate = DEFAULT_BAUD_RATE; // Default baud rate
             if (string.IsNullOrEmpty(baudRateStr))
             {
-                Console.WriteLine($"Baud rate not specified, using default: {DEFAULT_BAUD_RATE}");
+                Log.Information($"Baud rate not specified, using default: {DEFAULT_BAUD_RATE}");
             }
             else
             {
                 if (!int.TryParse(baudRateStr, out baudRate))
                 {
-                    Console.WriteLine($"Error: Invalid baud rate '{baudRateStr}'. Using default: {DEFAULT_BAUD_RATE}");
+                    Log.Warning($"Invalid baud rate '{baudRateStr}'. Using default: {DEFAULT_BAUD_RATE}");
                     baudRate = DEFAULT_BAUD_RATE;
                 }
                 else
                 {
-                    Console.WriteLine($"Using baud rate: {baudRate}");
+                    Log.Information($"Using baud rate: {baudRate}");
                 }
             }
 
             // Print visualization info if requested
             if (visualizeMode)
             {
-                Console.WriteLine("Visualization mode enabled: This would visualize sonar data if OpenGL support was present.");
+                Log.Information("Visualization mode enabled: This would visualize sonar data if OpenGL support was present.");
             }
 
             // Fetch and display all available COM ports
@@ -58,31 +63,31 @@ class Program
             if (string.IsNullOrEmpty(targetPort) || targetPort.ToLower() == "help")
             {
                 DisplayAvailablePorts();
-                Console.WriteLine();
-                Console.WriteLine("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>] [-visualize]");
-                Console.WriteLine("Parameters:");
-                Console.WriteLine("  -port <port_name>    COM port to connect to (required)");
-                Console.WriteLine($"  -rate <baud_rate>    Baud rate (optional, default: {DEFAULT_BAUD_RATE})");
-                Console.WriteLine("  -visualize           Enable visualization of sonar data (optional)");
-                Console.WriteLine();
-                Console.WriteLine("Examples:");
-                Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0");
-                Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0 -rate 115200");
-                Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0 -visualize");
-                Console.WriteLine("  dotnet run -- -port /dev/ttyUSB0 -rate 115200 -visualize");
+                Log.Information("");
+                Log.Information("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>] [-visualize]");
+                Log.Information("Parameters:");
+                Log.Information("  -port <port_name>    COM port to connect to (required)");
+                Log.Information($"  -rate <baud_rate>    Baud rate (optional, default: {DEFAULT_BAUD_RATE})");
+                Log.Information("  -visualize           Enable visualization of sonar data (optional)");
+                Log.Information("");
+                Log.Information("Examples:");
+                Log.Information("  dotnet run -- -port /dev/ttyUSB0");
+                Log.Information("  dotnet run -- -port /dev/ttyUSB0 -rate 115200");
+                Log.Information("  dotnet run -- -port /dev/ttyUSB0 -visualize");
+                Log.Information("  dotnet run -- -port /dev/ttyUSB0 -rate 115200 -visualize");
                 return;
             }
 
             // Check if the specified port exists
             if (!portNames.Contains(targetPort))
             {
-                Console.WriteLine($"Error: Port '{targetPort}' not found.");
+                Log.Error($"Port '{targetPort}' not found.");
                 DisplayAvailablePorts();
                 return;
             }
 
             // Open the specified port and read data
-            Console.WriteLine($"Opening port: {targetPort}");
+            Log.Information($"Opening port: {targetPort}");
 
             try
             {
@@ -121,12 +126,16 @@ class Program
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error opening port {targetPort}: {ex.Message}");
+                Log.Error(ex, $"Error opening port {targetPort}: {ex.Message}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Log.Error(ex, $"Error: {ex.Message}");
+        }
+        finally
+        {
+            Log.CloseAndFlush();
         }
     }
 
@@ -139,14 +148,14 @@ class Program
         
         if (portNames.Length == 0)
         {
-            Console.WriteLine("No COM ports found.");
+            Log.Warning("No COM ports found.");
         }
         else
         {
-            Console.WriteLine("Available COM ports:");
+            Log.Information("Available COM ports:");
             foreach (var portName in portNames)
             {
-                Console.WriteLine($"- {portName}");
+                Log.Information($"- {portName}");
             }
         }
     }

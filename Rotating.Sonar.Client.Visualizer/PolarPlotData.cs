@@ -1,5 +1,6 @@
 namespace Rotating.Sonar.Client.Visualizer;
 using System.Collections.Concurrent;
+using Serilog;
 
 internal class PolarPlotData
 {
@@ -9,7 +10,7 @@ internal class PolarPlotData
     {
         points[angle] = distance;
 
-        Console.WriteLine($"Updated with {angle}° {distance}cm");
+        Log.Debug($"Updated with {angle}° {distance}cm");
     }
 
     public List<(int angle, int distance)> GetPoints()

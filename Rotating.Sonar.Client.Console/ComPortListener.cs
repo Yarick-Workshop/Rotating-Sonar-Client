@@ -2,6 +2,7 @@ namespace Rotating.Sonar.ClientApp.Console;
 
 using System;
 using System.IO.Ports;
+using Serilog;
 
 public class ComPortListener
 {
@@ -31,15 +32,15 @@ public class ComPortListener
         try
         {
             serialPort.Open();
-            Console.WriteLine($"Port {serialPort.PortName} opened successfully at {serialPort.BaudRate} baud.");
-            Console.WriteLine("Reading data from port... (Press any key to stop)");//TODO, get rid of a button
-            Console.WriteLine("----------------------------------------");
+            Log.Information($"Port {serialPort.PortName} opened successfully at {serialPort.BaudRate} baud.");
+            Log.Information("Reading data from port... (Press any key to stop)");//TODO, get rid of a button
+            Log.Information("----------------------------------------");
 
             while (!isCancelled())
             {
                 var line = serialPort.ReadLine()
                     .TrimEnd('\r');
-                Console.WriteLine($"Received line: \"{line}\".");
+                Log.Debug($"Received line: \"{line}\".");
 
                 newLineCallBack?.Invoke(line);
             }

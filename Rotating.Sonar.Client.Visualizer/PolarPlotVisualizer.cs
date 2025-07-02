@@ -1,6 +1,7 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
 using System;
+using Serilog;
 
 public class PolarPlotVisualizer : IDisposable
 {
@@ -17,7 +18,7 @@ public class PolarPlotVisualizer : IDisposable
 
     public void FeedData(int angle, int distance)
     {
-        Console.WriteLine($"Plot is fed with angle: {angle}, distance: {distance}");
+        Log.Debug($"Plot is fed with angle: {angle}, distance: {distance}");
         plotData.Update(angle, distance);
     }
 

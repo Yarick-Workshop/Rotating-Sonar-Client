@@ -3,6 +3,7 @@ namespace Rotating.Sonar.Client.Visualizer;
 using System;
 using Silk.NET.OpenGL.Legacy;
 using Silk.NET.Windowing;
+using Serilog;
 
 #pragma warning disable CS0618
 
@@ -99,7 +100,7 @@ internal class PolarPlotWindow : IDisposable
             float x = cx + (float)(r * Math.Cos(rad));
             float y = cy + (float)(r * Math.Sin(rad));
 
-            Console.WriteLine($"X {x}, Y {y}");
+            Log.Debug($"X {x}, Y {y}");
 
             gl.Vertex2(x, y);
         }
