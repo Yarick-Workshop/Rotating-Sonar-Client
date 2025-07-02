@@ -10,9 +10,9 @@ public class PolarPlotVisualizer : IDisposable
 
     public void Start(int width = 600, int height = 600, string title = "OpenGL Polar Plot Visualizer")
     {
-        var win = new PolarPlotWindow(plotData);
+        var win = new PolarPlotWindow(plotData, width, height, title);
         window = win;
-        win.Run(width, height, title);
+        win.Run();
     }
 
     public void FeedData(int angle, int distance)

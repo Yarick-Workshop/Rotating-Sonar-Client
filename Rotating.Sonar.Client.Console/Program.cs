@@ -4,7 +4,6 @@ using System;
 using System.IO.Ports;
 using Rotating.Sonar.ClientApp.Console.Extensions;
 using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
 using Rotating.Sonar.Client.Visualizer;
 
 class Program
@@ -87,33 +86,20 @@ class Program
 
             try
             {
-                // Buffer for incoming lines
-                var lineBuffer = new ConcurrentQueue<string>();
                 var regex = new Regex(@"(\d+):\s*(\d+)cm", RegexOptions.Compiled);
 
                 var comPortListener = new ComPortListener(targetPort, baudRate);
 
                 if (visualizeMode)
                 {
-                    using (var visualizer = new PolarPlotVisualizer())
-                    using (var cancellationTokenSource = new CancellationTokenSource())
-                    {
-                        var serialThread = new Thread(() =>
-                            comPortListener.Listen(
-                                () => cancellationTokenSource.Token.IsCancellationRequested,
-                                line => lineBuffer.Enqueue(line)))
-                        {
-                            IsBackground = true
-                        };
-                        serialThread.Start();
-                        visualizer.Start();
-
-                        while (!cancellationTokenSource.Token.IsCancellationRequested)
-                        {
-                            while (lineBuffer.TryDequeue(out var line))
+                    using var visualizer = new PolarPlotVisualizer();
+                    using var cancellationTokenSource = new CancellationTokenSource();
+                    
+                    var serialThread = new Thread(() =>
+                        comPortListener.Listen(
+                            () => cancellationTokenSource.Token.IsCancellationRequested,
+                            line =>
                             {
-                                Console.WriteLine($"Dequeued \"{line}\".");
-
                                 var match = regex.Match(line);
                                 if (match.Success)
                                 {
@@ -121,14 +107,12 @@ class Program
                                     int distance = int.Parse(match.Groups[2].Value);
                                     visualizer.FeedData(angle, distance);
                                 }
-                            }
-                            if (Console.KeyAvailable)
-                            {
-                                cancellationTokenSource.Cancel();
-                            }
-                        }
-                    }
-                    // TODO: Optionally, stop the visualizer if needed
+                            }))
+                    {
+                        IsBackground = true
+                    };
+                    serialThread.Start();
+                    visualizer.Start();
                 }
                 else
                 {
