@@ -3,6 +3,8 @@ namespace Rotating.Sonar.ClientApp.Console;
 using System;
 using System.IO.Ports;
 using Rotating.Sonar.ClientApp.Console.Extensions;
+using System.Text.RegularExpressions;
+using Rotating.Sonar.Client.Visualizer;
 
 class Program
 {
@@ -81,35 +83,41 @@ class Program
 
             // Open the specified port and read data
             Console.WriteLine($"Opening port: {targetPort}");
-        
+
             try
             {
-                using var serialPort = new SerialPort(targetPort)
-                {
-                    BaudRate = baudRate,
-                    DataBits = 8,
-                    Parity = Parity.None,
-                    StopBits = StopBits.One,
-                };
+                var regex = new Regex(@"(\d+):\s*(\d+)cm", RegexOptions.Compiled);
 
-                serialPort.DataReceived += (sender, e) =>
+                var comPortListener = new ComPortListener(targetPort, baudRate);
+
+                if (visualizeMode)
                 {
-                    if (e.EventType == SerialData.Chars)
+                    using var visualizer = new PolarPlotVisualizer();
+                    using var cancellationTokenSource = new CancellationTokenSource();
+                    
+                    var serialThread = new Thread(() =>
+                        comPortListener.Listen(
+                            () => cancellationTokenSource.Token.IsCancellationRequested,
+                            line =>
+                            {
+                                var match = regex.Match(line);
+                                if (match.Success)
+                                {
+                                    int angle = int.Parse(match.Groups[1].Value);
+                                    int distance = int.Parse(match.Groups[2].Value);
+                                    visualizer.FeedData(angle, distance);
+                                }
+                            }))
                     {
-                        Console.Write(serialPort.ReadExisting());
-                    }
-                };
-
-                serialPort.Open();
-                Console.WriteLine($"Port {targetPort} opened successfully at {serialPort.BaudRate} baud.");
-                Console.WriteLine("Reading data from port... (Press any key to stop)");
-                Console.WriteLine("----------------------------------------");
-
-                // Keep the application running until a key is pressed
-                Console.ReadKey();
-
-                serialPort.Close();
-                Console.WriteLine("\nPort closed.");
+                        IsBackground = true
+                    };
+                    serialThread.Start();
+                    visualizer.Start();
+                }
+                else
+                {
+                    comPortListener.Listen(() => Console.KeyAvailable);
+                }
             }
             catch (Exception ex)
             {
@@ -119,11 +127,6 @@ class Program
         catch (Exception ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
-        }
-        finally
-        {
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
         }
     }
 

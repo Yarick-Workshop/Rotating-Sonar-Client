@@ -13,4 +13,8 @@
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Rotating.Sonar.Client.Visualizer\Rotating.Sonar.Client.Visualizer.csproj" />
+  </ItemGroup>
+
 </Project> 
