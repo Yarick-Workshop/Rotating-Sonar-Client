@@ -4,24 +4,21 @@ using System;
 using System.IO.Ports;
 using Serilog;
 
-public class ComPortListener
+public class ComPortListener : IComPortListener
 {
-    public ComPortListener(string portName, int portBaudRate)
-    {
-        this.portName = portName;
-        this.portBaudRate = portBaudRate;
-    }
-
-    private readonly string portName;
+    public string PortName { get; }
 
     private readonly int portBaudRate;
 
+    public ComPortListener(string portName, int portBaudRate)
+    {
+        this.PortName = portName;
+        this.portBaudRate = portBaudRate;
+    }
+
     public void Listen(Func<bool> isCancelled, Action<string>? newLineCallBack = null)
     {
-        //TODO cancellation token instead
-        //TODO, think of protection and make it a single shot one
-
-        using var serialPort = new SerialPort(this.portName)
+        using var serialPort = new SerialPort(this.PortName)
         {
             BaudRate = this.portBaudRate,
             DataBits = 8,
@@ -32,7 +29,7 @@ public class ComPortListener
         try
         {
             serialPort.Open();
-            Log.Information($"Port {serialPort.PortName} opened successfully at {serialPort.BaudRate} baud.");
+            Log.Information($"Port {this.PortName} opened successfully at {serialPort.BaudRate} baud.");
             Log.Information("Reading data from port... (Press any key to stop)");//TODO, get rid of a button
             Log.Information("----------------------------------------");
 

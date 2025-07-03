@@ -88,6 +88,7 @@ internal class PolarPlotWindow : IDisposable
 
     private void DrawPoints()
     {
+        // TODO: add auto(??)-rotating to the top
         var points = plotData.GetPoints().OrderBy(p => p.angle).ToList();
         //if (points.Count < 3) return; // Need at least 3 points for a polygon
         // Draw filled polygon
