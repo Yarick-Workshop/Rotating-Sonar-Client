@@ -88,11 +88,15 @@ internal class PolarPlotWindow : IDisposable
 
     private void DrawPoints()
     {
-        // TODO: add auto(??)-rotating to the top
+        // TODO: refactor the code
         var points = plotData.GetPoints().OrderBy(p => p.angle).ToList();
         //if (points.Count < 3) return; // Need at least 3 points for a polygon
         // Draw filled polygon
-        /*gl.Color3(0.2f, 0.8f, 0.8f); // Fill color
+        /*gl.PushMatrix();
+        gl.Translate(cx, cy, 0f);
+        gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
+        gl.Translate(-cx, -cy, 0f);
+        gl.Color3(0.2f, 0.8f, 0.8f); // Fill color
         gl.Begin(GLEnum.Polygon);
         foreach (var (angle, distance) in points)
         {
@@ -100,25 +104,29 @@ internal class PolarPlotWindow : IDisposable
             float r = (float)distance / maxDistance * radius;
             float x = cx + (float)(r * Math.Cos(rad));
             float y = cy + (float)(r * Math.Sin(rad));
-
             Log.Debug($"X {x}, Y {y}");
-
             gl.Vertex2(x, y);
         }
-        gl.End();*/
+        gl.End();
+        gl.PopMatrix();*/
         // Draw points as before for clarity
+        gl.PushMatrix();
+        gl.Translate(cx, cy, 0f);
+        gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
+        gl.Translate(-cx, -cy, 0f);
         gl.PointSize(12f);
         gl.Color3(1.0f, 0.2f, 0.2f);
         gl.Begin(GLEnum.Points);
         foreach (var (angle, distance) in points)
         {
-            double rad = angle / 180.0 * Math.PI ;
+            double rad = angle * Math.PI / 180.0;
             float r = (float)distance / maxDistance * radius;
             float x = cx + (float)(r * Math.Cos(rad));
             float y = cy + (float)(r * Math.Sin(rad));
             gl.Vertex2(x, y);
         }
         gl.End();
+        gl.PopMatrix();
         
         // Draw a white point at the center
         gl.Color3(1.0f, 1.0f, 1.0f);
