@@ -16,8 +16,9 @@ public class RenderOpenGL_1_1
     private readonly float maxDistance;
     private readonly float width;
     private readonly float height;
+    private readonly TextRenderOpenGL_1_1 textRenderer;
 
-    public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float heigh, float maxDistance)
+    public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float heigh, float maxDistance, TextRenderOpenGL_1_1 textRenderer)
     {
         this.gl = gl;
         this.sonarDataCache = sonarDataCache;
@@ -29,6 +30,7 @@ public class RenderOpenGL_1_1
         this.cy = height / 2f;
         this.radius = MathF.Min(cx, cy) - 40;
         this.maxDistance = maxDistance;
+        this.textRenderer = textRenderer;
 
         gl.ClearColor(0f, 0f, 0f, 1f);
         gl.Disable(GLEnum.DepthTest);
@@ -48,6 +50,7 @@ public class RenderOpenGL_1_1
 
         this.DrawPolarGrid();
         this.DrawPoints();
+        this.textRenderer.RenderText();
     }
 
     private void DrawPoints()

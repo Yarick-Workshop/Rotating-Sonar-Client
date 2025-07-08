@@ -1,9 +1,11 @@
 namespace Rotating.Sonar.Client.Visualizer;
+
 using System.Collections.Concurrent;
 using Serilog;
 
 public class SonarDataCache
 {
+    // TODO, refactor
     private readonly ConcurrentDictionary<int, int> sonarPoints = new();
 
     public void Update(int angle, int distance)

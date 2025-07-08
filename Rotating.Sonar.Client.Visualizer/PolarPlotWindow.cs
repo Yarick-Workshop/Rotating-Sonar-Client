@@ -10,6 +10,7 @@ internal class PolarPlotWindow : IDisposable
     private readonly SonarDataCache sonarDataCache;
     private IWindow window;
     private RenderOpenGL_1_1? render;
+    private TextRenderOpenGL_1_1? textRenderer;
     
     private bool isDisposed = false;
 
@@ -41,7 +42,8 @@ internal class PolarPlotWindow : IDisposable
 
         Log.Information("OpenGL Polar Plot Visualizer initialized with size {Width}x{Height}", width, height);
 
-        render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, 200f);
+        textRenderer = new TextRenderOpenGL_1_1(gl);
+        render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, 200f, textRenderer);
         /* 
         Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));
         Log.Information("OpenGL vendor: {Vendor}", gl.GetString(StringName.Vendor));
