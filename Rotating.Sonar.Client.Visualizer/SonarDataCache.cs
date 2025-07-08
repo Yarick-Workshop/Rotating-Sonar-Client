@@ -2,19 +2,19 @@ namespace Rotating.Sonar.Client.Visualizer;
 using System.Collections.Concurrent;
 using Serilog;
 
-public class PolarPlotData
+public class SonarDataCache
 {
-    private readonly ConcurrentDictionary<int, int> points = new();
+    private readonly ConcurrentDictionary<int, int> sonarPoints = new();
 
     public void Update(int angle, int distance)
     {
-        points[angle] = distance;
+        sonarPoints[angle] = distance;
 
         Log.Debug($"Updated with {angle}° {distance}cm");
     }
 
     public List<(int angle, int distance)> GetPoints()
     {
-        return points.Select(kv => (kv.Key, kv.Value)).ToList();
+        return sonarPoints.Select(kv => (kv.Key, kv.Value)).ToList();
     }
 }

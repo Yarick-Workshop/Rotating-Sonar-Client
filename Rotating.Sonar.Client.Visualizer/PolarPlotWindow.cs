@@ -7,13 +7,13 @@ using Serilog;
 
 internal class PolarPlotWindow : IDisposable
 {
-    private readonly PolarPlotData plotData;
+    private readonly SonarDataCache sonarDataCache;
     private IWindow window;
     private RenderOpenGL_1_1? render;
     
     private bool isDisposed = false;
 
-    public PolarPlotWindow(PolarPlotData plotData, int width, int height, string title)
+    public PolarPlotWindow(SonarDataCache sonarDataCache, int width, int height, string title)
     {
         var options = WindowOptions.Default;
         options.Size = new Silk.NET.Maths.Vector2D<int>(width, height);
@@ -25,7 +25,7 @@ internal class PolarPlotWindow : IDisposable
         window.Load += OnLoad;
         window.Render += OnRender;
 
-        this.plotData = plotData;
+        this.sonarDataCache = sonarDataCache;
     }
 
     public void Run()
@@ -41,7 +41,7 @@ internal class PolarPlotWindow : IDisposable
 
         Log.Information("OpenGL Polar Plot Visualizer initialized with size {Width}x{Height}", width, height);
 
-        render = new RenderOpenGL_1_1(gl, plotData, this.window.Size.X, this.window.Size.Y, 200f);
+        render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, 200f);
         /* 
         Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));
         Log.Information("OpenGL vendor: {Vendor}", gl.GetString(StringName.Vendor));

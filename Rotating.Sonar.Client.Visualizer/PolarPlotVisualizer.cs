@@ -5,13 +5,13 @@ using Serilog;
 
 public class PolarPlotVisualizer : IDisposable
 {
-    private readonly PolarPlotData plotData = new();
+    private readonly SonarDataCache sonarDataCache = new();
     private PolarPlotWindow? window;
     private bool _disposed = false;
 
     public void Start(int width = 600, int height = 600, string title = "OpenGL Polar Plot Visualizer")
     {
-        var win = new PolarPlotWindow(plotData, width, height, title);
+        var win = new PolarPlotWindow(sonarDataCache, width, height, title);
         window = win;
         win.Run();
     }
@@ -19,7 +19,7 @@ public class PolarPlotVisualizer : IDisposable
     public void FeedData(int angle, int distance)
     {
         Log.Debug($"Plot is fed with angle: {angle}, distance: {distance}");
-        plotData.Update(angle, distance);
+        sonarDataCache.Update(angle, distance);
     }
 
     public void Dispose()

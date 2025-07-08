@@ -9,7 +9,7 @@ public class RenderOpenGL_1_1
 {
     private readonly GL gl;
 
-    private readonly PolarPlotData plotData;
+    private readonly SonarDataCache sonarDataCache;
     private readonly float cx;
     private readonly float cy;
     private readonly float radius;
@@ -17,10 +17,10 @@ public class RenderOpenGL_1_1
     private readonly float width;
     private readonly float height;
 
-    public RenderOpenGL_1_1(GL gl, PolarPlotData plotData, float width, float heigh, float maxDistance)
+    public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float heigh, float maxDistance)
     {
         this.gl = gl;
-        this.plotData = plotData;
+        this.sonarDataCache = sonarDataCache;
 
         this.width = width;
         this.height = heigh;
@@ -53,7 +53,7 @@ public class RenderOpenGL_1_1
     private void DrawPoints()
     {
         // TODO: refactor the code
-        var points = plotData.GetPoints();
+        var points = sonarDataCache.GetPoints();
 
         if (points.Count == 0)
         {
