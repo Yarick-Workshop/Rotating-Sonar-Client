@@ -2,7 +2,7 @@ namespace Rotating.Sonar.Client.Visualizer;
 using System.Collections.Concurrent;
 using Serilog;
 
-internal class PolarPlotData
+public class PolarPlotData
 {
     private readonly ConcurrentDictionary<int, int> points = new();
 

@@ -1,0 +1,124 @@
+namespace Rotating.Sonar.Client.Visualizer;
+
+using Serilog;
+using Silk.NET.OpenGL.Legacy;
+
+#pragma warning disable CS0618
+
+public class RenderOpenGL_1_1
+{
+    private readonly GL gl;
+
+    private readonly PolarPlotData plotData;
+    private readonly float cx;
+    private readonly float cy;
+    private readonly float radius;
+    private readonly float maxDistance;
+    private readonly float width;
+    private readonly float height;
+
+    public RenderOpenGL_1_1(GL gl, PolarPlotData plotData, float width, float heigh, float maxDistance)
+    {
+        this.gl = gl;
+        this.plotData = plotData;
+
+        this.width = width;
+        this.height = heigh;
+        
+        this.cx = width / 2f;
+        this.cy = height / 2f;
+        this.radius = MathF.Min(cx, cy) - 40;
+        this.maxDistance = maxDistance;
+
+        gl.ClearColor(0f, 0f, 0f, 1f);
+        gl.Disable(GLEnum.DepthTest);
+        gl.Disable(GLEnum.CullFace);
+    }
+
+    public void Render()
+    {
+        gl.Viewport(0, 0, (uint)width, (uint)height);
+        gl.Clear(ClearBufferMask.ColorBufferBit);
+        gl.MatrixMode(GLEnum.Projection);
+        gl.LoadIdentity();
+        // 2D orthographic projection
+        gl.Ortho(0, width, 0, height, -1, 1);
+        gl.MatrixMode(GLEnum.Modelview);
+        gl.LoadIdentity();
+
+        this.DrawPolarGrid();
+        this.DrawPoints();
+    }
+
+    private void DrawPoints()
+    {
+        // TODO: refactor the code
+        var points = plotData.GetPoints();
+
+        if (points.Count == 0)
+        {
+            Log.Warning("No points to draw in polar plot.");
+            return;
+        }
+
+        gl.PushMatrix();
+        gl.Translate(cx, cy, 0f);
+        gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
+        gl.Translate(-cx, -cy, 0f);
+        gl.PointSize(12f);
+        gl.Color3(1.0f, 0.2f, 0.2f);
+        gl.Begin(GLEnum.Points);
+        foreach (var (angle, distance) in points)
+        {
+            double rad = angle * Math.PI / 180.0;
+            float r = (float)distance / maxDistance * radius;
+            float x = cx + (float)(r * Math.Cos(rad));
+            float y = cy + (float)(r * Math.Sin(rad));
+            gl.Vertex2(x, y);
+        }
+        gl.End();
+        gl.PopMatrix();
+
+        // Draw a white point at the center
+        gl.Color3(1.0f, 1.0f, 1.0f);
+        gl.Begin(GLEnum.Points);
+        gl.Vertex2(cx, cy);
+        gl.End();
+    }
+
+    private void DrawPolarGrid()
+    {
+        // Draw circles
+        gl.Color3(0.3f, 0.3f, 0.3f);
+        for (int r = 1; r <= 4; r++)
+        {
+            DrawCircle(cx, cy, radius * r / 4);
+        }
+        // Draw radial lines
+        for (int a = 0; a < 360; a += 30)
+        {
+            double rad = a * Math.PI / 180.0;
+            float x = cx + (float)(radius * Math.Cos(rad));
+            float y = cy + (float)(radius * Math.Sin(rad));
+            gl.Begin(GLEnum.Lines);
+            gl.Vertex2(cx, cy);
+            gl.Vertex2(x, y);
+            gl.End();
+        }
+    }
+
+    private void DrawCircle(float cx, float cy, float r)
+    {
+        gl.Begin(GLEnum.LineLoop);
+        for (int i = 0; i < 64; i++)
+        {
+            double theta = 2.0 * Math.PI * i / 64;
+            float x = cx + (float)(r * Math.Cos(theta));
+            float y = cy + (float)(r * Math.Sin(theta));
+            gl.Vertex2(x, y);
+        }
+        gl.End();
+    }
+}
+
+#pragma warning restore CS0618
