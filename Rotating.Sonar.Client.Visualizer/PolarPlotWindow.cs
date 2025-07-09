@@ -4,6 +4,8 @@ using System;
 using Silk.NET.OpenGL.Legacy;
 using Silk.NET.Windowing;
 using Serilog;
+using System.Collections.Generic;
+using System.Linq;
 
 internal class PolarPlotWindow : IDisposable
 {
@@ -11,6 +13,8 @@ internal class PolarPlotWindow : IDisposable
     private IWindow window;
     private RenderOpenGL_1_1? render;
     private TextRenderOpenGL_1_1? textRenderer;
+    private double latestFps = 0;
+    private readonly Queue<double> fpsHistory = new Queue<double>(7);
     
     private bool isDisposed = false;
 
@@ -54,7 +58,15 @@ internal class PolarPlotWindow : IDisposable
 
     private void OnRender(double delta)
     {
-        this.render!.Render();
+        if (delta > 0)
+        {// TODO, optimize
+            double fps = 1.0 / delta;
+            if (fpsHistory.Count == 120)
+                fpsHistory.Dequeue();
+            fpsHistory.Enqueue(fps);
+            latestFps = fpsHistory.Average();
+        }
+        this.render!.Render(latestFps);
     }
 
     public void Dispose()

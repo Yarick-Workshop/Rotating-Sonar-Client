@@ -30,21 +30,14 @@ public class TextRenderOpenGL_1_1
         gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
     }
 
-    public void RenderText()
+    public void DrawText(string text, float x, float y)
     {
         gl.BindTexture(TextureTarget.Texture2D, atlasTexture);
 
-        DrawText("Hello, Silk.NET + Skia!", 50, 100);
-        
-        gl.BindTexture(TextureTarget.Texture2D, 0);
-    }
-
-    void DrawText(string text, float x, float y)
-    {
         float cursorX = x;
         foreach (var c in text)
         {
-            if (!glyphs.TryGetValue(c, out var g)) 
+            if (!glyphs.TryGetValue(c, out var g))
             {
                 throw new ArgumentException($"Glyph not found for character: {c}");
             }
@@ -67,6 +60,8 @@ public class TextRenderOpenGL_1_1
 
             cursorX += w * 0.75f; // advance
         }
+
+        gl.BindTexture(TextureTarget.Texture2D, 0);
     }
 
     private Dictionary<char, GlyphInfo> GenerateFontAtlas(int tileSize, int columns)
