@@ -14,7 +14,7 @@ class Program
     static void Main(string[] args)
     {
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            // TODO, uncomment to see debug logs .MinimumLevel.Debug()
             .WriteTo.Async(a => a.Console())
             .CreateLogger();
         
