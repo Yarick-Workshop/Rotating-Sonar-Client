@@ -25,14 +25,18 @@ public class TextRenderOpenGL_1_1
 
         this.glyphs = this.GenerateFontAtlas(TileSize, Columns);
 
-        gl.Enable(GLEnum.Texture2D);// TODO, to think of it
+        gl.Enable(GLEnum.Texture2D);// TODO, to think of it, where to initialize?
+        gl.Enable(GLEnum.Blend);
+        gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
     }
 
     public void RenderText()
-    {        
+    {
         gl.BindTexture(TextureTarget.Texture2D, atlasTexture);
 
         DrawText("Hello, Silk.NET + Skia!", 50, 100);
+        
+        gl.BindTexture(TextureTarget.Texture2D, 0);
     }
 
     void DrawText(string text, float x, float y)
@@ -42,16 +46,23 @@ public class TextRenderOpenGL_1_1
         {
             if (!glyphs.TryGetValue(c, out var g)) 
             {
-            throw new ArgumentException($"Glyph not found for character: {c}");
+                throw new ArgumentException($"Glyph not found for character: {c}");
             }
 
             float w = g.Width, h = g.Height;
 
             gl.Begin(GLEnum.Quads);
-            gl.TexCoord2(g.U1, g.V1); gl.Vertex2(cursorX, y);
-            gl.TexCoord2(g.U2, g.V1); gl.Vertex2(cursorX + w, y);
-            gl.TexCoord2(g.U2, g.V2); gl.Vertex2(cursorX + w, y + h);
-            gl.TexCoord2(g.U1, g.V2); gl.Vertex2(cursorX, y + h);
+                gl.TexCoord2(g.U1, g.V1);
+                gl.Vertex2(cursorX, y + h);
+
+                gl.TexCoord2(g.U2, g.V1);
+                gl.Vertex2(cursorX + w, y + h);
+
+                gl.TexCoord2(g.U2, g.V2);
+                gl.Vertex2(cursorX + w, y);
+
+                gl.TexCoord2(g.U1, g.V2);
+                gl.Vertex2(cursorX, y);
             gl.End();
 
             cursorX += w * 0.75f; // advance
