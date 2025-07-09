@@ -9,7 +9,7 @@ public class PolarPlotVisualizer : IDisposable
     private PolarPlotWindow? window;
     private bool _disposed = false;
 
-    public void Start(int width = 600, int height = 600, string title = "OpenGL Polar Plot Visualizer")
+    public void Start(int width = 1920, int height = 1080, string title = "OpenGL Polar Plot Visualizer")
     {
         var win = new PolarPlotWindow(sonarDataCache, width, height, title);
         window = win;
