@@ -125,7 +125,7 @@ public class RenderOpenGL_1_1
             gl.PushMatrix();
 
             gl.Translate(cx, cy, 0f); // Move to center
-            gl.Rotate(a + 90, 0f, 0f, 1f); // Rotate to angle (360 at top)
+            gl.Rotate(-a+ 90, 0f, 0f, 1f); // Rotate to angle (CW direction)
             gl.Translate(radius, 0, 0f); // Move to label position
             gl.Rotate(-90, 0f, 0f, 1f);
 
