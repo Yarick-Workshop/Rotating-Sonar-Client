@@ -10,6 +10,14 @@ using System.Runtime.InteropServices;
 
 record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height);
 
+public enum HorizontalAlignment
+{
+    None,
+    Left,
+    Right,
+    Center
+}
+
 public class TextRenderOpenGL_1_1
 {
     private readonly GL gl;
@@ -32,9 +40,34 @@ public class TextRenderOpenGL_1_1
 
     public void DrawText(string text, float x, float y)
     {
+        DrawText(text, x, y, HorizontalAlignment.Left);
+    }
+
+    public void DrawText(string text, float x, float y, HorizontalAlignment hAlign)
+    {
+        float startX = x;
+        
+        switch (hAlign)
+        {
+            case HorizontalAlignment.Left:
+                // Use the original logic - no adjustment needed
+                break;
+            case HorizontalAlignment.Right:
+                startX = x - CalculateTextWidth(text);
+                break;
+            case HorizontalAlignment.Center:
+                startX = x - CalculateTextWidth(text) / 2f;
+                break;
+            case HorizontalAlignment.None:
+                // Use the original logic - no adjustment needed
+                break;
+            default:
+                throw new ArgumentException($"Unsupported horizontal alignment: {hAlign}");
+        }
+
         gl.BindTexture(TextureTarget.Texture2D, atlasTexture);
 
-        float cursorX = x;
+        float cursorX = startX;
         foreach (var c in text)
         {
             if (!glyphs.TryGetValue(c, out var g))
@@ -62,6 +95,20 @@ public class TextRenderOpenGL_1_1
         }
 
         gl.BindTexture(TextureTarget.Texture2D, 0);
+    }
+
+    public float CalculateTextWidth(string text)
+    {
+        float totalWidth = 0f;
+        foreach (var c in text)
+        {
+            if (!glyphs.TryGetValue(c, out var g))
+            {
+                throw new ArgumentException($"Glyph not found for character: {c}");
+            }
+            totalWidth += g.Width * 0.75f; // advance
+        }
+        return totalWidth;
     }
 
     private Dictionary<char, GlyphInfo> GenerateFontAtlas(int tileSize, int columns)
