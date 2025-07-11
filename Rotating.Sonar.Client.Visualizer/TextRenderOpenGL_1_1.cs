@@ -7,6 +7,8 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Linq;
 
 record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height);
 
@@ -27,15 +29,25 @@ public class TextRenderOpenGL_1_1
     const int TileSize = 32;
     const int Columns = 16;
 
-    public TextRenderOpenGL_1_1(GL gl)
+    public TextRenderOpenGL_1_1(GL gl, List<char> charTable)
     {
         this.gl = gl;
 
-        this.glyphs = this.GenerateFontAtlas(TileSize, Columns);
+        this.glyphs = this.GenerateFontAtlas(charTable, TileSize, Columns);
 
         gl.Enable(GLEnum.Texture2D);// TODO, to think of it, where to initialize?
         gl.Enable(GLEnum.Blend);
         gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+    }
+
+    public TextRenderOpenGL_1_1(GL gl)
+        : this(gl, GetASCIITable())
+    {
+    }
+
+    public TextRenderOpenGL_1_1(GL gl, string additionalChars)
+        : this(gl, GetASCIITable().Union(additionalChars).ToList())
+    {
     }
 
     public void DrawText(string text, float x, float y)
@@ -46,7 +58,7 @@ public class TextRenderOpenGL_1_1
     public void DrawText(string text, float x, float y, HorizontalAlignment hAlign)
     {
         float startX = x;
-        
+
         switch (hAlign)
         {
             case HorizontalAlignment.Left:
@@ -111,10 +123,9 @@ public class TextRenderOpenGL_1_1
         return totalWidth;
     }
 
-    private Dictionary<char, GlyphInfo> GenerateFontAtlas(int tileSize, int columns)
+    private Dictionary<char, GlyphInfo> GenerateFontAtlas(List<char> charTable, int tileSize, int columns)
     {
-        const int start = 32, end = 126;
-        int count = end - start + 1;
+        var count = charTable.Count;
         int rows = (int)Math.Ceiling(count / (float)columns);
         int atlasWidth = columns * tileSize;
         int atlasHeight = rows * tileSize;
@@ -133,9 +144,10 @@ public class TextRenderOpenGL_1_1
         };
 
         var glyphMap = new Dictionary<char, GlyphInfo>();
-        int i = 0;
-        for (char c = (char)start; c <= (char)end; c++, i++)
+
+        for (var i = 0; i < charTable.Count; i++)
         {
+            var c = charTable[i];
             int col = i % columns;
             int row = i / columns;
             float x = col * tileSize;
@@ -173,6 +185,16 @@ public class TextRenderOpenGL_1_1
         this.gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
 
         return tex;
+    }
+
+    private static List<char> GetASCIITable()
+    {
+        var asciiTable = new List<char>();
+        for (int i = 32; i < 127; i++)
+        {
+            asciiTable.Add((char)i);
+        }
+        return asciiTable;
     }
 }
 

@@ -77,7 +77,7 @@ public class RenderOpenGL_1_1
         gl.Begin(GLEnum.Points);
         foreach (var (angle, distance) in points)
         {
-            double rad = angle * Math.PI / 180.0;
+            double rad = -angle * Math.PI / 180.0;
             float r = (float)distance / maxDistance * radius;
             float x = cx + (float)(r * Math.Cos(rad));
             float y = cy + (float)(r * Math.Sin(rad));
@@ -104,13 +104,34 @@ public class RenderOpenGL_1_1
         // Draw radial lines
         for (int a = 0; a < 360; a += 30)
         {
-            double rad = a * Math.PI / 180.0;
-            float x = cx + (float)(radius * Math.Cos(rad));
-            float y = cy + (float)(radius * Math.Sin(rad));
+            gl.PushMatrix();
+
+            gl.Translate(cx, cy, 0f); // Move to center
+            gl.Rotate(a, 0f, 0f, 1f); // Rotate to angle
+            
             gl.Begin(GLEnum.Lines);
-            gl.Vertex2(cx, cy);
-            gl.Vertex2(x, y);
+                gl.Vertex2(0, 0); // Start at center
+                gl.Vertex2(radius, 0); // End at radius distance along X-axis
             gl.End();
+
+            gl.PopMatrix();
+        }
+
+        // Draw compass-like degree labels around the largest circle
+        for (int a = 0; a < 360; a += 30)
+        {
+            string angleText = $"{a}°";
+            
+            gl.PushMatrix();
+
+            gl.Translate(cx, cy, 0f); // Move to center
+            gl.Rotate(-a+ 90, 0f, 0f, 1f); // Rotate to angle (CW direction)
+            gl.Translate(radius, 0, 0f); // Move to label position
+            gl.Rotate(-90, 0f, 0f, 1f);
+
+            textRenderer.DrawText(angleText, 0, 0, HorizontalAlignment.Center);
+
+            gl.PopMatrix();
         }
     }
 
@@ -120,7 +141,7 @@ public class RenderOpenGL_1_1
         for (int i = 0; i < 64; i++)
         {
             double theta = 2.0 * Math.PI * i / 64;
-            float x = cx + (float)(r * Math.Cos(theta));
+            float x = cx + (float)(r * Math.Cos(theta));//TODO, optimize
             float y = cy + (float)(r * Math.Sin(theta));
             gl.Vertex2(x, y);
         }
