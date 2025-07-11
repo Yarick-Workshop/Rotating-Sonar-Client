@@ -77,7 +77,7 @@ public class RenderOpenGL_1_1
         gl.Begin(GLEnum.Points);
         foreach (var (angle, distance) in points)
         {
-            double rad = angle * Math.PI / 180.0;
+            double rad = -angle * Math.PI / 180.0;
             float r = (float)distance / maxDistance * radius;
             float x = cx + (float)(r * Math.Cos(rad));
             float y = cy + (float)(r * Math.Sin(rad));
