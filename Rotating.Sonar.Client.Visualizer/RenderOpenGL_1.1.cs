@@ -120,7 +120,7 @@ public class RenderOpenGL_1_1
         // Draw compass-like degree labels around the largest circle
         for (int a = 0; a < 360; a += 30)
         {
-            string angleText = $"{a}";//TODO, add degree symbol °
+            string angleText = $"{a}°";
             
             gl.PushMatrix();
 
