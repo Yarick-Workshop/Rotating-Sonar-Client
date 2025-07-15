@@ -124,13 +124,21 @@ internal class PolarPlotWindow : IDisposable
 
     public void ToggleFullscreen()
     {
-        // TODO, fix bug when going back to normal from fullscreen
-        // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
-        
         var oldState = window.WindowState;
-        
-        window.WindowState = window.WindowState == WindowState.Fullscreen ? 
-            WindowState.Normal : WindowState.Fullscreen;
+
+        if (oldState == WindowState.Fullscreen)
+        {
+            window.WindowState = WindowState.Normal;
+        }
+        else
+        {
+            // It is not an useless line.
+            // It is a fix of a bug when going back to normal from fullscreen
+            // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
+            window.WindowState = WindowState.Normal;
+
+            window.WindowState = WindowState.Fullscreen;
+        }
 
         Log.Information(
             "Toggling fullscreen: {OldState} -> {NewState}",
