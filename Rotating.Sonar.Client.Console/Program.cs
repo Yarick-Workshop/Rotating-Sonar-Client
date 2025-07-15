@@ -6,6 +6,7 @@ using Rotating.Sonar.ClientApp.Console.Extensions;
 using System.Text.RegularExpressions;
 using Rotating.Sonar.Client.Visualizer;
 using Serilog;
+using System.Diagnostics;
 
 class Program
 {
@@ -13,6 +14,13 @@ class Program
 
     static void Main(string[] args)
     {
+        if (args.Length == 0 && Debugger.IsAttached)
+        {
+            args = ["-fake", "-visualize"]; // For testing purposes, remove in production
+
+            Log.Warning("No command line arguments provided, using default test arguments: -fake -visualize");
+        }
+
         Log.Logger = new LoggerConfiguration()
             // TODO, uncomment to see debug logs .MinimumLevel.Debug()
             .WriteTo.Async(a => a.Console())
