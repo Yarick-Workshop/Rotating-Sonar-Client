@@ -10,12 +10,12 @@ public class RenderOpenGL_1_1
     private readonly GL gl;
 
     private readonly SonarDataCache sonarDataCache;
-    private readonly float cx;
-    private readonly float cy;
-    private readonly float radius;
+    private float cx;
+    private float cy;
+    private float radius;
     private readonly float maxDistance;
-    private readonly float width;
-    private readonly float height;
+    private float width;
+    private float height;
     private readonly TextRenderOpenGL_1_1 textRenderer;
 
     public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float heigh, float maxDistance, TextRenderOpenGL_1_1 textRenderer)
@@ -23,12 +23,14 @@ public class RenderOpenGL_1_1
         this.gl = gl;
         this.sonarDataCache = sonarDataCache;
 
+        // TODO, investigate why option this.UpdateViewport(width, height); does not work
         this.width = width;
         this.height = heigh;
         
         this.cx = width / 2f;
         this.cy = height / 2f;
         this.radius = MathF.Min(cx, cy) - 40;
+
         this.maxDistance = maxDistance;
         this.textRenderer = textRenderer;
 
@@ -55,6 +57,17 @@ public class RenderOpenGL_1_1
         float textX = 10;
         float textY = height - 40;
         textRenderer.DrawText(fpsText, textX, textY);
+    }
+
+    public void UpdateViewport(float newWidth, float newHeight)
+    {
+        this.width = newWidth;
+        this.height = newHeight;
+        
+        // Update center and radius based on new dimensions
+        this.cx = width / 2f;
+        this.cy = height / 2f;
+        this.radius = MathF.Min(cx, cy) - 40;
     }
 
     private void DrawPoints()

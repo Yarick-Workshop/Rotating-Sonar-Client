@@ -1,6 +1,7 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
 using System;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL.Legacy;
 using Silk.NET.Windowing;
 using Serilog;
@@ -29,6 +30,7 @@ internal class PolarPlotWindow : IDisposable
 
         window.Load += OnLoad;
         window.Render += OnRender;
+        window.Resize += OnResize;
 
         this.sonarDataCache = sonarDataCache;
     }
@@ -67,6 +69,11 @@ internal class PolarPlotWindow : IDisposable
             latestFps = fpsHistory.Average();
         }
         this.render!.Render(latestFps);
+    }
+
+    private void OnResize(Vector2D<int> newSize)
+    {
+        render?.UpdateViewport((float)newSize.X, (float)newSize.Y);
     }
 
     public void Dispose()
