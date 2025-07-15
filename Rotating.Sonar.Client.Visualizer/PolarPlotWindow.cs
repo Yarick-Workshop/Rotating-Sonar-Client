@@ -81,6 +81,13 @@ internal class PolarPlotWindow : IDisposable
 
     private void OnResize(Vector2D<int> newSize)
     {
+        Log.Information(
+            "Window resized: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}", 
+            window.Size.X,
+            window.Size.Y,
+            newSize.X,
+            newSize.Y);
+
         render?.UpdateViewport((float)newSize.X, (float)newSize.Y);
     }
 
