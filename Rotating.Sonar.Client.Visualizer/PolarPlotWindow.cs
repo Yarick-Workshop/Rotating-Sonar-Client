@@ -7,6 +7,7 @@ using Silk.NET.Windowing;
 using Serilog;
 using System.Collections.Generic;
 using System.Linq;
+using Silk.NET.Input;
 
 internal class PolarPlotWindow : IDisposable
 {
@@ -16,6 +17,7 @@ internal class PolarPlotWindow : IDisposable
     private TextRenderOpenGL_1_1? textRenderer;
     private double latestFps = 0;
     private readonly Queue<double> fpsHistory = new Queue<double>(7);
+    private bool showFps = true;
     
     private bool isDisposed = false;
 
@@ -48,6 +50,12 @@ internal class PolarPlotWindow : IDisposable
 
         Log.Information("OpenGL Polar Plot Visualizer initialized with size {Width}x{Height}", width, height);
 
+        IInputContext input = window.CreateInput();
+        for (int i = 0; i < input.Keyboards.Count; i++)
+        {
+            input.Keyboards[i].KeyDown += OnKeyDown;
+        }
+
         textRenderer = new TextRenderOpenGL_1_1(gl, "°");
         render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, 200f, textRenderer);
         /* 
@@ -68,12 +76,26 @@ internal class PolarPlotWindow : IDisposable
             fpsHistory.Enqueue(fps);
             latestFps = fpsHistory.Average();
         }
-        this.render!.Render(latestFps);
+        this.render!.Render(latestFps, showFps);
     }
 
     private void OnResize(Vector2D<int> newSize)
     {
         render?.UpdateViewport((float)newSize.X, (float)newSize.Y);
+    }
+
+    private void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
+    {
+        switch (key)
+        {
+            case Key.F:
+            case Key.F3:
+                showFps = !showFps;
+                break;
+            case Key.Escape:
+                this.window?.Close();
+                break;
+        }
     }
 
     public void Dispose()
@@ -84,6 +106,6 @@ internal class PolarPlotWindow : IDisposable
         }
 
         isDisposed = true;
-        window?.Dispose();
+        this.window?.Dispose();
     }
 }

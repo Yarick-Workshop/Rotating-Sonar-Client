@@ -39,7 +39,7 @@ public class RenderOpenGL_1_1
         gl.Disable(GLEnum.CullFace);
     }
 
-    public void Render(double fps)
+    public void Render(double fps, bool showFps)
     {
         gl.Viewport(0, 0, (uint)width, (uint)height);
         gl.Clear(ClearBufferMask.ColorBufferBit);
@@ -52,11 +52,15 @@ public class RenderOpenGL_1_1
 
         this.DrawPolarGrid();
         this.DrawPoints();
-        // Draw FPS in top-left corner
-        string fpsText = $"{fps:F0}FPS";
-        float textX = 10;
-        float textY = height - 40;
-        textRenderer.DrawText(fpsText, textX, textY);
+
+        if (showFps)
+        {
+            // Draw FPS in top-left corner
+            string fpsText = $"{fps:F0}FPS";
+            float textX = 10;
+            float textY = height - 40;
+            textRenderer.DrawText(fpsText, textX, textY);
+        }
     }
 
     public void UpdateViewport(float newWidth, float newHeight)
