@@ -92,6 +92,19 @@ internal class PolarPlotWindow : IDisposable
             case Key.F3:
                 showFps = !showFps;
                 break;
+            case Key.F11:
+                window.WindowState = window.WindowState == WindowState.Fullscreen
+                    ? WindowState.Normal
+                    : WindowState.Fullscreen;
+                break;
+            case Key.Enter:
+                if (keyboard.IsKeyPressed(Key.AltLeft))
+                {
+                    window.WindowState = window.WindowState == WindowState.Fullscreen
+                        ? WindowState.Normal
+                        : WindowState.Fullscreen;
+                }
+                break;
             case Key.Escape:
                 this.window?.Close();
                 break;
