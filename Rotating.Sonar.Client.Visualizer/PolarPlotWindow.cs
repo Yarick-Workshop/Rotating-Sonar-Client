@@ -93,22 +93,27 @@ internal class PolarPlotWindow : IDisposable
                 showFps = !showFps;
                 break;
             case Key.F11:
-                window.WindowState = window.WindowState == WindowState.Fullscreen
-                    ? WindowState.Normal
-                    : WindowState.Fullscreen;
+                this.ToggleFullscreen();
                 break;
             case Key.Enter:
                 if (keyboard.IsKeyPressed(Key.AltLeft))
                 {
-                    window.WindowState = window.WindowState == WindowState.Fullscreen
-                        ? WindowState.Normal
-                        : WindowState.Fullscreen;
+                    this.ToggleFullscreen();
                 }
                 break;
             case Key.Escape:
                 this.window?.Close();
                 break;
         }
+    }
+
+    public void ToggleFullscreen()
+    {
+        // TODO, fix bug when going back to normal from fullscreen
+        // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
+        window.WindowState = window.WindowState == WindowState.Fullscreen
+                    ? WindowState.Normal
+                    : WindowState.Fullscreen;
     }
 
     public void Dispose()
