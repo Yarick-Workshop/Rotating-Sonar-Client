@@ -24,8 +24,6 @@ public class FakeComPortListener : IComPortListener
         {
             var line = $"{currentAngle}: {distance + rnd.Next(-10, 11)}cm"; // TODO, to config file?
 
-            Console.WriteLine(line);
-
             Log.Debug($"Received line: \"{line}\".");
 
             newLineCallBack?.Invoke(line);
