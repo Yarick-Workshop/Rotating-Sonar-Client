@@ -91,6 +91,7 @@ internal class PolarPlotWindow : IDisposable
             case Key.F:
             case Key.F3:
                 showFps = !showFps;
+                Log.Information("FPS display toggled: {ShowFps}", showFps);
                 break;
             case Key.F11:
                 this.ToggleFullscreen();
@@ -102,6 +103,7 @@ internal class PolarPlotWindow : IDisposable
                 }
                 break;
             case Key.Escape:
+                Log.Information("Window closing requested via Escape key");
                 this.window?.Close();
                 break;
         }
@@ -111,9 +113,22 @@ internal class PolarPlotWindow : IDisposable
     {
         // TODO, fix bug when going back to normal from fullscreen
         // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
-        window.WindowState = window.WindowState == WindowState.Fullscreen
-                    ? WindowState.Normal
-                    : WindowState.Fullscreen;
+        var oldState = window.WindowState;
+        var oldResolution = window.Size;
+
+        var newState = window.WindowState == WindowState.Fullscreen ? 
+            WindowState.Normal : WindowState.Fullscreen;
+
+        window.WindowState = newState;
+
+        Log.Information(
+            "Toggling fullscreen: {OldState} -> {NewState}, Resolution: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}",
+            oldState, 
+            newState, 
+            oldResolution.X, 
+            oldResolution.Y, 
+            window.Size.X, 
+            window.Size.Y);
     }
 
     public void Dispose()
