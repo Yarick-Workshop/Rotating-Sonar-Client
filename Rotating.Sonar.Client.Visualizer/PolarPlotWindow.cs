@@ -18,13 +18,15 @@ internal class PolarPlotWindow : IDisposable
     private double latestFps = 0;
     private readonly Queue<double> fpsHistory = new Queue<double>(7);
     private bool showFps = true;
+
+    private Vector2D<int> previousSize;
     
     private bool isDisposed = false;
 
     public PolarPlotWindow(SonarDataCache sonarDataCache, int width, int height, string title)
     {
         var options = WindowOptions.Default;
-        options.Size = new Silk.NET.Maths.Vector2D<int>(width, height);
+        options.Size = new Vector2D<int>(width, height);
         options.Title = title;
         options.API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(1, 1));
 
@@ -47,6 +49,8 @@ internal class PolarPlotWindow : IDisposable
         var gl = GL.GetApi(window);
         var width = window.Size.X;
         var height = window.Size.Y;
+
+        previousSize = window.Size;
 
         Log.Information("OpenGL Polar Plot Visualizer initialized with size {Width}x{Height}", width, height);
 
@@ -83,12 +87,14 @@ internal class PolarPlotWindow : IDisposable
     {
         Log.Information(
             "Window resized: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}", 
-            window.Size.X,
-            window.Size.Y,
+            previousSize.X,
+            previousSize.Y,
             newSize.X,
             newSize.Y);
 
-        render?.UpdateViewport((float)newSize.X, (float)newSize.Y);
+        this.previousSize = newSize;
+
+        this.render?.UpdateViewport((float)newSize.X, (float)newSize.Y);
     }
 
     private void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
@@ -120,22 +126,16 @@ internal class PolarPlotWindow : IDisposable
     {
         // TODO, fix bug when going back to normal from fullscreen
         // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
+        
         var oldState = window.WindowState;
-        var oldResolution = window.Size;
-
-        var newState = window.WindowState == WindowState.Fullscreen ? 
+        
+        window.WindowState = window.WindowState == WindowState.Fullscreen ? 
             WindowState.Normal : WindowState.Fullscreen;
 
-        window.WindowState = newState;
-
         Log.Information(
-            "Toggling fullscreen: {OldState} -> {NewState}, Resolution: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}",
+            "Toggling fullscreen: {OldState} -> {NewState}",
             oldState, 
-            newState, 
-            oldResolution.X, 
-            oldResolution.Y, 
-            window.Size.X, 
-            window.Size.Y);
+            window.WindowState);
     }
 
     public void Dispose()
