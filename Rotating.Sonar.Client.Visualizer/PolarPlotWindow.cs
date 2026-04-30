@@ -13,6 +13,7 @@ internal class PolarPlotWindow : IDisposable
 {
     private readonly SonarDataCache sonarDataCache;
     private IWindow window;
+    private IInputContext? inputContext;
     private RenderOpenGL_1_1? render;
     private TextRenderOpenGL_1_1? textRenderer;
     private double latestFps = 0;
@@ -54,10 +55,15 @@ internal class PolarPlotWindow : IDisposable
 
         Log.Information("OpenGL Polar Plot Visualizer initialized with size {Width}x{Height}", width, height);
 
-        IInputContext input = window.CreateInput();
-        for (int i = 0; i < input.Keyboards.Count; i++)
+        inputContext = window.CreateInput();
+        for (int i = 0; i < inputContext.Keyboards.Count; i++)
         {
-            input.Keyboards[i].KeyDown += OnKeyDown;
+            inputContext.Keyboards[i].KeyDown += OnKeyDown;
+        }
+
+        for (int i = 0; i < inputContext.Mice.Count; i++)
+        {
+            inputContext.Mice[i].Scroll += OnMouseScroll;
         }
 
         textRenderer = new TextRenderOpenGL_1_1(gl, "°");
@@ -99,6 +105,27 @@ internal class PolarPlotWindow : IDisposable
 
     private void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
     {
+        bool ctrl = keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight);
+
+        if (ctrl)
+        {
+            switch (key)
+            {
+                case Key.Equal:
+                case Key.KeypadAdd:
+                    this.render?.ZoomIn();
+                    return;
+                case Key.Minus:
+                case Key.KeypadSubtract:
+                    this.render?.ZoomOut();
+                    return;
+                case Key.D0:
+                case Key.Keypad0:
+                    this.render?.ResetZoom();
+                    return;
+            }
+        }
+
         switch (key)
         {
             case Key.F:
@@ -120,6 +147,28 @@ internal class PolarPlotWindow : IDisposable
                 this.window?.Close();
                 break;
         }
+    }
+
+    private bool IsCtrlPressed()
+    {
+        if (inputContext == null)
+            return false;
+
+        foreach (IKeyboard keyboard in inputContext.Keyboards)
+        {
+            if (keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight))
+                return true;
+        }
+
+        return false;
+    }
+
+    private void OnMouseScroll(IMouse mouse, ScrollWheel scroll)
+    {
+        if (!IsCtrlPressed())
+            return;
+
+        this.render?.ZoomWheel(scroll.Y);
     }
 
     public void ToggleFullscreen()

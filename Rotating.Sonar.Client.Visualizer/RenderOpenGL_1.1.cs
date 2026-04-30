@@ -13,6 +13,7 @@ public class RenderOpenGL_1_1
     private float cx;
     private float cy;
     private float radius;
+    private float zoomScale = 1f;
     private readonly float maxDistance;
     private float width;
     private float height;
@@ -39,6 +40,41 @@ public class RenderOpenGL_1_1
         gl.Disable(GLEnum.CullFace);
     }
 
+    private const float MinZoomScale = 0.25f;
+    private const float MaxZoomScale = 4f;
+    private const float ZoomFactorPerStep = 1.12f;
+    private const float MaxWheelZoomExponent = 5f;
+    private const float OverflowArrowHeadLengthPx = 8f;
+    private const float OverflowArrowHalfWidthPx = 5f;
+    private const float OverflowArrowRimInsetPx = 8f;
+    private const float OverflowArrowMinTailRadiusPx = 26f;
+    private const float InsideRingEpsilon = 1e-4f;
+
+    public void ZoomIn()
+    {
+        zoomScale = Math.Min(MaxZoomScale, zoomScale * ZoomFactorPerStep);
+    }
+
+    public void ZoomOut()
+    {
+        zoomScale = Math.Max(MinZoomScale, zoomScale / ZoomFactorPerStep);
+    }
+
+    public void ResetZoom()
+    {
+        zoomScale = 1f;
+    }
+
+    public void ZoomWheel(float deltaY)
+    {
+        if (deltaY == 0f)
+            return;
+
+        float signedMag = Math.Sign(deltaY) * Math.Min(Math.Abs(deltaY), MaxWheelZoomExponent);
+        zoomScale *= MathF.Pow(ZoomFactorPerStep, signedMag);
+        zoomScale = Math.Clamp(zoomScale, MinZoomScale, MaxZoomScale);
+    }
+
     public void Render(double fps, bool showFps)
     {
         gl.Viewport(0, 0, (uint)width, (uint)height);
@@ -61,6 +97,10 @@ public class RenderOpenGL_1_1
             float textY = height - 40;
             textRenderer.DrawText(fpsText, textX, textY);
         }
+
+        string zoomText = $"Zoom {zoomScale * 100f:F0}%";
+        float zoomMargin = 10f;
+        textRenderer.DrawText(zoomText, width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
     }
 
     public void UpdateViewport(float newWidth, float newHeight)
@@ -95,12 +135,26 @@ public class RenderOpenGL_1_1
         foreach (var (angle, distance) in points)
         {
             double rad = -angle * Math.PI / 180.0;
-            float r = (float)distance / maxDistance * radius;
-            float x = cx + (float)(r * Math.Cos(rad));
-            float y = cy + (float)(r * Math.Sin(rad));
-            gl.Vertex2(x, y);
+            float cos = (float)Math.Cos(rad);
+            float sin = (float)Math.Sin(rad);
+            float rEcho = EchoRadius(distance);
+            if (rEcho <= radius + InsideRingEpsilon)
+            {
+                gl.Vertex2(cx + rEcho * cos, cy + rEcho * sin);
+            }
         }
         gl.End();
+
+        foreach (var (angle, distance) in points)
+        {
+            double rad = -angle * Math.PI / 180.0;
+            float cos = (float)Math.Cos(rad);
+            float sin = (float)Math.Sin(rad);
+            float rEcho = EchoRadius(distance);
+            if (rEcho > radius + InsideRingEpsilon)
+                DrawOverflowArrow(cx, cy, cos, sin, rEcho);
+        }
+
         gl.PopMatrix();
 
         // Draw a white point at the center
@@ -128,7 +182,7 @@ public class RenderOpenGL_1_1
             
             gl.Begin(GLEnum.Lines);
                 gl.Vertex2(0, 0); // Start at center
-                gl.Vertex2(radius, 0); // End at radius distance along X-axis
+                gl.Vertex2(radius, 0); // End at outer ring along X-axis
             gl.End();
 
             gl.PopMatrix();
@@ -162,6 +216,49 @@ public class RenderOpenGL_1_1
             float y = cy + (float)(r * Math.Sin(theta));
             gl.Vertex2(x, y);
         }
+        gl.End();
+    }
+
+    private float EchoRadius(int distanceCm)
+    {
+        return distanceCm / maxDistance * radius * zoomScale;
+    }
+
+    private void DrawOverflowArrow(float centerX, float centerY, float cos, float sin, float rEcho)
+    {
+        float overflow = rEcho - radius;
+        if (overflow <= InsideRingEpsilon)
+            return;
+
+        float rTip = radius - OverflowArrowRimInsetPx;
+        float maxHeadBack = rTip - OverflowArrowMinTailRadiusPx;
+        if (maxHeadBack <= InsideRingEpsilon)
+            return;
+
+        float stretch = Math.Min(overflow * 0.08f, 12f);
+        float headBack = Math.Min(OverflowArrowHeadLengthPx + stretch * 0.25f, maxHeadBack);
+        headBack = Math.Max(headBack, 2.5f);
+
+        float rHeadBase = rTip - headBack;
+
+        float tipX = centerX + rTip * cos;
+        float tipY = centerY + rTip * sin;
+        float baseMidX = centerX + rHeadBase * cos;
+        float baseMidY = centerY + rHeadBase * sin;
+        float px = -sin;
+        float py = cos;
+
+        float w = OverflowArrowHalfWidthPx;
+        float b0x = baseMidX + w * px;
+        float b0y = baseMidY + w * py;
+        float b1x = baseMidX - w * px;
+        float b1y = baseMidY - w * py;
+
+        gl.Color3(0.95f, 0.15f, 0.12f);
+        gl.Begin(GLEnum.Triangles);
+        gl.Vertex2(tipX, tipY);
+        gl.Vertex2(b0x, b0y);
+        gl.Vertex2(b1x, b1y);
         gl.End();
     }
 }
