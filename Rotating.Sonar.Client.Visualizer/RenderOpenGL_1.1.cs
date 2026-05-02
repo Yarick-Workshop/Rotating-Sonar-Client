@@ -49,6 +49,7 @@ public class RenderOpenGL_1_1
     private const float OverflowArrowRimInsetPx = 8f;
     private const float OverflowArrowMinTailRadiusPx = 26f;
     private const float InsideRingEpsilon = 1e-4f;
+    private const float RangeRingStepCm = 100f;
 
     public void ZoomIn()
     {
@@ -166,12 +167,22 @@ public class RenderOpenGL_1_1
 
     private void DrawPolarGrid()
     {
-        // Draw circles
+        // Every 100 cm ring that fits inside the rim (same scale as echoes). Fills disc: farthest
+        // ring at d = maxDistance/zoomScale coincides with the plot edge when zoom ≠ 1.
         gl.Color3(0.3f, 0.3f, 0.3f);
-        for (int r = 1; r <= 4; r++)
+        if (maxDistance > 0f && zoomScale > 0f)
         {
-            DrawCircle(cx, cy, radius * r / 4);
+            float dMax = maxDistance / zoomScale;
+            for (float d = RangeRingStepCm; d <= dMax + InsideRingEpsilon; d += RangeRingStepCm)
+            {
+                float ringR = ScaledEchoRadius(d);
+                if (ringR <= radius + InsideRingEpsilon)
+                    DrawCircle(cx, cy, ringR);
+            }
         }
+
+        if (maxDistance > 0f)
+            DrawCircle(cx, cy, radius);
         // Draw radial lines
         for (int a = 0; a < 360; a += 30)
         {
@@ -219,9 +230,14 @@ public class RenderOpenGL_1_1
         gl.End();
     }
 
-    private float EchoRadius(int distanceCm)
+    private float ScaledEchoRadius(float distanceCm)
     {
         return distanceCm / maxDistance * radius * zoomScale;
+    }
+
+    private float EchoRadius(int distanceCm)
+    {
+        return ScaledEchoRadius(distanceCm);
     }
 
     private void DrawOverflowArrow(float centerX, float centerY, float cos, float sin, float rEcho)
