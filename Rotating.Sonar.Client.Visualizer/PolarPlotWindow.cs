@@ -31,43 +31,43 @@ internal class PolarPlotWindow : IDisposable
         options.Title = title;
         options.API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(1, 1));
 
-        window = Window.Create(options);
+        this.window = Window.Create(options);
 
-        window.Load += OnLoad;
-        window.Render += OnRender;
-        window.Resize += OnResize;
+        this.window.Load += OnLoad;
+        this.window.Render += OnRender;
+        this.window.Resize += OnResize;
 
         this.sonarDataCache = sonarDataCache;
     }
 
     public void Run()
     {        
-        window!.Run();
+        this.window!.Run();
     }
 
     private void OnLoad()
     {
-        var gl = GL.GetApi(window);
-        var width = window.Size.X;
-        var height = window.Size.Y;
+        var gl = GL.GetApi(this.window);
+        var width = this.window.Size.X;
+        var height = this.window.Size.Y;
 
-        previousSize = window.Size;
+        this.previousSize = this.window.Size;
 
         Log.Information("OpenGL Polar Plot Visualizer initialized with size {Width}x{Height}", width, height);
 
-        inputContext = window.CreateInput();
-        for (int i = 0; i < inputContext.Keyboards.Count; i++)
+        this.inputContext = this.window.CreateInput();
+        for (int i = 0; i < this.inputContext.Keyboards.Count; i++)
         {
-            inputContext.Keyboards[i].KeyDown += OnKeyDown;
+            this.inputContext.Keyboards[i].KeyDown += OnKeyDown;
         }
 
-        for (int i = 0; i < inputContext.Mice.Count; i++)
+        for (int i = 0; i < this.inputContext.Mice.Count; i++)
         {
-            inputContext.Mice[i].Scroll += OnMouseScroll;
+            this.inputContext.Mice[i].Scroll += OnMouseScroll;
         }
 
-        textRenderer = new TextRenderOpenGL_1_1(gl, "°");
-        render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, 200f, textRenderer);
+        this.textRenderer = new TextRenderOpenGL_1_1(gl, "°");
+        this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, 200f, this.textRenderer);
         /* 
         Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));
         Log.Information("OpenGL vendor: {Vendor}", gl.GetString(StringName.Vendor));
@@ -81,20 +81,20 @@ internal class PolarPlotWindow : IDisposable
         if (delta > 0)
         {// TODO, optimize
             double fps = 1.0 / delta;
-            if (fpsHistory.Count == 120)
-                fpsHistory.Dequeue();
-            fpsHistory.Enqueue(fps);
-            latestFps = fpsHistory.Average();
+            if (this.fpsHistory.Count == 120)
+                this.fpsHistory.Dequeue();
+            this.fpsHistory.Enqueue(fps);
+            this.latestFps = this.fpsHistory.Average();
         }
-        this.render!.Render(latestFps, showFps);
+        this.render!.Render(this.latestFps, this.showFps);
     }
 
     private void OnResize(Vector2D<int> newSize)
     {
         Log.Information(
             "Window resized: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}", 
-            previousSize.X,
-            previousSize.Y,
+            this.previousSize.X,
+            this.previousSize.Y,
             newSize.X,
             newSize.Y);
 
@@ -132,8 +132,8 @@ internal class PolarPlotWindow : IDisposable
         {
             case Key.F:
             case Key.F3:
-                showFps = !showFps;
-                Log.Information("FPS display toggled: {ShowFps}", showFps);
+                this.showFps = !this.showFps;
+                Log.Information("FPS display toggled: {ShowFps}", this.showFps);
                 break;
             case Key.F11:
                 this.ToggleFullscreen();
@@ -154,10 +154,10 @@ internal class PolarPlotWindow : IDisposable
     private bool IsCtrlPressed()
     {
         // Scroll events carry no keyboard; any keyboard may have held Ctrl (multi-keyboard / mixed hardware).
-        if (inputContext == null)
+        if (this.inputContext == null)
             return false;
 
-        foreach (IKeyboard keyboard in inputContext.Keyboards)
+        foreach (IKeyboard keyboard in this.inputContext.Keyboards)
         {
             if (keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight))
                 return true;
@@ -168,7 +168,7 @@ internal class PolarPlotWindow : IDisposable
 
     private void OnMouseScroll(IMouse mouse, ScrollWheel scroll)
     {
-        if (!IsCtrlPressed())
+        if (!this.IsCtrlPressed())
             return;
 
         this.render?.ZoomWheel(scroll.Y);
@@ -176,53 +176,53 @@ internal class PolarPlotWindow : IDisposable
 
     public void ToggleFullscreen()
     {
-        var oldState = window.WindowState;
+        var oldState = this.window.WindowState;
 
         if (oldState == WindowState.Fullscreen)
         {
-            window.WindowState = WindowState.Normal;
+            this.window.WindowState = WindowState.Normal;
         }
         else
         {
             // It is not an useless line.
             // It is a fix of a bug when going back to normal from fullscreen
             // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
-            window.WindowState = WindowState.Normal;
+            this.window.WindowState = WindowState.Normal;
 
-            window.WindowState = WindowState.Fullscreen;
+            this.window.WindowState = WindowState.Fullscreen;
         }
 
         Log.Information(
             "Toggling fullscreen: {OldState} -> {NewState}",
             oldState, 
-            window.WindowState);
+            this.window.WindowState);
     }
 
     private void ReleaseInput()
     {
-        if (inputContext == null)
+        if (this.inputContext == null)
             return;
 
-        foreach (IKeyboard keyboard in inputContext.Keyboards)
+        foreach (IKeyboard keyboard in this.inputContext.Keyboards)
             keyboard.KeyDown -= OnKeyDown;
 
-        foreach (IMouse mouse in inputContext.Mice)
+        foreach (IMouse mouse in this.inputContext.Mice)
             mouse.Scroll -= OnMouseScroll;
 
-        if (inputContext is IDisposable disposable)
+        if (this.inputContext is IDisposable disposable)
             disposable.Dispose();
 
-        inputContext = null;
+        this.inputContext = null;
     }
 
     public void Dispose()
     {
-        if (isDisposed)
+        if (this.isDisposed)
         {
             return;
         }
 
-        isDisposed = true;
+        this.isDisposed = true;
         this.ReleaseInput();
         this.window?.Dispose();
     }

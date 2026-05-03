@@ -30,14 +30,14 @@ public class RenderOpenGL_1_1
         
         this.cx = width / 2f;
         this.cy = height / 2f;
-        this.radius = MathF.Min(cx, cy) - 40;
+        this.radius = MathF.Min(this.cx, this.cy) - 40;
 
         this.maxDistance = maxDistance;
         this.textRenderer = textRenderer;
 
-        gl.ClearColor(0f, 0f, 0f, 1f);
-        gl.Disable(GLEnum.DepthTest);
-        gl.Disable(GLEnum.CullFace);
+        this.gl.ClearColor(0f, 0f, 0f, 1f);
+        this.gl.Disable(GLEnum.DepthTest);
+        this.gl.Disable(GLEnum.CullFace);
     }
 
     private const float MinZoomScale = 0.25f;
@@ -53,17 +53,17 @@ public class RenderOpenGL_1_1
 
     public void ZoomIn()
     {
-        zoomScale = Math.Min(MaxZoomScale, zoomScale * ZoomFactorPerStep);
+        this.zoomScale = Math.Min(MaxZoomScale, this.zoomScale * ZoomFactorPerStep);
     }
 
     public void ZoomOut()
     {
-        zoomScale = Math.Max(MinZoomScale, zoomScale / ZoomFactorPerStep);
+        this.zoomScale = Math.Max(MinZoomScale, this.zoomScale / ZoomFactorPerStep);
     }
 
     public void ResetZoom()
     {
-        zoomScale = 1f;
+        this.zoomScale = 1f;
     }
 
     public void ZoomWheel(float deltaY)
@@ -72,20 +72,20 @@ public class RenderOpenGL_1_1
             return;
 
         float signedMag = Math.Sign(deltaY) * Math.Min(Math.Abs(deltaY), MaxWheelZoomExponent);
-        zoomScale *= MathF.Pow(ZoomFactorPerStep, signedMag);
-        zoomScale = Math.Clamp(zoomScale, MinZoomScale, MaxZoomScale);
+        this.zoomScale *= MathF.Pow(ZoomFactorPerStep, signedMag);
+        this.zoomScale = Math.Clamp(this.zoomScale, MinZoomScale, MaxZoomScale);
     }
 
     public void Render(double fps, bool showFps)
     {
-        gl.Viewport(0, 0, (uint)width, (uint)height);
-        gl.Clear(ClearBufferMask.ColorBufferBit);
-        gl.MatrixMode(GLEnum.Projection);
-        gl.LoadIdentity();
+        this.gl.Viewport(0, 0, (uint)this.width, (uint)this.height);
+        this.gl.Clear(ClearBufferMask.ColorBufferBit);
+        this.gl.MatrixMode(GLEnum.Projection);
+        this.gl.LoadIdentity();
         // 2D orthographic projection
-        gl.Ortho(0, width, 0, height, -1, 1);
-        gl.MatrixMode(GLEnum.Modelview);
-        gl.LoadIdentity();
+        this.gl.Ortho(0, this.width, 0, this.height, -1, 1);
+        this.gl.MatrixMode(GLEnum.Modelview);
+        this.gl.LoadIdentity();
 
         this.DrawPolarGrid();
         this.DrawPoints();
@@ -95,13 +95,13 @@ public class RenderOpenGL_1_1
             // Draw FPS in top-left corner
             string fpsText = $"{fps:F0}FPS";
             float textX = 10;
-            float textY = height - 40;
-            textRenderer.DrawText(fpsText, textX, textY);
+            float textY = this.height - 40;
+            this.textRenderer.DrawText(fpsText, textX, textY);
         }
 
-        string zoomText = $"Zoom {zoomScale * 100f:F0}%";
+        string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
         float zoomMargin = 10f;
-        textRenderer.DrawText(zoomText, width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
+        this.textRenderer.DrawText(zoomText, this.width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
     }
 
     public void UpdateViewport(float newWidth, float newHeight)
@@ -110,14 +110,14 @@ public class RenderOpenGL_1_1
         this.height = newHeight;
         
         // Update center and radius based on new dimensions
-        this.cx = width / 2f;
-        this.cy = height / 2f;
-        this.radius = MathF.Min(cx, cy) - 40;
+        this.cx = this.width / 2f;
+        this.cy = this.height / 2f;
+        this.radius = MathF.Min(this.cx, this.cy) - 40;
     }
 
     private void DrawPoints()
     {
-        var points = sonarDataCache.GetPoints();
+        var points = this.sonarDataCache.GetPoints();
 
         if (points.Count == 0)
         {
@@ -125,13 +125,13 @@ public class RenderOpenGL_1_1
             return;
         }
 
-        gl.PushMatrix();
-        gl.Translate(cx, cy, 0f);
-        gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
-        gl.Translate(-cx, -cy, 0f);
-        gl.PointSize(12f);
-        gl.Color3(1.0f, 0.2f, 0.2f);
-        gl.Begin(GLEnum.Points);
+        this.gl.PushMatrix();
+        this.gl.Translate(this.cx, this.cy, 0f);
+        this.gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
+        this.gl.Translate(-this.cx, -this.cy, 0f);
+        this.gl.PointSize(12f);
+        this.gl.Color3(1.0f, 0.2f, 0.2f);
+        this.gl.Begin(GLEnum.Points);
 
         var overflowArrows = new List<(float Cos, float Sin, float Radius)>();
         foreach (var (angle, distance) in points)
@@ -139,64 +139,64 @@ public class RenderOpenGL_1_1
             double rad = -angle * Math.PI / 180.0;
             float cos = (float)Math.Cos(rad);
             float sin = (float)Math.Sin(rad);
-            float rEcho = ScaledEchoRadius(distance);
-            if (rEcho <= radius + InsideRingEpsilon)
+            float rEcho = this.ScaledEchoRadius(distance);
+            if (rEcho <= this.radius + InsideRingEpsilon)
             {
-                gl.Vertex2(cx + rEcho * cos, cy + rEcho * sin);
+                this.gl.Vertex2(this.cx + rEcho * cos, this.cy + rEcho * sin);
             }
             else
             {
                 overflowArrows.Add((cos, sin, rEcho));
             }
         }
-        gl.End();
+        this.gl.End();
 
         foreach (var (cos, sin, rEcho) in overflowArrows)
         {
-            DrawOverflowArrow(cx, cy, cos, sin, rEcho);
+            this.DrawOverflowArrow(this.cx, this.cy, cos, sin, rEcho);
         }
 
-        gl.PopMatrix();
+        this.gl.PopMatrix();
 
         // Draw a white point at the center
-        gl.Color3(1.0f, 1.0f, 1.0f);
-        gl.Begin(GLEnum.Points);
-        gl.Vertex2(cx, cy);
-        gl.End();
+        this.gl.Color3(1.0f, 1.0f, 1.0f);
+        this.gl.Begin(GLEnum.Points);
+        this.gl.Vertex2(this.cx, this.cy);
+        this.gl.End();
     }
 
     private void DrawPolarGrid()
     {
         // Every 100 cm ring that fits inside the rim (same scale as echoes). Fills disc: farthest
         // ring at d = maxDistance/zoomScale coincides with the plot edge when zoom ≠ 1.
-        gl.Color3(0.3f, 0.3f, 0.3f);
-        if (maxDistance > 0f && zoomScale > 0f)
+        this.gl.Color3(0.3f, 0.3f, 0.3f);
+        if (this.maxDistance > 0f && this.zoomScale > 0f)
         {
-            float dMax = maxDistance / zoomScale;
+            float dMax = this.maxDistance / this.zoomScale;
             for (float d = RangeRingStepCm; d <= dMax + InsideRingEpsilon; d += RangeRingStepCm)
             {
-                float ringR = ScaledEchoRadius(d);
-                if (ringR <= radius + InsideRingEpsilon)
-                    DrawCircle(cx, cy, ringR);
+                float ringR = this.ScaledEchoRadius(d);
+                if (ringR <= this.radius + InsideRingEpsilon)
+                    this.DrawCircle(this.cx, this.cy, ringR);
             }
         }
 
-        if (maxDistance > 0f)
-            DrawCircle(cx, cy, radius);
+        if (this.maxDistance > 0f)
+            this.DrawCircle(this.cx, this.cy, this.radius);
         // Draw radial lines
         for (int a = 0; a < 360; a += 30)
         {
-            gl.PushMatrix();
+            this.gl.PushMatrix();
 
-            gl.Translate(cx, cy, 0f); // Move to center
-            gl.Rotate(a, 0f, 0f, 1f); // Rotate to angle
+            this.gl.Translate(this.cx, this.cy, 0f); // Move to center
+            this.gl.Rotate(a, 0f, 0f, 1f); // Rotate to angle
             
-            gl.Begin(GLEnum.Lines);
-                gl.Vertex2(0, 0); // Start at center
-                gl.Vertex2(radius, 0); // End at outer ring along X-axis
-            gl.End();
+            this.gl.Begin(GLEnum.Lines);
+                this.gl.Vertex2(0, 0); // Start at center
+                this.gl.Vertex2(this.radius, 0); // End at outer ring along X-axis
+            this.gl.End();
 
-            gl.PopMatrix();
+            this.gl.PopMatrix();
         }
 
         // Draw compass-like degree labels around the largest circle
@@ -204,44 +204,44 @@ public class RenderOpenGL_1_1
         {
             string angleText = $"{a}°";
             
-            gl.PushMatrix();
+            this.gl.PushMatrix();
 
-            gl.Translate(cx, cy, 0f); // Move to center
-            gl.Rotate(-a+ 90, 0f, 0f, 1f); // Rotate to angle (CW direction)
-            gl.Translate(radius, 0, 0f); // Move to label position
-            gl.Rotate(-90, 0f, 0f, 1f);
+            this.gl.Translate(this.cx, this.cy, 0f); // Move to center
+            this.gl.Rotate(-a+ 90, 0f, 0f, 1f); // Rotate to angle (CW direction)
+            this.gl.Translate(this.radius, 0, 0f); // Move to label position
+            this.gl.Rotate(-90, 0f, 0f, 1f);
 
-            textRenderer.DrawText(angleText, 0, 0, HorizontalAlignment.Center);
+            this.textRenderer.DrawText(angleText, 0, 0, HorizontalAlignment.Center);
 
-            gl.PopMatrix();
+            this.gl.PopMatrix();
         }
     }
 
     private void DrawCircle(float cx, float cy, float r)
     {
-        gl.Begin(GLEnum.LineLoop);
+        this.gl.Begin(GLEnum.LineLoop);
         for (int i = 0; i < 64; i++)
         {
             double theta = 2.0 * Math.PI * i / 64;
             float x = cx + (float)(r * Math.Cos(theta));//TODO, optimize
             float y = cy + (float)(r * Math.Sin(theta));
-            gl.Vertex2(x, y);
+            this.gl.Vertex2(x, y);
         }
-        gl.End();
+        this.gl.End();
     }
 
     private float ScaledEchoRadius(float distanceCm)
     {
-        return distanceCm / maxDistance * radius * zoomScale;
+        return distanceCm / this.maxDistance * this.radius * this.zoomScale;
     }
 
     private void DrawOverflowArrow(float centerX, float centerY, float cos, float sin, float rEcho)
     {
-        float overflow = rEcho - radius;
+        float overflow = rEcho - this.radius;
         if (overflow <= InsideRingEpsilon)
             return;
 
-        float rTip = radius - OverflowArrowRimInsetPx;
+        float rTip = this.radius - OverflowArrowRimInsetPx;
         float maxHeadBack = rTip - OverflowArrowMinTailRadiusPx;
         if (maxHeadBack <= InsideRingEpsilon)
             return;
@@ -265,12 +265,12 @@ public class RenderOpenGL_1_1
         float b1x = baseMidX - w * px;
         float b1y = baseMidY - w * py;
 
-        gl.Color3(0.95f, 0.15f, 0.12f);
-        gl.Begin(GLEnum.Triangles);
-        gl.Vertex2(tipX, tipY);
-        gl.Vertex2(b0x, b0y);
-        gl.Vertex2(b1x, b1y);
-        gl.End();
+        this.gl.Color3(0.95f, 0.15f, 0.12f);
+        this.gl.Begin(GLEnum.Triangles);
+        this.gl.Vertex2(tipX, tipY);
+        this.gl.Vertex2(b0x, b0y);
+        this.gl.Vertex2(b1x, b1y);
+        this.gl.End();
     }
 }
 
