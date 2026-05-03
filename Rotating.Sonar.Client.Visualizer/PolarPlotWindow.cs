@@ -105,6 +105,8 @@ internal class PolarPlotWindow : IDisposable
 
     private void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
     {
+        // Ctrl shortcuts use only this event's keyboard. Wheel zoom uses IsCtrlPressed(), which scans all keyboards
+        // so Ctrl held on another physical device still qualifies.
         bool ctrl = keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight);
 
         if (ctrl)
@@ -151,6 +153,7 @@ internal class PolarPlotWindow : IDisposable
 
     private bool IsCtrlPressed()
     {
+        // Scroll events carry no keyboard; any keyboard may have held Ctrl (multi-keyboard / mixed hardware).
         if (inputContext == null)
             return false;
 
@@ -195,6 +198,23 @@ internal class PolarPlotWindow : IDisposable
             window.WindowState);
     }
 
+    private void ReleaseInput()
+    {
+        if (inputContext == null)
+            return;
+
+        foreach (IKeyboard keyboard in inputContext.Keyboards)
+            keyboard.KeyDown -= OnKeyDown;
+
+        foreach (IMouse mouse in inputContext.Mice)
+            mouse.Scroll -= OnMouseScroll;
+
+        if (inputContext is IDisposable disposable)
+            disposable.Dispose();
+
+        inputContext = null;
+    }
+
     public void Dispose()
     {
         if (isDisposed)
@@ -203,6 +223,7 @@ internal class PolarPlotWindow : IDisposable
         }
 
         isDisposed = true;
+        this.ReleaseInput();
         this.window?.Dispose();
     }
 }

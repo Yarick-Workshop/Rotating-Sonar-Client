@@ -138,7 +138,7 @@ public class RenderOpenGL_1_1
             double rad = -angle * Math.PI / 180.0;
             float cos = (float)Math.Cos(rad);
             float sin = (float)Math.Sin(rad);
-            float rEcho = EchoRadius(distance);
+            float rEcho = ScaledEchoRadius(distance);
             if (rEcho <= radius + InsideRingEpsilon)
             {
                 gl.Vertex2(cx + rEcho * cos, cy + rEcho * sin);
@@ -151,7 +151,7 @@ public class RenderOpenGL_1_1
             double rad = -angle * Math.PI / 180.0;
             float cos = (float)Math.Cos(rad);
             float sin = (float)Math.Sin(rad);
-            float rEcho = EchoRadius(distance);
+            float rEcho = ScaledEchoRadius(distance);
             if (rEcho > radius + InsideRingEpsilon)
                 DrawOverflowArrow(cx, cy, cos, sin, rEcho);
         }
@@ -233,11 +233,6 @@ public class RenderOpenGL_1_1
     private float ScaledEchoRadius(float distanceCm)
     {
         return distanceCm / maxDistance * radius * zoomScale;
-    }
-
-    private float EchoRadius(int distanceCm)
-    {
-        return ScaledEchoRadius(distanceCm);
     }
 
     private void DrawOverflowArrow(float centerX, float centerY, float cos, float sin, float rEcho)
