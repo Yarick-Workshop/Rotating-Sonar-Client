@@ -154,10 +154,7 @@ public class RenderOpenGL_1_1
         }
         this.gl.End();
 
-        foreach (var (cos, sin, rEcho) in overflowArrows)
-        {
-            this.DrawOverflowArrow(this.cx, this.cy, cos, sin, rEcho);
-        }
+        this.DrawOverflowArrows(overflowArrows);
 
         this.gl.PopMatrix();
 
@@ -238,6 +235,20 @@ public class RenderOpenGL_1_1
         return distanceCm / this.maxDistance * this.radius * this.zoomScale;
     }
 
+    private void DrawOverflowArrows(List<(float Cos, float Sin, float Radius)> arrows)
+    {
+        if (arrows.Count == 0)
+        {
+            return;
+        }
+
+        this.gl.Color3(0.95f, 0.15f, 0.12f);
+        foreach (var (cos, sin, rEcho) in arrows)
+        {
+            this.DrawOverflowArrow(this.cx, this.cy, cos, sin, rEcho);
+        }
+    }
+
     private void DrawOverflowArrow(float centerX, float centerY, float cos, float sin, float rEcho)
     {
         float overflow = rEcho - this.radius;
@@ -268,7 +279,6 @@ public class RenderOpenGL_1_1
         float b1x = baseMidX - w * px;
         float b1y = baseMidY - w * py;
 
-        this.gl.Color3(0.95f, 0.15f, 0.12f);
         this.gl.Begin(GLEnum.Triangles);
         this.gl.Vertex2(tipX, tipY);
         this.gl.Vertex2(b0x, b0y);
