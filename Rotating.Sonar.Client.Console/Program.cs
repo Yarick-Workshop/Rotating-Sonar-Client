@@ -72,6 +72,8 @@ class Program
                     };
                     serialThread.Start();
                     visualizer.Start();
+
+                    serialThread.Join();
                 }
                 else
                 {
