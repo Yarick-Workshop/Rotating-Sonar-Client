@@ -117,7 +117,6 @@ public class RenderOpenGL_1_1
 
     private void DrawPoints()
     {
-        // TODO: refactor the code
         var points = sonarDataCache.GetPoints();
 
         if (points.Count == 0)
@@ -133,6 +132,8 @@ public class RenderOpenGL_1_1
         gl.PointSize(12f);
         gl.Color3(1.0f, 0.2f, 0.2f);
         gl.Begin(GLEnum.Points);
+
+        var overflowArrows = new List<(float Cos, float Sin, float Radius)>();
         foreach (var (angle, distance) in points)
         {
             double rad = -angle * Math.PI / 180.0;
@@ -143,17 +144,16 @@ public class RenderOpenGL_1_1
             {
                 gl.Vertex2(cx + rEcho * cos, cy + rEcho * sin);
             }
+            else
+            {
+                overflowArrows.Add((cos, sin, rEcho));
+            }
         }
         gl.End();
 
-        foreach (var (angle, distance) in points)
+        foreach (var (cos, sin, rEcho) in overflowArrows)
         {
-            double rad = -angle * Math.PI / 180.0;
-            float cos = (float)Math.Cos(rad);
-            float sin = (float)Math.Sin(rad);
-            float rEcho = ScaledEchoRadius(distance);
-            if (rEcho > radius + InsideRingEpsilon)
-                DrawOverflowArrow(cx, cy, cos, sin, rEcho);
+            DrawOverflowArrow(cx, cy, cos, sin, rEcho);
         }
 
         gl.PopMatrix();
