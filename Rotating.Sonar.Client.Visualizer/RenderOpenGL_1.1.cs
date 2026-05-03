@@ -173,9 +173,9 @@ public class RenderOpenGL_1_1
         if (this.maxDistance > 0f && this.zoomScale > 0f)
         {
             float dMax = this.maxDistance / this.zoomScale;
-            for (float d = RangeRingStepCm; d <= dMax + InsideRingEpsilon; d += RangeRingStepCm)
+            for (int i = 1; i * RangeRingStepCm <= dMax + InsideRingEpsilon; i++)
             {
-                float ringR = this.ScaledEchoRadius(d);
+                float ringR = this.ScaledEchoRadius(i * RangeRingStepCm);
                 if (ringR <= this.radius + InsideRingEpsilon)
                     this.DrawCircle(this.cx, this.cy, ringR);
             }
