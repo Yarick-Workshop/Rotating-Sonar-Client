@@ -154,10 +154,7 @@ internal class PolarPlotWindow : IDisposable
     private bool IsCtrlPressed()
     {
         // Scroll events carry no keyboard; any keyboard may have held Ctrl (multi-keyboard / mixed hardware).
-        if (this.inputContext == null)
-            return false;
-
-        foreach (IKeyboard keyboard in this.inputContext.Keyboards)
+        foreach (IKeyboard keyboard in this.inputContext!.Keyboards)
         {
             if (keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight))
                 return true;
