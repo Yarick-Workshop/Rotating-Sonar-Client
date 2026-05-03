@@ -99,9 +99,12 @@ public class RenderOpenGL_1_1
             this.textRenderer.DrawText(fpsText, textX, textY);
         }
 
-        string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
-        float zoomMargin = 10f;
-        this.textRenderer.DrawText(zoomText, this.width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
+        if (MathF.Abs(this.zoomScale - 1f) > InsideRingEpsilon)
+        {
+            string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
+            float zoomMargin = 10f;
+            this.textRenderer.DrawText(zoomText, this.width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
+        }
     }
 
     public void UpdateViewport(float newWidth, float newHeight)
