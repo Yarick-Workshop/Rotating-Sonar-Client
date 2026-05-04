@@ -84,7 +84,10 @@ internal class PolarPlotWindow : IDisposable
         {// TODO, optimize
             double fps = 1.0 / delta;
             if (this.fpsHistory.Count == 120)
+            {
                 this.fpsHistory.Dequeue();
+            }
+
             this.fpsHistory.Enqueue(fps);
             this.latestFps = this.fpsHistory.Average();
         }
@@ -159,7 +162,9 @@ internal class PolarPlotWindow : IDisposable
         foreach (IKeyboard keyboard in this.inputContext!.Keyboards)
         {
             if (keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight))
+            {
                 return true;
+            }
         }
 
         return false;
@@ -168,7 +173,9 @@ internal class PolarPlotWindow : IDisposable
     private void OnMouseScroll(IMouse mouse, ScrollWheel scroll)
     {
         if (!this.IsCtrlPressed())
+        {
             return;
+        }
 
         this.zoomControl?.ZoomWheel(scroll.Y);
     }
@@ -200,16 +207,24 @@ internal class PolarPlotWindow : IDisposable
     private void ReleaseInput()
     {
         if (this.inputContext == null)
+        {
             return;
+        }
 
         foreach (IKeyboard keyboard in this.inputContext.Keyboards)
+        {
             keyboard.KeyDown -= this.OnKeyDown;
+        }
 
         foreach (IMouse mouse in this.inputContext.Mice)
+        {
             mouse.Scroll -= this.OnMouseScroll;
+        }
 
         if (this.inputContext is IDisposable disposable)
+        {
             disposable.Dispose();
+        }
 
         this.inputContext = null;
     }

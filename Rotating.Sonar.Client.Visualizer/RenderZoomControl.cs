@@ -33,7 +33,9 @@ public sealed class RenderZoomControl
     public void ZoomWheel(float deltaY)
     {
         if (deltaY == 0.0f)
+        {
             return;
+        }
 
         float signedMag = Math.Sign(deltaY) * Math.Min(Math.Abs(deltaY), MaxWheelExponent);
         float newScale = this.zoomSubject.ZoomScale * MathF.Pow(FactorPerStep, signedMag);

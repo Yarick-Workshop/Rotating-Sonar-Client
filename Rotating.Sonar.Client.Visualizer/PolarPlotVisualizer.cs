@@ -24,7 +24,11 @@ public class PolarPlotVisualizer : IDisposable
 
     public void Dispose()
     {
-        if (this._disposed) return;
+        if (this._disposed)
+        {
+            return;
+        }
+
         this._disposed = true;
         this.window?.Dispose();
     }

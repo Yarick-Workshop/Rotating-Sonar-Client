@@ -163,12 +163,17 @@ public class RenderOpenGL_1_1 : IZoomable
             {
                 float ringR = this.ScaledEchoRadius(i * RangeRingStepCm);
                 if (ringR <= this.radius + InsideRingEpsilon)
+                {
                     this.DrawCircle(this.cx, this.cy, ringR);
+                }
             }
         }
 
         if (this.maxDistance > 0f)
+        {
             this.DrawCircle(this.cx, this.cy, this.radius);
+        }
+
         // Draw radial lines
         for (int a = 0; a < 360; a += 30)
         {
@@ -239,12 +244,16 @@ public class RenderOpenGL_1_1 : IZoomable
     {
         float overflow = rEcho - this.radius;
         if (overflow <= InsideRingEpsilon)
+        {
             return;
+        }
 
         float rTip = this.radius - OverflowArrowRimInsetPx;
         float maxHeadBack = rTip - OverflowArrowMinTailRadiusPx;
         if (maxHeadBack <= InsideRingEpsilon)
+        {
             return;
+        }
 
         float stretch = Math.Min(overflow * 0.08f, 12f);
         float headBack = Math.Min(OverflowArrowHeadLengthPx + stretch * 0.25f, maxHeadBack);
