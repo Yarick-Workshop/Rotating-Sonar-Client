@@ -73,6 +73,7 @@ class Program
                     serialThread.Start();
                     visualizer.Start();
 
+                    cancellationTokenSource.Cancel();
                     serialThread.Join();
                 }
                 else
