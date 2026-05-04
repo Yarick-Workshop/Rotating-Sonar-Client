@@ -44,7 +44,7 @@ public class TextRenderOpenGL_1_1
 
     public void DrawText(string text, float x, float y)
     {
-        DrawText(text, x, y, HorizontalAlignment.Left);
+        this.DrawText(text, x, y, HorizontalAlignment.Left);
     }
 
     public void DrawText(string text, float x, float y, HorizontalAlignment hAlign)
@@ -57,10 +57,10 @@ public class TextRenderOpenGL_1_1
                 // Use the original logic - no adjustment needed
                 break;
             case HorizontalAlignment.Right:
-                startX = x - CalculateTextWidth(text);
+                startX = x - this.CalculateTextWidth(text);
                 break;
             case HorizontalAlignment.Center:
-                startX = x - CalculateTextWidth(text) / 2f;
+                startX = x - this.CalculateTextWidth(text) / 2f;
                 break;
             case HorizontalAlignment.None:
                 // Use the original logic - no adjustment needed
@@ -69,36 +69,36 @@ public class TextRenderOpenGL_1_1
                 throw new ArgumentException($"Unsupported horizontal alignment: {hAlign}");
         }
 
-        gl.BindTexture(TextureTarget.Texture2D, atlasTexture);
+        this.gl.BindTexture(TextureTarget.Texture2D, this.atlasTexture);
 
         float cursorX = startX;
         foreach (var c in text)
         {
-            if (!glyphs.TryGetValue(c, out var g))
+            if (!this.glyphs.TryGetValue(c, out var g))
             {
                 throw new ArgumentException($"Glyph not found for character: {c}");
             }
 
             float w = g.Width, h = g.Height;
 
-            gl.Begin(GLEnum.Quads);
-                gl.TexCoord2(g.U1, g.V1);
-                gl.Vertex2(cursorX, y + h);
+            this.gl.Begin(GLEnum.Quads);
+            this.gl.TexCoord2(g.U1, g.V1);
+            this.gl.Vertex2(cursorX, y + h);
 
-                gl.TexCoord2(g.U2, g.V1);
-                gl.Vertex2(cursorX + w, y + h);
+            this.gl.TexCoord2(g.U2, g.V1);
+            this.gl.Vertex2(cursorX + w, y + h);
 
-                gl.TexCoord2(g.U2, g.V2);
-                gl.Vertex2(cursorX + w, y);
+            this.gl.TexCoord2(g.U2, g.V2);
+            this.gl.Vertex2(cursorX + w, y);
 
-                gl.TexCoord2(g.U1, g.V2);
-                gl.Vertex2(cursorX, y);
-            gl.End();
+            this.gl.TexCoord2(g.U1, g.V2);
+            this.gl.Vertex2(cursorX, y);
+            this.gl.End();
 
             cursorX += w * 0.75f; // advance
         }
 
-        gl.BindTexture(TextureTarget.Texture2D, 0);
+        this.gl.BindTexture(TextureTarget.Texture2D, 0);
     }
 
     public float CalculateTextWidth(string text)
@@ -106,7 +106,7 @@ public class TextRenderOpenGL_1_1
         float totalWidth = 0f;
         foreach (var c in text)
         {
-            if (!glyphs.TryGetValue(c, out var g))
+            if (!this.glyphs.TryGetValue(c, out var g))
             {
                 throw new ArgumentException($"Glyph not found for character: {c}");
             }

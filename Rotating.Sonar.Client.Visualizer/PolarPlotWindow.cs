@@ -34,9 +34,9 @@ internal class PolarPlotWindow : IDisposable
 
         this.window = Window.Create(options);
 
-        this.window.Load += OnLoad;
-        this.window.Render += OnRender;
-        this.window.Resize += OnResize;
+        this.window.Load += this.OnLoad;
+        this.window.Render += this.OnRender;
+        this.window.Resize += this.OnResize;
 
         this.sonarDataCache = sonarDataCache;
     }
@@ -59,12 +59,12 @@ internal class PolarPlotWindow : IDisposable
         this.inputContext = this.window.CreateInput();
         for (int i = 0; i < this.inputContext.Keyboards.Count; i++)
         {
-            this.inputContext.Keyboards[i].KeyDown += OnKeyDown;
+            this.inputContext.Keyboards[i].KeyDown += this.OnKeyDown;
         }
 
         for (int i = 0; i < this.inputContext.Mice.Count; i++)
         {
-            this.inputContext.Mice[i].Scroll += OnMouseScroll;
+            this.inputContext.Mice[i].Scroll += this.OnMouseScroll;
         }
 
         this.textRenderer = new TextRenderOpenGL_1_1(gl, "°");
@@ -203,10 +203,10 @@ internal class PolarPlotWindow : IDisposable
             return;
 
         foreach (IKeyboard keyboard in this.inputContext.Keyboards)
-            keyboard.KeyDown -= OnKeyDown;
+            keyboard.KeyDown -= this.OnKeyDown;
 
         foreach (IMouse mouse in this.inputContext.Mice)
-            mouse.Scroll -= OnMouseScroll;
+            mouse.Scroll -= this.OnMouseScroll;
 
         if (this.inputContext is IDisposable disposable)
             disposable.Dispose();
