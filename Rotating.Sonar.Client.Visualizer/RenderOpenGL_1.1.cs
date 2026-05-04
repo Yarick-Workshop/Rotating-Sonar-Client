@@ -7,6 +7,8 @@ using Silk.NET.OpenGL.Legacy;
 
 public class RenderOpenGL_1_1 : IZoomable
 {
+    private readonly object renderLock = new();
+
     private readonly GL gl;
 
     private readonly SonarDataCache sonarDataCache;
@@ -47,53 +49,71 @@ public class RenderOpenGL_1_1 : IZoomable
     private const float InsideRingEpsilon = 1e-4f;
     private const float RangeRingStepCm = 100f;
 
-    public float ZoomScale => this.zoomScale;
+    public float ZoomScale
+    {
+        get
+        {
+            lock (this.renderLock)
+            {
+                return this.zoomScale;
+            }
+        }
+    }
 
     public void SetZoom(float zoomScale)
     {
-        this.zoomScale = Math.Clamp(zoomScale, RenderZoomControl.MinScale, RenderZoomControl.MaxScale);
+        lock (this.renderLock)
+        {
+            this.zoomScale = Math.Clamp(zoomScale, RenderZoomControl.MinScale, RenderZoomControl.MaxScale);
+        }
     }
 
     public void Render(double fps, bool showFps)
     {
-        this.gl.Viewport(0, 0, (uint)this.width, (uint)this.height);
-        this.gl.Clear(ClearBufferMask.ColorBufferBit);
-        this.gl.MatrixMode(GLEnum.Projection);
-        this.gl.LoadIdentity();
-        // 2D orthographic projection
-        this.gl.Ortho(0, this.width, 0, this.height, -1, 1);
-        this.gl.MatrixMode(GLEnum.Modelview);
-        this.gl.LoadIdentity();
-
-        this.DrawPolarGrid();
-        this.DrawPoints();
-
-        if (showFps)
+        lock (this.renderLock)
         {
-            // Draw FPS in top-left corner
-            string fpsText = $"{fps:F0}FPS";
-            float textX = 10;
-            float textY = this.height - 40;
-            this.textRenderer.DrawText(fpsText, textX, textY);
-        }
+            this.gl.Viewport(0, 0, (uint)this.width, (uint)this.height);
+            this.gl.Clear(ClearBufferMask.ColorBufferBit);
+            this.gl.MatrixMode(GLEnum.Projection);
+            this.gl.LoadIdentity();
+            // 2D orthographic projection
+            this.gl.Ortho(0, this.width, 0, this.height, -1, 1);
+            this.gl.MatrixMode(GLEnum.Modelview);
+            this.gl.LoadIdentity();
 
-        if (MathF.Abs(this.zoomScale - 1f) > InsideRingEpsilon)
-        {
-            string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
-            float zoomMargin = 10f;
-            this.textRenderer.DrawText(zoomText, this.width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
+            this.DrawPolarGrid();
+            this.DrawPoints();
+
+            if (showFps)
+            {
+                // Draw FPS in top-left corner
+                string fpsText = $"{fps:F0}FPS";
+                float textX = 10;
+                float textY = this.height - 40;
+                this.textRenderer.DrawText(fpsText, textX, textY);
+            }
+
+            if (MathF.Abs(this.zoomScale - 1f) > InsideRingEpsilon)
+            {
+                string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
+                float zoomMargin = 10f;
+                this.textRenderer.DrawText(zoomText, this.width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
+            }
         }
     }
 
     public void UpdateViewport(float newWidth, float newHeight)
     {
-        this.width = newWidth;
-        this.height = newHeight;
-        
-        // Update center and radius based on new dimensions
-        this.cx = this.width / 2f;
-        this.cy = this.height / 2f;
-        this.radius = MathF.Min(this.cx, this.cy) - 40;
+        lock (this.renderLock)
+        {
+            this.width = newWidth;
+            this.height = newHeight;
+
+            // Update center and radius based on new dimensions
+            this.cx = this.width / 2f;
+            this.cy = this.height / 2f;
+            this.radius = MathF.Min(this.cx, this.cy) - 40;
+        }
     }
 
     private void DrawPoints()
