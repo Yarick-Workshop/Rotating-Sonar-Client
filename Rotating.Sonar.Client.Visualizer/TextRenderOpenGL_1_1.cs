@@ -12,14 +12,6 @@ using System.Linq;
 
 record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height);
 
-public enum HorizontalAlignment
-{
-    None,
-    Left,
-    Right,
-    Center
-}
-
 public class TextRenderOpenGL_1_1
 {
     private readonly GL gl;
