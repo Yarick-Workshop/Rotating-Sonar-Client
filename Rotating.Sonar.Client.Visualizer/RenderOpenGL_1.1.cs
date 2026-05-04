@@ -5,7 +5,7 @@ using Silk.NET.OpenGL.Legacy;
 
 #pragma warning disable CS0618
 
-public class RenderOpenGL_1_1
+public class RenderOpenGL_1_1 : IZoomable
 {
     private readonly GL gl;
 
@@ -40,10 +40,6 @@ public class RenderOpenGL_1_1
         this.gl.Disable(GLEnum.CullFace);
     }
 
-    private const float MinZoomScale = 0.25f;
-    private const float MaxZoomScale = 4f;
-    private const float ZoomFactorPerStep = 1.12f;
-    private const float MaxWheelZoomExponent = 5f;
     private const float OverflowArrowHeadLengthPx = 8f;
     private const float OverflowArrowHalfWidthPx = 5f;
     private const float OverflowArrowRimInsetPx = 8f;
@@ -51,29 +47,11 @@ public class RenderOpenGL_1_1
     private const float InsideRingEpsilon = 1e-4f;
     private const float RangeRingStepCm = 100f;
 
-    public void ZoomIn()
-    {
-        this.zoomScale = Math.Min(MaxZoomScale, this.zoomScale * ZoomFactorPerStep);
-    }
+    public float ZoomScale => this.zoomScale;
 
-    public void ZoomOut()
+    public void SetZoom(float zoomScale)
     {
-        this.zoomScale = Math.Max(MinZoomScale, this.zoomScale / ZoomFactorPerStep);
-    }
-
-    public void ResetZoom()
-    {
-        this.zoomScale = 1f;
-    }
-
-    public void ZoomWheel(float deltaY)
-    {
-        if (deltaY == 0f)
-            return;
-
-        float signedMag = Math.Sign(deltaY) * Math.Min(Math.Abs(deltaY), MaxWheelZoomExponent);
-        this.zoomScale *= MathF.Pow(ZoomFactorPerStep, signedMag);
-        this.zoomScale = Math.Clamp(this.zoomScale, MinZoomScale, MaxZoomScale);
+        this.zoomScale = Math.Clamp(zoomScale, RenderZoomControl.MinScale, RenderZoomControl.MaxScale);
     }
 
     public void Render(double fps, bool showFps)

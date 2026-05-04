@@ -15,6 +15,7 @@ internal class PolarPlotWindow : IDisposable
     private IWindow window;
     private IInputContext? inputContext;
     private RenderOpenGL_1_1? render;
+    private RenderZoomControl? zoomControl;
     private TextRenderOpenGL_1_1? textRenderer;
     private double latestFps = 0;
     private readonly Queue<double> fpsHistory = new Queue<double>(7);
@@ -68,6 +69,7 @@ internal class PolarPlotWindow : IDisposable
 
         this.textRenderer = new TextRenderOpenGL_1_1(gl, "°");
         this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, 200f, this.textRenderer);
+        this.zoomControl = new RenderZoomControl(this.render);
         /* 
         Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));
         Log.Information("OpenGL vendor: {Vendor}", gl.GetString(StringName.Vendor));
@@ -115,15 +117,15 @@ internal class PolarPlotWindow : IDisposable
             {
                 case Key.Equal:
                 case Key.KeypadAdd:
-                    this.render?.ZoomIn();
+                    this.zoomControl?.ZoomIn();
                     return;
                 case Key.Minus:
                 case Key.KeypadSubtract:
-                    this.render?.ZoomOut();
+                    this.zoomControl?.ZoomOut();
                     return;
                 case Key.D0:
                 case Key.Keypad0:
-                    this.render?.ResetZoom();
+                    this.zoomControl?.ResetZoom();
                     return;
             }
         }
@@ -168,7 +170,7 @@ internal class PolarPlotWindow : IDisposable
         if (!this.IsCtrlPressed())
             return;
 
-        this.render?.ZoomWheel(scroll.Y);
+        this.zoomControl?.ZoomWheel(scroll.Y);
     }
 
     public void ToggleFullscreen()
