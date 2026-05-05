@@ -18,7 +18,7 @@ public class PolarPlotVisualizer : IDisposable
 
     public void FeedData(int angle, int distance)
     {
-        Log.Debug($"Plot is fed with angle: {angle}, distance: {distance}");
+        Log.Debug("Plot is fed with angle: {Angle}, distance: {Distance}", angle, distance);
         this.sonarDataCache.Update(angle, distance);
     }
 

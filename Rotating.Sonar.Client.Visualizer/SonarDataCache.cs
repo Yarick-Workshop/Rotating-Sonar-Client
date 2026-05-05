@@ -12,7 +12,7 @@ public class SonarDataCache
     {
         this.sonarPoints[angle] = distance;
 
-        Log.Debug($"Updated with {angle}° {distance}cm");
+        Log.Debug("Updated with {Angle}° {Distance}cm", angle, distance);
     }
 
     public List<(int angle, int distance)> GetPoints()
