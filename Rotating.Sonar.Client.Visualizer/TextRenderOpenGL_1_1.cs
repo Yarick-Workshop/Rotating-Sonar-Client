@@ -10,8 +10,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Linq;
 
-record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height);
+record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, float Advance);
 
+// TODO, refactor
 public class TextRenderOpenGL_1_1
 {
     private readonly GL gl;
@@ -95,7 +96,7 @@ public class TextRenderOpenGL_1_1
             this.gl.Vertex2(cursorX, y);
             this.gl.End();
 
-            cursorX += w * 0.75f; // advance
+            cursorX += g.Advance;
         }
 
         this.gl.BindTexture(TextureTarget.Texture2D, 0);
@@ -110,7 +111,7 @@ public class TextRenderOpenGL_1_1
             {
                 throw new ArgumentException($"Glyph not found for character: {c}");
             }
-            totalWidth += g.Width * 0.75f; // advance
+            totalWidth += g.Advance;
         }
         return totalWidth;
     }
@@ -132,7 +133,7 @@ public class TextRenderOpenGL_1_1
             Typeface = SKTypeface.Default,
             IsAntialias = true,
             Color = SKColors.White,
-            TextAlign = SKTextAlign.Center
+            TextAlign = SKTextAlign.Left
         };
 
         var glyphMap = new Dictionary<char, GlyphInfo>();
@@ -145,14 +146,15 @@ public class TextRenderOpenGL_1_1
             float x = col * tileSize;
             float y = row * tileSize;
 
-            canvas.DrawText(c.ToString(), x + tileSize / 2, y + tileSize * 0.75f, paint);
+            canvas.DrawText(c.ToString(), x, y + tileSize * 0.75f, paint);
 
             float u1 = x / (float)atlasWidth;
             float v1 = y / (float)atlasHeight;
             float u2 = (x + tileSize) / (float)atlasWidth;
             float v2 = (y + tileSize) / (float)atlasHeight;
 
-            glyphMap[c] = new GlyphInfo(u1, v1, u2, v2, tileSize, tileSize);
+            float advance = paint.MeasureText(c.ToString());
+            glyphMap[c] = new GlyphInfo(u1, v1, u2, v2, tileSize, tileSize, advance);
         }
 
         this.atlasTexture = this.UploadToGL(bitmap);
