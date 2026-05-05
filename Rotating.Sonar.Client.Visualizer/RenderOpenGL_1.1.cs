@@ -7,8 +7,6 @@ using Silk.NET.OpenGL.Legacy;
 
 public class RenderOpenGL_1_1 : IZoomable
 {
-    private readonly object renderLock = new();
-
     private readonly GL gl;
 
     private readonly SonarDataCache sonarDataCache;
@@ -31,7 +29,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.height = heigh;
         
         this.cx = width / 2f;
-        this.cy = height / 2f;
+        this.cy = this.height / 2f;
         this.radius = MathF.Min(this.cx, this.cy) - 40;
 
         this.maxDistance = maxDistance;
@@ -164,14 +162,14 @@ public class RenderOpenGL_1_1 : IZoomable
                 float ringR = this.ScaledEchoRadius(i * RangeRingStepCm);
                 if (ringR <= this.radius + InsideRingEpsilon)
                 {
-                    this.DrawCircle(this.cx, this.cy, ringR);
+                    gl.DrawCircle(this.cx, this.cy, ringR);
                 }
             }
         }
 
         if (this.maxDistance > 0f)
         {
-            this.DrawCircle(this.cx, this.cy, this.radius);
+            gl.DrawCircle(this.cx, this.cy, this.radius);
         }
 
         // Draw radial lines
@@ -206,19 +204,6 @@ public class RenderOpenGL_1_1 : IZoomable
 
             this.gl.PopMatrix();
         }
-    }
-
-    private void DrawCircle(float cx, float cy, float r)
-    {
-        this.gl.Begin(GLEnum.LineLoop);
-        for (int i = 0; i < 64; i++)
-        {
-            double theta = 2.0 * Math.PI * i / 64;
-            float x = cx + (float)(r * Math.Cos(theta));//TODO, optimize
-            float y = cy + (float)(r * Math.Sin(theta));
-            this.gl.Vertex2(x, y);
-        }
-        this.gl.End();
     }
 
     private float ScaledEchoRadius(float distanceCm)
