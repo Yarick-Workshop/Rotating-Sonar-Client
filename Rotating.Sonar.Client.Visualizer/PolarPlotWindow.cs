@@ -11,6 +11,8 @@ using Silk.NET.Input;
 
 internal class PolarPlotWindow : IDisposable
 {
+    private const int FpsWindowSize = 60;// TODO to config
+
     private readonly SonarDataCache sonarDataCache;
     private IWindow window;
     private IInputContext? inputContext;
@@ -18,7 +20,7 @@ internal class PolarPlotWindow : IDisposable
     private RenderZoomControl? zoomControl;
     private TextRenderOpenGL_1_1? textRenderer;
     private double latestFps = 0;
-    private readonly Queue<double> fpsHistory = new Queue<double>(7);
+    private readonly Queue<double> fpsHistory = new Queue<double>(FpsWindowSize);
     private bool showFps = true;
 
     private Vector2D<int> previousSize;
@@ -83,7 +85,7 @@ internal class PolarPlotWindow : IDisposable
         if (delta > 0)
         {// TODO, optimize
             double fps = 1.0 / delta;
-            if (this.fpsHistory.Count == 120)
+            if (this.fpsHistory.Count == FpsWindowSize)
             {
                 this.fpsHistory.Dequeue();
             }
