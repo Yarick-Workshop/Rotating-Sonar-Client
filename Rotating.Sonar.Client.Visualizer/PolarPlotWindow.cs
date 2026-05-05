@@ -26,7 +26,7 @@ internal class PolarPlotWindow : IDisposable
 
     private Vector2D<int> previousSize;
     
-    private bool isDisposed = false;
+    private bool _disposed = false;
 
     public PolarPlotWindow(SonarDataCache sonarDataCache, int width, int height, string title)
     {
@@ -235,12 +235,12 @@ internal class PolarPlotWindow : IDisposable
 
     public void Dispose()
     {
-        if (this.isDisposed)
+        if (this._disposed)
         {
             return;
         }
 
-        this.isDisposed = true;
+        this._disposed = true;
         this.ReleaseInput();
         this.window?.Dispose();
     }

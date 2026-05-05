@@ -33,5 +33,4 @@ public static class OpenGL_1_1_Extensions
         return points;
     }
 }
-
 #pragma warning restore CS0618
