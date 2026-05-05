@@ -12,6 +12,7 @@ using Silk.NET.Input;
 internal class PolarPlotWindow : IDisposable
 {
     private const int FpsWindowSize = 60;// TODO to config
+    private const float MaxDistanceCm = 200f;
 
     private readonly SonarDataCache sonarDataCache;
     private IWindow window;
@@ -70,7 +71,7 @@ internal class PolarPlotWindow : IDisposable
         }
 
         this.textRenderer = new TextRenderOpenGL_1_1(gl, "°");
-        this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, 200f, this.textRenderer);
+        this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
         this.zoomControl = new RenderZoomControl(this.render);
         /* 
         Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));

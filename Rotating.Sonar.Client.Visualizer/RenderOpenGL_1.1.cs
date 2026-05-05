@@ -21,12 +21,12 @@ public class RenderOpenGL_1_1 : IZoomable
     private float cy;
     private float radius;
     private float zoomScale = 1f;
-    private readonly float maxDistance;
+    private readonly float maxDistanceCm;
     private float width;
     private float height;
     private readonly TextRenderOpenGL_1_1 textRenderer;
 
-    public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float height, float maxDistance, TextRenderOpenGL_1_1 textRenderer)
+    public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float height, float maxDistanceCm, TextRenderOpenGL_1_1 textRenderer)
     {
         this.gl = gl;
         this.sonarDataCache = sonarDataCache;
@@ -39,7 +39,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.cy = this.height / 2f;
         this.radius = MathF.Min(this.cx, this.cy) - 40;
 
-        this.maxDistance = maxDistance;
+        this.maxDistanceCm = maxDistanceCm;
         this.textRenderer = textRenderer;
 
         this.gl.ClearColor(0f, 0f, 0f, 1f);
@@ -149,11 +149,11 @@ public class RenderOpenGL_1_1 : IZoomable
     private void DrawPolarGrid()
     {
         // Every 100 cm ring that fits inside the rim (same scale as echoes). Fills disc: farthest
-        // ring at d = maxDistance/zoomScale coincides with the plot edge when zoom ≠ 1.
+        // ring at d = maxDistanceCm/zoomScale coincides with the plot edge when zoom ≠ 1.
         this.gl.Color3(0.3f, 0.3f, 0.3f);
-        if (this.maxDistance > 0f && this.zoomScale > 0f)
+        if (this.maxDistanceCm > 0f && this.zoomScale > 0f)
         {
-            float dMax = this.maxDistance / this.zoomScale;
+            float dMax = this.maxDistanceCm / this.zoomScale;
             for (int i = 1; i * RangeRingStepCm <= dMax + InsideRingEpsilon; i++)
             {
                 float ringR = this.ScaledEchoRadius(i * RangeRingStepCm);
@@ -164,7 +164,7 @@ public class RenderOpenGL_1_1 : IZoomable
             }
         }
 
-        if (this.maxDistance > 0f)
+        if (this.maxDistanceCm > 0f)
         {
             this.gl.DrawCircle(this.cx, this.cy, this.radius);
         }
@@ -205,7 +205,7 @@ public class RenderOpenGL_1_1 : IZoomable
 
     private float ScaledEchoRadius(float distanceCm)
     {
-        return distanceCm / this.maxDistance * this.radius * this.zoomScale;
+        return distanceCm / this.maxDistanceCm * this.radius * this.zoomScale;
     }
 
     private void DrawOverflowArrows(List<(float Cos, float Sin, float Radius)> arrows)
