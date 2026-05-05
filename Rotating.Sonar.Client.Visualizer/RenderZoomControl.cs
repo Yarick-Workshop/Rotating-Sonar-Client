@@ -2,6 +2,7 @@ namespace Rotating.Sonar.Client.Visualizer;
 
 public sealed class RenderZoomControl
 {
+    // TODO move hardcoded values to config
     public const float MinScale = 0.25f;
     public const float MaxScale = 4f;
 
