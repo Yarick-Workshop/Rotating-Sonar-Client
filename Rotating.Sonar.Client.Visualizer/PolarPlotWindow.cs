@@ -83,7 +83,8 @@ internal class PolarPlotWindow : IDisposable
     private void OnRender(double delta)
     {
         if (delta > 0)
-        {// TODO, optimize
+        {
+            // TODO, optimize
             double fps = 1.0 / delta;
             if (this.fpsHistory.Count == FpsWindowSize)
             {

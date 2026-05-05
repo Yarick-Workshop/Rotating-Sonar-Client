@@ -7,6 +7,13 @@ using Silk.NET.OpenGL.Legacy;
 
 public class RenderOpenGL_1_1 : IZoomable
 {
+    private const float OverflowArrowHeadLengthPx = 8f;
+    private const float OverflowArrowHalfWidthPx = 5f;
+    private const float OverflowArrowRimInsetPx = 8f;
+    private const float OverflowArrowMinTailRadiusPx = 26f;
+    private const float InsideRingEpsilon = 1e-4f;
+    private const float RangeRingStepCm = 100f;
+
     private readonly GL gl;
 
     private readonly SonarDataCache sonarDataCache;
@@ -19,14 +26,14 @@ public class RenderOpenGL_1_1 : IZoomable
     private float height;
     private readonly TextRenderOpenGL_1_1 textRenderer;
 
-    public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float heigh, float maxDistance, TextRenderOpenGL_1_1 textRenderer)
+    public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float height, float maxDistance, TextRenderOpenGL_1_1 textRenderer)
     {
         this.gl = gl;
         this.sonarDataCache = sonarDataCache;
 
         // TODO, investigate why option this.UpdateViewport(width, height); does not work
         this.width = width;
-        this.height = heigh;
+        this.height = height;
         
         this.cx = width / 2f;
         this.cy = this.height / 2f;
@@ -39,13 +46,6 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.Disable(GLEnum.DepthTest);
         this.gl.Disable(GLEnum.CullFace);
     }
-
-    private const float OverflowArrowHeadLengthPx = 8f;
-    private const float OverflowArrowHalfWidthPx = 5f;
-    private const float OverflowArrowRimInsetPx = 8f;
-    private const float OverflowArrowMinTailRadiusPx = 26f;
-    private const float InsideRingEpsilon = 1e-4f;
-    private const float RangeRingStepCm = 100f;
 
     public float ZoomScale
     {
@@ -159,14 +159,14 @@ public class RenderOpenGL_1_1 : IZoomable
                 float ringR = this.ScaledEchoRadius(i * RangeRingStepCm);
                 if (ringR <= this.radius + InsideRingEpsilon)
                 {
-                    gl.DrawCircle(this.cx, this.cy, ringR);
+                    this.gl.DrawCircle(this.cx, this.cy, ringR);
                 }
             }
         }
 
         if (this.maxDistance > 0f)
         {
-            gl.DrawCircle(this.cx, this.cy, this.radius);
+            this.gl.DrawCircle(this.cx, this.cy, this.radius);
         }
 
         // Draw radial lines
@@ -193,7 +193,7 @@ public class RenderOpenGL_1_1 : IZoomable
             this.gl.PushMatrix();
 
             this.gl.Translate(this.cx, this.cy, 0f); // Move to center
-            this.gl.Rotate(-a+ 90, 0f, 0f, 1f); // Rotate to angle (CW direction)
+            this.gl.Rotate(-a + 90, 0f, 0f, 1f); // Rotate to angle (CW direction)
             this.gl.Translate(this.radius, 0, 0f); // Move to label position
             this.gl.Rotate(-90, 0f, 0f, 1f);
 
