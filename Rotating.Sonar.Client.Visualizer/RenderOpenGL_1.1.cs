@@ -15,6 +15,10 @@ public class RenderOpenGL_1_1 : IZoomable
     private const float RangeRingStepCm = 100f;
     private const float GridLineAlpha = 0.5f;
     private const float GridGray = 0.3f;
+    private const float GridTickLabelGray = 0.6f;
+    private const float GridLabelGray = 0.78f;
+    private const float OuterTickLength10DegPx = 12f;
+    private const float OuterTickLength5DegPx = 7f;
 
     private readonly GL gl;
 
@@ -193,7 +197,27 @@ public class RenderOpenGL_1_1 : IZoomable
             this.gl.PopMatrix();
         }
 
-        this.gl.Color4(GridGray, GridGray, GridGray, GridLineAlpha);
+        // Draw short rim ticks every 5 degrees; longer marks every 10 degrees.
+        this.gl.Color4(GridTickLabelGray, GridTickLabelGray, GridTickLabelGray, GridLineAlpha);
+        this.gl.Begin(GLEnum.Lines);
+        for (int a = 0; a < 360; a += 5)
+        {
+            float tickLength = a % 10 == 0 ? OuterTickLength10DegPx : OuterTickLength5DegPx;
+            double radians = a * Math.PI / 180.0;
+            float cos = (float)Math.Cos(radians);
+            float sin = (float)Math.Sin(radians);
+
+            float innerX = this.cx + this.radius * cos;
+            float innerY = this.cy + this.radius * sin;
+            float outerX = this.cx + (this.radius + tickLength) * cos;
+            float outerY = this.cy + (this.radius + tickLength) * sin;
+
+            this.gl.Vertex2(innerX, innerY);
+            this.gl.Vertex2(outerX, outerY);
+        }
+        this.gl.End();
+
+        this.gl.Color4(GridLabelGray, GridLabelGray, GridLabelGray, GridLineAlpha);
 
         // Draw compass-like degree labels around the largest circle
         for (int a = 0; a < 360; a += 30)
