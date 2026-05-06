@@ -48,7 +48,7 @@ public class ComPortListener : IComPortListener
                 }
                 catch (TimeoutException)
                 {
-                    Log.Warning("Serial port read timed out while waiting for data.");
+                    Log.Information("Serial port read timed out while waiting for data.");
                 }
             }
         }
