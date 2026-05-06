@@ -71,10 +71,15 @@ class Program
                         IsBackground = true
                     };
                     serialThread.Start();
-                    visualizer.Start();
-
-                    cancellationTokenSource.Cancel();
-                    serialThread.Join();
+                    try
+                    {
+                        visualizer.Start();
+                    }
+                    finally
+                    {
+                        cancellationTokenSource.Cancel();
+                        serialThread.Join();
+                    }
                 }
                 else
                 {
