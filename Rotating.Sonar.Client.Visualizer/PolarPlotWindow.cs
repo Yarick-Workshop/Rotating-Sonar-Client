@@ -23,6 +23,7 @@ internal class PolarPlotWindow : IDisposable
     private double latestFps = 0;
     private readonly Queue<double> fpsHistory = new Queue<double>(FpsWindowSize);
     private bool showFps = true;
+    private bool showZoom = true;
 
     private Vector2D<int> previousSize;
     
@@ -95,7 +96,7 @@ internal class PolarPlotWindow : IDisposable
             this.fpsHistory.Enqueue(fps);
             this.latestFps = this.fpsHistory.Average();
         }
-        this.render!.Render(this.latestFps, this.showFps);
+        this.render!.Render(this.latestFps, this.showFps, this.showZoom);
     }
 
     private void OnResize(Vector2D<int> newSize)
@@ -143,6 +144,10 @@ internal class PolarPlotWindow : IDisposable
             case Key.F3:
                 this.showFps = !this.showFps;
                 Log.Information("FPS display toggled: {ShowFps}", this.showFps);
+                break;
+            case Key.Z:
+                this.showZoom = !this.showZoom;
+                Log.Information("Zoom display toggled: {ShowZoom}", this.showZoom);
                 break;
             case Key.F11:
                 this.ToggleFullscreen();

@@ -67,7 +67,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.zoomScale = Math.Clamp(zoomScale, RenderZoomControl.MinScale, RenderZoomControl.MaxScale);
     }
 
-    public void Render(double fps, bool showFps)
+    public void Render(double fps, bool showFps, bool showZoom)
     {
         this.gl.Viewport(0, 0, (uint)this.width, (uint)this.height);
         this.gl.Clear(ClearBufferMask.ColorBufferBit);
@@ -92,9 +92,12 @@ public class RenderOpenGL_1_1 : IZoomable
             this.textRenderer.DrawText(fpsText, textX, textY);
         }
 
-        string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
-        float zoomMargin = 10f;
-        this.textRenderer.DrawText(zoomText, this.width - zoomMargin, zoomMargin, HorizontalAlignment.Right);        
+        if (showZoom)
+        {
+            string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
+            float zoomMargin = 10f;
+            this.textRenderer.DrawText(zoomText, this.width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
+        }
     }
 
     public void UpdateViewport(float newWidth, float newHeight)
