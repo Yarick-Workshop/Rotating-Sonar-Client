@@ -7,11 +7,17 @@ public class PolarPlotVisualizer : IDisposable
 {
     private readonly SonarDataCache sonarDataCache = new();
     private PolarPlotWindow? window;
+    private readonly AppSettings appSettings;
     private bool _disposed = false;
+
+    public PolarPlotVisualizer(AppSettings? appSettings = null)
+    {
+        this.appSettings = appSettings ?? new AppSettings();
+    }
 
     public void Start(int width = 1920, int height = 1080, string title = "OpenGL Polar Plot Visualizer")
     {
-        var win = new PolarPlotWindow(this.sonarDataCache, width, height, title);
+        var win = new PolarPlotWindow(this.sonarDataCache, this.appSettings, width, height, title);
         this.window = win;
         win.Run();
     }

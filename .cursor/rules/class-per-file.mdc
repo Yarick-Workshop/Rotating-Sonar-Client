@@ -1,0 +1,12 @@
+---
+description: Enforce one class per file and organized folders
+alwaysApply: true
+---
+
+# Class File Organization
+
+- Keep exactly one top-level class per `.cs` file.
+- Name each file exactly as its class name.
+- Place related classes into feature-oriented folders (for example `Settings/Colors`).
+- When adding new classes, create folders as needed to keep files grouped by responsibility.
+- Avoid multi-class utility dumps; split them into focused files.

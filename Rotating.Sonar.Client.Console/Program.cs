@@ -51,7 +51,9 @@ class Program
                 
                 if (visualizeMode)
                 {
-                    using var visualizer = new PolarPlotVisualizer();
+                    var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+                    var appSettings = AppSettings.Load(appSettingsPath);
+                    using var visualizer = new PolarPlotVisualizer(appSettings);
                     using var cancellationTokenSource = new CancellationTokenSource();
 
                     var serialThread = new Thread(() =>

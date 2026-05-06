@@ -20,4 +20,11 @@
     <ProjectReference Include="..\Rotating.Sonar.Client.Visualizer\Rotating.Sonar.Client.Visualizer.csproj" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project> 

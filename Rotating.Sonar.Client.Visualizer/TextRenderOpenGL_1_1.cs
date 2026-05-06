@@ -18,13 +18,15 @@ public class TextRenderOpenGL_1_1
     private readonly GL gl;
     private uint atlasTexture;//TODO, temp
     private readonly Dictionary<char, GlyphInfo> glyphs;
+    private readonly VizualizerSettings vizualizerColors;
 
     const int TileSize = 32;
     const int Columns = 16;
 
-    public TextRenderOpenGL_1_1(GL gl, List<char> charTable)
+    public TextRenderOpenGL_1_1(GL gl, VizualizerSettings vizualizerColors, List<char> charTable)
     {
         this.gl = gl;
+        this.vizualizerColors = vizualizerColors;
 
         this.glyphs = this.GenerateFontAtlas(charTable, TileSize, Columns);
 
@@ -33,13 +35,13 @@ public class TextRenderOpenGL_1_1
         gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
     }
 
-    public TextRenderOpenGL_1_1(GL gl)
-        : this(gl, GetASCIITable())
+    public TextRenderOpenGL_1_1(GL gl, AppSettings appSettings)
+        : this(gl, appSettings.Visualizer.Vizualizer, GetASCIITable())
     {
     }
 
-    public TextRenderOpenGL_1_1(GL gl, string additionalChars)
-        : this(gl, GetASCIITable().Union(additionalChars).ToList())
+    public TextRenderOpenGL_1_1(GL gl, AppSettings appSettings, string additionalChars)
+        : this(gl, appSettings.Visualizer.Vizualizer, GetASCIITable().Union(additionalChars).ToList())
     {
     }
 

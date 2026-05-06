@@ -15,6 +15,7 @@ internal class PolarPlotWindow : IDisposable
     private const float MaxDistanceCm = 200f;
 
     private readonly SonarDataCache sonarDataCache;
+    private readonly AppSettings appSettings;
     private IWindow window;
     private IInputContext? inputContext;
     private RenderOpenGL_1_1? render;
@@ -27,7 +28,7 @@ internal class PolarPlotWindow : IDisposable
     
     private bool _disposed = false;
 
-    public PolarPlotWindow(SonarDataCache sonarDataCache, int width, int height, string title)
+    public PolarPlotWindow(SonarDataCache sonarDataCache, AppSettings appSettings, int width, int height, string title)
     {
         var options = WindowOptions.Default;
         options.Size = new Vector2D<int>(width, height);
@@ -41,6 +42,7 @@ internal class PolarPlotWindow : IDisposable
         this.window.Resize += this.OnResize;
 
         this.sonarDataCache = sonarDataCache;
+        this.appSettings = appSettings;
     }
 
     public void Run()
@@ -69,8 +71,8 @@ internal class PolarPlotWindow : IDisposable
             this.inputContext.Mice[i].Scroll += this.OnMouseScroll;
         }
 
-        this.textRenderer = new TextRenderOpenGL_1_1(gl, "°");
-        this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
+        this.textRenderer = new TextRenderOpenGL_1_1(gl, this.appSettings, "°");
+        this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
         this.zoomControl = new RenderZoomControl(this.render);
         /* 
         Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));
