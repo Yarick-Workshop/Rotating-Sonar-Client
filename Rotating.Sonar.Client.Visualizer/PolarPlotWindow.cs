@@ -22,8 +22,6 @@ internal class PolarPlotWindow : IDisposable
     private TextRenderOpenGL_1_1? textRenderer;
     private double latestFps = 0;
     private readonly Queue<double> fpsHistory = new Queue<double>(FpsWindowSize);
-    private bool showFps = true;
-    private bool showZoom = true;
 
     private Vector2D<int> previousSize;
     
@@ -96,7 +94,7 @@ internal class PolarPlotWindow : IDisposable
             this.fpsHistory.Enqueue(fps);
             this.latestFps = this.fpsHistory.Average();
         }
-        this.render!.Render(this.latestFps, this.showFps, this.showZoom);
+        this.render!.Render(this.latestFps);
     }
 
     private void OnResize(Vector2D<int> newSize)
@@ -142,12 +140,12 @@ internal class PolarPlotWindow : IDisposable
         {
             case Key.F:
             case Key.F3:
-                this.showFps = !this.showFps;
-                Log.Information("FPS display toggled: {ShowFps}", this.showFps);
+                bool showFps = this.render!.ToggleFpsDisplay();
+                Log.Information("FPS display toggled: {ShowFps}", showFps);
                 break;
             case Key.Z:
-                this.showZoom = !this.showZoom;
-                Log.Information("Zoom display toggled: {ShowZoom}", this.showZoom);
+                bool showZoom = this.render!.ToggleZoomDisplay();
+                Log.Information("Zoom display toggled: {ShowZoom}", showZoom);
                 break;
             case Key.F11:
                 this.ToggleFullscreen();

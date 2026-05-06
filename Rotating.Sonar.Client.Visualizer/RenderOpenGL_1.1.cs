@@ -31,6 +31,8 @@ public class RenderOpenGL_1_1 : IZoomable
     private float width;
     private float height;
     private readonly TextRenderOpenGL_1_1 textRenderer;
+    private bool showFps = true;
+    private bool showZoom = true;
 
     public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, float width, float height, float maxDistanceCm, TextRenderOpenGL_1_1 textRenderer)
     {
@@ -67,7 +69,19 @@ public class RenderOpenGL_1_1 : IZoomable
         this.zoomScale = Math.Clamp(zoomScale, RenderZoomControl.MinScale, RenderZoomControl.MaxScale);
     }
 
-    public void Render(double fps, bool showFps, bool showZoom)
+    public bool ToggleFpsDisplay()
+    {
+        this.showFps = !this.showFps;
+        return this.showFps;
+    }
+
+    public bool ToggleZoomDisplay()
+    {
+        this.showZoom = !this.showZoom;
+        return this.showZoom;
+    }
+
+    public void Render(double fps)
     {
         this.gl.Viewport(0, 0, (uint)this.width, (uint)this.height);
         this.gl.Clear(ClearBufferMask.ColorBufferBit);
@@ -83,7 +97,7 @@ public class RenderOpenGL_1_1 : IZoomable
 
         this.gl.Color4(1f, 1f, 1f, 1f);
 
-        if (showFps)
+        if (this.showFps)
         {
             // Draw FPS in top-left corner
             string fpsText = $"{fps:F0}FPS";
@@ -92,7 +106,7 @@ public class RenderOpenGL_1_1 : IZoomable
             this.textRenderer.DrawText(fpsText, textX, textY);
         }
 
-        if (showZoom)
+        if (this.showZoom)
         {
             string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
             float zoomMargin = 10f;
