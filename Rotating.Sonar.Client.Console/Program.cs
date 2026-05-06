@@ -40,7 +40,7 @@ class Program
             // Print visualization info if requested
             if (visualizeMode)
             {
-                Log.Information("Visualization mode enabled: This would visualize sonar data if OpenGL support was present.");
+                Log.Information("Visualization mode enabled: sonar data will be shown in the polar plot window.");
             }
 
             try
