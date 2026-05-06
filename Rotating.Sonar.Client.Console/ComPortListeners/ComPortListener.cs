@@ -6,6 +6,8 @@ using Serilog;
 
 public class ComPortListener : IComPortListener
 {
+    private const int ReadTimeoutMilliseconds = 250;
+
     public string PortName { get; }
 
     private readonly int portBaudRate;
@@ -24,22 +26,30 @@ public class ComPortListener : IComPortListener
             DataBits = 8,
             Parity = Parity.None,
             StopBits = StopBits.One,
+            ReadTimeout = ReadTimeoutMilliseconds,
         };
 
         try
         {
             serialPort.Open();
-            Log.Information($"Port {this.PortName} opened successfully at {serialPort.BaudRate} baud.");
+            Log.Information("Port {PortName} opened successfully at {BaudRate} baud.", this.PortName, serialPort.BaudRate);
             Log.Information("Reading data from port... (Press any key to stop)");//TODO, get rid of a button
             Log.Information("----------------------------------------");
 
             while (!isCancelled())
             {
-                var line = serialPort.ReadLine()
-                    .TrimEnd('\r');
-                Log.Debug($"Received line: \"{line}\".");
+                try
+                {
+                    var line = serialPort.ReadLine()
+                        .TrimEnd('\r');
+                    Log.Debug("Received line: \"{Line}\".", line);
 
-                newLineCallBack?.Invoke(line);
+                    newLineCallBack?.Invoke(line);
+                }
+                catch (TimeoutException)
+                {
+                    Log.Information("Serial port read timed out while waiting for data.");
+                }
             }
         }
         finally

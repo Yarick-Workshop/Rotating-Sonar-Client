@@ -40,7 +40,7 @@ class Program
             // Print visualization info if requested
             if (visualizeMode)
             {
-                Log.Information("Visualization mode enabled: This would visualize sonar data if OpenGL support was present.");
+                Log.Information("Visualization mode enabled: sonar data will be shown in the polar plot window.");
             }
 
             try
@@ -71,7 +71,15 @@ class Program
                         IsBackground = true
                     };
                     serialThread.Start();
-                    visualizer.Start();
+                    try
+                    {
+                        visualizer.Start();
+                    }
+                    finally
+                    {
+                        cancellationTokenSource.Cancel();
+                        serialThread.Join();
+                    }
                 }
                 else
                 {
@@ -80,12 +88,12 @@ class Program
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Error: {ex.Message}");
+                Log.Error(ex, "Error: {ErrorMessage}", ex.Message);
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Error: {ex.Message}");
+            Log.Error(ex, "Error: {ErrorMessage}", ex.Message);
 
             LogHelp();
         }
@@ -121,18 +129,18 @@ class Program
             int baudRate = DEFAULT_BAUD_RATE; // Default baud rate
             if (string.IsNullOrEmpty(baudRateStr))
             {
-                Log.Information($"Baud rate not specified, using default: {DEFAULT_BAUD_RATE}");
+                Log.Information("Baud rate not specified, using default: {DefaultBaudRate}", DEFAULT_BAUD_RATE);
             }
             else
             {
                 if (!int.TryParse(baudRateStr, out baudRate))
                 {
-                    Log.Warning($"Invalid baud rate '{baudRateStr}'. Using default: {DEFAULT_BAUD_RATE}");
+                    Log.Warning("Invalid baud rate '{BaudRate}'. Using default: {DefaultBaudRate}", baudRateStr, DEFAULT_BAUD_RATE);
                     baudRate = DEFAULT_BAUD_RATE;
                 }
                 else
                 {
-                    Log.Information($"Using baud rate: {baudRate}");
+                    Log.Information("Using baud rate: {BaudRate}", baudRate);
                 }
             }
 
@@ -142,7 +150,7 @@ class Program
             // Check if the specified port exists
             if (!portNames.Contains(targetPort))
             {
-                Log.Error($"Port '{targetPort}' not found.");
+                Log.Error("Port '{TargetPort}' not found.", targetPort);
                 DisplayAvailablePorts();
                 throw new ArgumentException($"Port '{targetPort}' not found.");
             }
@@ -151,7 +159,7 @@ class Program
         }
 
         // Open the created port and read data
-        Log.Information($"Opened port: {result.PortName}.");
+        Log.Information("Opened port: {PortName}.", result.PortName);
 
         return result;
     }
@@ -162,7 +170,7 @@ class Program
         Log.Information("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>] [-visualize]");
         Log.Information("Parameters:");
         Log.Information("  -port <port_name>    COM port to connect to (required)");
-        Log.Information($"  -rate <baud_rate>    Baud rate (optional, default: {DEFAULT_BAUD_RATE})");
+        Log.Information("  -rate <baud_rate>    Baud rate (optional, default: {DefaultBaudRate})", DEFAULT_BAUD_RATE);
         Log.Information("  -visualize           Enable visualization of sonar data (optional)");
         Log.Information("  -fake                Generate fake randomize COM port data. A fake com port (optional). If the parameter is set no real COM port configuration is needed");
         Log.Information("");
@@ -191,7 +199,7 @@ class Program
             Log.Information("Available COM ports:");
             foreach (var portName in portNames)
             {
-                Log.Information($"- {portName}");
+                Log.Information("- {PortName}", portName);
             }
         }
     }

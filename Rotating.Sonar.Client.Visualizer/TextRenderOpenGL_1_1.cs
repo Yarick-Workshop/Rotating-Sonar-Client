@@ -10,16 +10,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Linq;
 
-record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height);
+record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, float Advance);
 
-public enum HorizontalAlignment
-{
-    None,
-    Left,
-    Right,
-    Center
-}
-
+// TODO, refactor
 public class TextRenderOpenGL_1_1
 {
     private readonly GL gl;
@@ -52,7 +45,7 @@ public class TextRenderOpenGL_1_1
 
     public void DrawText(string text, float x, float y)
     {
-        DrawText(text, x, y, HorizontalAlignment.Left);
+        this.DrawText(text, x, y, HorizontalAlignment.Left);
     }
 
     public void DrawText(string text, float x, float y, HorizontalAlignment hAlign)
@@ -65,10 +58,10 @@ public class TextRenderOpenGL_1_1
                 // Use the original logic - no adjustment needed
                 break;
             case HorizontalAlignment.Right:
-                startX = x - CalculateTextWidth(text);
+                startX = x - this.CalculateTextWidth(text);
                 break;
             case HorizontalAlignment.Center:
-                startX = x - CalculateTextWidth(text) / 2f;
+                startX = x - this.CalculateTextWidth(text) / 2f;
                 break;
             case HorizontalAlignment.None:
                 // Use the original logic - no adjustment needed
@@ -77,36 +70,36 @@ public class TextRenderOpenGL_1_1
                 throw new ArgumentException($"Unsupported horizontal alignment: {hAlign}");
         }
 
-        gl.BindTexture(TextureTarget.Texture2D, atlasTexture);
+        this.gl.BindTexture(TextureTarget.Texture2D, this.atlasTexture);
 
         float cursorX = startX;
         foreach (var c in text)
         {
-            if (!glyphs.TryGetValue(c, out var g))
+            if (!this.glyphs.TryGetValue(c, out var g))
             {
                 throw new ArgumentException($"Glyph not found for character: {c}");
             }
 
             float w = g.Width, h = g.Height;
 
-            gl.Begin(GLEnum.Quads);
-                gl.TexCoord2(g.U1, g.V1);
-                gl.Vertex2(cursorX, y + h);
+            this.gl.Begin(GLEnum.Quads);
+            this.gl.TexCoord2(g.U1, g.V1);
+            this.gl.Vertex2(cursorX, y + h);
 
-                gl.TexCoord2(g.U2, g.V1);
-                gl.Vertex2(cursorX + w, y + h);
+            this.gl.TexCoord2(g.U2, g.V1);
+            this.gl.Vertex2(cursorX + w, y + h);
 
-                gl.TexCoord2(g.U2, g.V2);
-                gl.Vertex2(cursorX + w, y);
+            this.gl.TexCoord2(g.U2, g.V2);
+            this.gl.Vertex2(cursorX + w, y);
 
-                gl.TexCoord2(g.U1, g.V2);
-                gl.Vertex2(cursorX, y);
-            gl.End();
+            this.gl.TexCoord2(g.U1, g.V2);
+            this.gl.Vertex2(cursorX, y);
+            this.gl.End();
 
-            cursorX += w * 0.75f; // advance
+            cursorX += g.Advance;
         }
 
-        gl.BindTexture(TextureTarget.Texture2D, 0);
+        this.gl.BindTexture(TextureTarget.Texture2D, 0);
     }
 
     public float CalculateTextWidth(string text)
@@ -114,11 +107,11 @@ public class TextRenderOpenGL_1_1
         float totalWidth = 0f;
         foreach (var c in text)
         {
-            if (!glyphs.TryGetValue(c, out var g))
+            if (!this.glyphs.TryGetValue(c, out var g))
             {
                 throw new ArgumentException($"Glyph not found for character: {c}");
             }
-            totalWidth += g.Width * 0.75f; // advance
+            totalWidth += g.Advance;
         }
         return totalWidth;
     }
@@ -140,7 +133,7 @@ public class TextRenderOpenGL_1_1
             Typeface = SKTypeface.Default,
             IsAntialias = true,
             Color = SKColors.White,
-            TextAlign = SKTextAlign.Center
+            TextAlign = SKTextAlign.Left
         };
 
         var glyphMap = new Dictionary<char, GlyphInfo>();
@@ -153,14 +146,15 @@ public class TextRenderOpenGL_1_1
             float x = col * tileSize;
             float y = row * tileSize;
 
-            canvas.DrawText(c.ToString(), x + tileSize / 2, y + tileSize * 0.75f, paint);
+            canvas.DrawText(c.ToString(), x, y + tileSize * 0.75f, paint);
 
             float u1 = x / (float)atlasWidth;
             float v1 = y / (float)atlasHeight;
             float u2 = (x + tileSize) / (float)atlasWidth;
             float v2 = (y + tileSize) / (float)atlasHeight;
 
-            glyphMap[c] = new GlyphInfo(u1, v1, u2, v2, tileSize, tileSize);
+            float advance = paint.MeasureText(c.ToString());
+            glyphMap[c] = new GlyphInfo(u1, v1, u2, v2, tileSize, tileSize, advance);
         }
 
         this.atlasTexture = this.UploadToGL(bitmap);
