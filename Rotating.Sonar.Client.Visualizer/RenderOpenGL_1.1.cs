@@ -13,6 +13,8 @@ public class RenderOpenGL_1_1 : IZoomable
     private const float OverflowArrowMinTailRadiusPx = 26f;
     private const float InsideRingEpsilon = 1e-4f;
     private const float RangeRingStepCm = 100f;
+    private const float GridLineAlpha = 0.5f;
+    private const float GridGray = 0.3f;
 
     private readonly GL gl;
 
@@ -72,8 +74,10 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.MatrixMode(GLEnum.Modelview);
         this.gl.LoadIdentity();
 
-        this.DrawPolarGrid();
         this.DrawPoints();
+        this.DrawPolarGrid();
+
+        this.gl.Color4(1f, 1f, 1f, 1f);
 
         if (showFps)
         {
@@ -149,9 +153,12 @@ public class RenderOpenGL_1_1 : IZoomable
 
     private void DrawPolarGrid()
     {
+        this.gl.Enable(GLEnum.Blend);
+        this.gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+
         // Every 100 cm ring that fits inside the rim (same scale as echoes). Fills disc: farthest
         // ring at d = maxDistanceCm/zoomScale coincides with the plot edge when zoom ≠ 1.
-        this.gl.Color3(0.3f, 0.3f, 0.3f);
+        this.gl.Color4(GridGray, GridGray, GridGray, GridLineAlpha);
         if (this.maxDistanceCm > 0f && this.zoomScale > 0f)
         {
             float dMax = this.maxDistanceCm / this.zoomScale;
@@ -167,7 +174,7 @@ public class RenderOpenGL_1_1 : IZoomable
 
         if (this.maxDistanceCm > 0f)
         {
-            this.gl.DrawCircle(this.cx, this.cy, this.radius);
+            this.gl.DrawCircle(this.cx, this.cy, this.radius, lineWidth: 2f);
         }
 
         // Draw radial lines
@@ -185,6 +192,8 @@ public class RenderOpenGL_1_1 : IZoomable
 
             this.gl.PopMatrix();
         }
+
+        this.gl.Color4(GridGray, GridGray, GridGray, GridLineAlpha);
 
         // Draw compass-like degree labels around the largest circle
         for (int a = 0; a < 360; a += 30)

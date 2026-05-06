@@ -9,8 +9,12 @@ public static class OpenGL_1_1_Extensions
 
     private static readonly (float Cos, float Sin)[] UnitCirclePoints = CreateUnitCirclePoints();
 
-    public static void DrawCircle(this GL gl, float centerX, float centerY, float radius)
+    public static void DrawCircle(this GL gl, float centerX, float centerY, float radius, float lineWidth = 1f)
     {
+        Span<float> previousWidth = stackalloc float[1];
+        gl.GetFloat(GLEnum.LineWidth, previousWidth);
+        gl.LineWidth(lineWidth);
+        
         gl.Begin(GLEnum.LineLoop);
         foreach (var (cos, sin) in UnitCirclePoints)
         {
@@ -18,7 +22,9 @@ public static class OpenGL_1_1_Extensions
             float y = centerY + (radius * sin);
             gl.Vertex2(x, y);
         }
+
         gl.End();
+        gl.LineWidth(previousWidth[0]);
     }
     
     private static (float Cos, float Sin)[] CreateUnitCirclePoints()
