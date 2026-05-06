@@ -39,6 +39,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.cy = this.height / 2f;
         this.radius = MathF.Min(this.cx, this.cy) - 40;
 
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxDistanceCm, 0f);
         this.maxDistanceCm = maxDistanceCm;
         this.textRenderer = textRenderer;
 
