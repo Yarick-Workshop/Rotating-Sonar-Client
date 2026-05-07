@@ -139,7 +139,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.Translate(this.cx, this.cy, 0f);
         this.gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
         this.gl.Translate(-this.cx, -this.cy, 0f);
-        this.gl.PointSize(12f);
+        this.gl.PointSize(Math.Max(1f, this.visualizerColors.Points.PointSize));// TODO, validation instead!!!
         var echoPoint = this.visualizerColors.Points.EchoColor;
         this.gl.Color4(echoPoint.R, echoPoint.G, echoPoint.B, echoPoint.A);
         this.gl.Begin(GLEnum.Points);
