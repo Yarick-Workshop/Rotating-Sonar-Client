@@ -6,6 +6,7 @@ using Silk.NET.OpenGL.Legacy;
 public static class OpenGL_1_1_Extensions
 {
     private const int CircleSegments = 64;
+    private const int MarkerCircleSegments = 16;
 
     private static readonly (float Cos, float Sin)[] UnitCirclePoints = CreateUnitCirclePoints();
 
@@ -26,6 +27,28 @@ public static class OpenGL_1_1_Extensions
         gl.End();
         gl.LineWidth(previousWidth[0]);
     }
+
+    // TODO, optimize
+    public static void DrawPointMarker(this GL gl, float x, float y, float size, PointRenderStyle pointRenderStyle)
+    {
+        switch (pointRenderStyle)
+        {
+            case PointRenderStyle.OutlineSquare:
+                DrawSquareMarker(gl, x, y, size, filled: false);
+                return;
+            case PointRenderStyle.SolidSquare:
+                DrawSquareMarker(gl, x, y, size, filled: true);
+                return;
+            case PointRenderStyle.SolidCircle:
+                DrawCircleMarker(gl, x, y, size, filled: true);
+                return;
+            case PointRenderStyle.OutlineCircle:
+                DrawCircleMarker(gl, x, y, size, filled: false);
+                return;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(pointRenderStyle), pointRenderStyle, "Unknown point render style value.");
+        }
+    }
     
     private static (float Cos, float Sin)[] CreateUnitCirclePoints()
     {
@@ -37,6 +60,33 @@ public static class OpenGL_1_1_Extensions
         }
 
         return points;
+    }
+
+    private static void DrawSquareMarker(GL gl, float x, float y, float size, bool filled)
+    {
+        float half = size / 2f;
+        gl.Begin(filled ? GLEnum.Quads : GLEnum.LineLoop);
+        gl.Vertex2(x - half, y - half);
+        gl.Vertex2(x + half, y - half);
+        gl.Vertex2(x + half, y + half);
+        gl.Vertex2(x - half, y + half);
+        gl.End();
+    }
+
+    private static void DrawCircleMarker(GL gl, float x, float y, float size, bool filled)
+    {
+        float radiusPx = size / 2f;
+        gl.Begin(filled ? GLEnum.TriangleFan : GLEnum.LineLoop);
+
+        for (int i = 0; i <= MarkerCircleSegments; i++)
+        {
+            float angle = i * 2f * MathF.PI / MarkerCircleSegments;
+            gl.Vertex2(
+                x + radiusPx * MathF.Cos(angle),
+                y + radiusPx * MathF.Sin(angle));
+        }
+
+        gl.End();
     }
 }
 #pragma warning restore CS0618

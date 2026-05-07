@@ -30,6 +30,7 @@ public class RenderOpenGL_1_1 : IZoomable
     private readonly VisualizerSettings visualizerColors;
     private bool showFps = true;
     private bool showZoom = true;
+    private PointRenderStyle pointRenderStyle = PointRenderStyle.SolidSquare;
 
     public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, AppSettings appSettings, float width, float height, float maxDistanceCm, TextRenderOpenGL_1_1 textRenderer)
     {
@@ -78,6 +79,20 @@ public class RenderOpenGL_1_1 : IZoomable
     {
         this.showZoom = !this.showZoom;
         return this.showZoom;
+    }
+
+    public PointRenderStyle TogglePointRenderStyle()
+    {
+        this.pointRenderStyle = this.pointRenderStyle switch
+        {
+            PointRenderStyle.OutlineSquare => PointRenderStyle.SolidSquare,
+            PointRenderStyle.SolidSquare => PointRenderStyle.SolidCircle,
+            PointRenderStyle.SolidCircle => PointRenderStyle.OutlineCircle,
+            PointRenderStyle.OutlineCircle => PointRenderStyle.OutlineSquare,
+            _ => throw new ArgumentOutOfRangeException(nameof(this.pointRenderStyle), this.pointRenderStyle, "Unknown point render style value."),
+        };
+
+        return this.pointRenderStyle;
     }
 
     public void Render(double fps)
@@ -139,12 +154,11 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.Translate(this.cx, this.cy, 0f);
         this.gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
         this.gl.Translate(-this.cx, -this.cy, 0f);
-        this.gl.PointSize(Math.Max(1f, this.visualizerColors.Points.PointSize));// TODO, validation instead!!!
         var echoPoint = this.visualizerColors.Points.EchoColor;
         this.gl.Color4(echoPoint.R, echoPoint.G, echoPoint.B, echoPoint.A);
-        this.gl.Begin(GLEnum.Points);
 
         var overflowArrows = new List<(float Cos, float Sin, float Radius)>();
+        float pointSize = Math.Max(1f, this.visualizerColors.Points.PointSize); // TODO, validation instead!!!
         foreach (var (angle, distance) in points)
         {
             double rad = -angle * Math.PI / 180.0;
@@ -153,14 +167,13 @@ public class RenderOpenGL_1_1 : IZoomable
             float rEcho = this.ScaledEchoRadius(distance);
             if (rEcho <= this.radius + InsideRingEpsilon)
             {
-                this.gl.Vertex2(this.cx + rEcho * cos, this.cy + rEcho * sin);
+                this.gl.DrawPointMarker(this.cx + rEcho * cos, this.cy + rEcho * sin, pointSize, this.pointRenderStyle);
             }
             else
             {
                 overflowArrows.Add((cos, sin, rEcho));
             }
         }
-        this.gl.End();
 
         this.DrawOverflowArrows(overflowArrows);
 
@@ -169,9 +182,7 @@ public class RenderOpenGL_1_1 : IZoomable
         // Draw a white point at the center
         var centerPoint = this.visualizerColors.Points.CenterColor;
         this.gl.Color4(centerPoint.R, centerPoint.G, centerPoint.B, centerPoint.A);
-        this.gl.Begin(GLEnum.Points);
-        this.gl.Vertex2(this.cx, this.cy);
-        this.gl.End();
+        this.gl.DrawPointMarker(this.cx, this.cy, pointSize, this.pointRenderStyle);
     }
 
     private void DrawPolarGrid()

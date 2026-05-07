@@ -7,6 +7,7 @@ A desktop client to visualize data from Rotating-Sonar-Arduino
 
 | Hotkey(s)      | Description                                 |
 |---------------|---------------------------------------------|
+| P             | Toggle point style                          |
 | F, F3         | Toggle FPS display on/off                   |
 | Z             | Toggle zoom display on/off                  |
 | F11, Alt+Enter| Toggle fullscreen mode                      |

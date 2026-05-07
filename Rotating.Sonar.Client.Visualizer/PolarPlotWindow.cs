@@ -140,6 +140,10 @@ internal class PolarPlotWindow : IDisposable
 
         switch (key)
         {
+            case Key.P:
+                PointRenderStyle pointStyle = this.render!.TogglePointRenderStyle();
+                Log.Information("Point style toggled: {PointStyle}", pointStyle);
+                break;
             case Key.F:
             case Key.F3:
                 bool showFps = this.render!.ToggleFpsDisplay();
