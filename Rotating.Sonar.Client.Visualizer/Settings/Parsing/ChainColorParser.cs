@@ -4,11 +4,23 @@ using System.Reflection;
 
 internal sealed class ChainColorParser : IColorParser
 {
+    public static ChainColorParser Instance { get; } = new();
+
     private readonly IColorParser[] parsers;
 
-    public ChainColorParser()
+    private ChainColorParser()
     {
         this.parsers = this.CreateParsers();
+    }
+
+    public FloatColor4 ParseOrThrow(string raw, string colorName)
+    {
+        if (this.TryParse(raw, out var color))
+        {
+            return color;
+        }
+
+        throw new FormatException($"Could not parse color '{colorName}' from value '{raw}'.");
     }
 
     public bool TryParse(string raw, out FloatColor4 color)

@@ -5,7 +5,7 @@ using System.Globalization;
 
 public sealed class FloatColor4TypeConverter : TypeConverter
 {
-    private static readonly IColorParser Parser = new ChainColorParser();
+    private static readonly IColorParser Parser = ChainColorParser.Instance;
 
     public static FloatColor4 Parse(string? raw)
     {
