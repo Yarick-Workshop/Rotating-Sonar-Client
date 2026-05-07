@@ -22,10 +22,10 @@ public sealed class FloatColor4TypeConverter : TypeConverter
                 return color;
             }
 
-            throw new FormatException($"Invalid color format: '{s}'.");
+            throw new FormatException($"Invalid FloatColor4 format: '{s}'.");
         }
 
-        return base.ConvertFrom(context, culture, value);
+        throw this.GetConvertFromException(value);
     }
 
     public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
@@ -39,11 +39,13 @@ public sealed class FloatColor4TypeConverter : TypeConverter
         object? value,
         Type destinationType)
     {
+        ArgumentNullException.ThrowIfNull(destinationType);
+
         if (destinationType == typeof(string) && value is FloatColor4 c)
         {
             return $"{FloatColor4JsonConverter.FormatByte(c.R)},{FloatColor4JsonConverter.FormatByte(c.G)},{FloatColor4JsonConverter.FormatByte(c.B)},{FloatColor4JsonConverter.FormatByte(c.A)}";
         }
 
-        return base.ConvertTo(context, culture, value, destinationType);
+        throw this.GetConvertToException(value, destinationType);
     }
 }
