@@ -27,7 +27,7 @@ public class RenderOpenGL_1_1 : IZoomable
     private float width;
     private float height;
     private readonly TextRenderOpenGL_1_1 textRenderer;
-    private readonly VizualizerSettings vizualizerColors;
+    private readonly VisualizerSettings visualizerColors;
     private bool showFps = true;
     private bool showZoom = true;
 
@@ -47,9 +47,9 @@ public class RenderOpenGL_1_1 : IZoomable
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxDistanceCm, 0f);
         this.maxDistanceCm = maxDistanceCm;
         this.textRenderer = textRenderer;
-        this.vizualizerColors = appSettings.Visualizer.Vizualizer;
+        this.visualizerColors = appSettings.Visualizer;
 
-        var bg = this.vizualizerColors.BackgroundColor;
+        var bg = this.visualizerColors.BackgroundColor;
         this.gl.ClearColor(bg.R, bg.G, bg.B, bg.A);
         this.gl.Disable(GLEnum.DepthTest);
         this.gl.Disable(GLEnum.CullFace);
@@ -94,7 +94,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.DrawPoints();
         this.DrawPolarGrid();
 
-        var uiText = this.vizualizerColors.UiTextColor;
+        var uiText = this.visualizerColors.UiTextColor;
         this.gl.Color4(uiText.R, uiText.G, uiText.B, uiText.A);
 
         if (this.showFps)
@@ -140,7 +140,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
         this.gl.Translate(-this.cx, -this.cy, 0f);
         this.gl.PointSize(12f);
-        var echoPoint = this.vizualizerColors.Points.EchoColor;
+        var echoPoint = this.visualizerColors.Points.EchoColor;
         this.gl.Color4(echoPoint.R, echoPoint.G, echoPoint.B, echoPoint.A);
         this.gl.Begin(GLEnum.Points);
 
@@ -167,7 +167,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.PopMatrix();
 
         // Draw a white point at the center
-        var centerPoint = this.vizualizerColors.Points.CenterColor;
+        var centerPoint = this.visualizerColors.Points.CenterColor;
         this.gl.Color4(centerPoint.R, centerPoint.G, centerPoint.B, centerPoint.A);
         this.gl.Begin(GLEnum.Points);
         this.gl.Vertex2(this.cx, this.cy);
@@ -181,7 +181,7 @@ public class RenderOpenGL_1_1 : IZoomable
 
         // Every 100 cm ring that fits inside the rim (same scale as echoes). Fills disc: farthest
         // ring at d = maxDistanceCm/zoomScale coincides with the plot edge when zoom ≠ 1.
-        var gridLine = this.vizualizerColors.Grid.LineColor;
+        var gridLine = this.visualizerColors.Grid.LineColor;
         this.gl.Color4(gridLine.R, gridLine.G, gridLine.B, gridLine.A);
         if (this.maxDistanceCm > 0f && this.zoomScale > 0f)
         {
@@ -218,7 +218,7 @@ public class RenderOpenGL_1_1 : IZoomable
         }
 
         // Draw short rim ticks every 5 degrees; longer marks every 10 degrees.
-        var gridTickLabel = this.vizualizerColors.Grid.TickLabelColor;
+        var gridTickLabel = this.visualizerColors.Grid.TickLabelColor;
         this.gl.Color4(gridTickLabel.R, gridTickLabel.G, gridTickLabel.B, gridTickLabel.A);
         this.gl.Begin(GLEnum.Lines);
         for (int a = 0; a < 360; a += 5)
@@ -238,7 +238,7 @@ public class RenderOpenGL_1_1 : IZoomable
         }
         this.gl.End();
 
-        var gridLabel = this.vizualizerColors.Grid.LabelColor;
+        var gridLabel = this.visualizerColors.Grid.LabelColor;
         this.gl.Color4(gridLabel.R, gridLabel.G, gridLabel.B, gridLabel.A);
 
         // Draw compass-like degree labels around the largest circle
@@ -271,7 +271,7 @@ public class RenderOpenGL_1_1 : IZoomable
             return;
         }
 
-        var overflowArrow = this.vizualizerColors.Points.OverflowArrowColor;
+        var overflowArrow = this.visualizerColors.Points.OverflowArrowColor;
         this.gl.Color4(overflowArrow.R, overflowArrow.G, overflowArrow.B, overflowArrow.A);
         foreach (var (cos, sin, rEcho) in arrows)
         {
