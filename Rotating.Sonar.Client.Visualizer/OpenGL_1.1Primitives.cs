@@ -9,7 +9,6 @@ public class OpenGL_1_1_Primitives
     private const int PointCircleSegments = 16;
 
     private readonly GL gl;
-    private readonly float pointSize;
     private static readonly (float X, float Y)[] UnitCirclePoints = CreateUnitCirclePoints(CircleSegments);
     private readonly (float X, float Y)[] pointCirclePoints;
     private readonly (float X, float Y)[] pointSquareCorners;
@@ -17,9 +16,9 @@ public class OpenGL_1_1_Primitives
     public OpenGL_1_1_Primitives(GL gl, VisualizerSettings settings)
     {
         this.gl = gl;
-        this.pointSize = Math.Max(1f, settings.Points.PointSize);
 
-        float radiusPx = this.pointSize / 2f;
+        float pointSize = Math.Max(1f, settings.Points.PointSize);
+        float radiusPx = pointSize / 2f;
         this.pointCirclePoints = CreateScaledCirclePoints(PointCircleSegments, radiusPx);
         this.pointSquareCorners =
         [
@@ -58,6 +57,28 @@ public class OpenGL_1_1_Primitives
         };
 
         this.DrawPointPolygon(x, y, unitPoints, filled);
+    }
+
+    public void DrawPoints(IReadOnlyList<(float X, float Y)> points, PointRenderStyle pointRenderStyle)
+    {
+        if (points.Count == 0)
+        {
+            return;
+        }
+
+        ((float X, float Y)[] unitPoints, bool filled) = pointRenderStyle switch
+        {
+            PointRenderStyle.OutlineSquare => (this.pointSquareCorners, false),
+            PointRenderStyle.SolidSquare => (this.pointSquareCorners, true),
+            PointRenderStyle.SolidCircle => (this.pointCirclePoints, true),
+            PointRenderStyle.OutlineCircle => (this.pointCirclePoints, false),
+            _ => throw new ArgumentOutOfRangeException(nameof(pointRenderStyle), pointRenderStyle, "Unknown point render style value."),
+        };
+
+        foreach (var (x, y) in points)
+        {
+            this.DrawPointPolygon(x, y, unitPoints, filled);
+        }
     }
     
     private static (float X, float Y)[] CreateUnitCirclePoints(int segments)

@@ -159,6 +159,7 @@ public class RenderOpenGL_1_1 : IZoomable
         var echoPoint = this.visualizerColors.Points.EchoColor;
         this.gl.Color4(echoPoint.R, echoPoint.G, echoPoint.B, echoPoint.A);
 
+        var visiblePoints = new List<(float X, float Y)>(points.Count);
         var overflowArrows = new List<(float Cos, float Sin, float Radius)>();
         foreach (var (angle, distance) in points)
         {
@@ -168,7 +169,7 @@ public class RenderOpenGL_1_1 : IZoomable
             float rEcho = this.ScaledEchoRadius(distance);
             if (rEcho <= this.radius + InsideRingEpsilon)
             {
-                this.glPrimitives.DrawPoint(this.cx + rEcho * cos, this.cy + rEcho * sin, this.pointRenderStyle);
+                visiblePoints.Add((this.cx + rEcho * cos, this.cy + rEcho * sin));
             }
             else
             {
@@ -176,6 +177,7 @@ public class RenderOpenGL_1_1 : IZoomable
             }
         }
 
+        this.glPrimitives.DrawPoints(visiblePoints, this.pointRenderStyle);
         this.DrawOverflowArrows(overflowArrows);
 
         this.gl.PopMatrix();
