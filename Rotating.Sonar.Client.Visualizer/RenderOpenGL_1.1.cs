@@ -235,9 +235,9 @@ public class RenderOpenGL_1_1 : IZoomable
             this.gl.Translate(radius, 0f, 0f);
 
             // TODO, add option to enable/disable this?
-            if (this.pointRenderStyle == SolidSquare || this.pointRenderStyle == OutlineSquare)
+            if (this.pointRenderStyle == PointRenderStyle.SolidSquare || this.pointRenderStyle == PointRenderStyle.OutlineSquare)
             {
-                his.gl.Rotate(angle, 0f, 0f, 1f);
+                this.gl.Rotate(angle, 0f, 0f, 1f);
             }
 
             this.glPrimitives.DrawPointPrimitive(this.pointRenderStyle);
