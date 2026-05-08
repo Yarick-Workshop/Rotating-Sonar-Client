@@ -1,10 +1,11 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
 using Microsoft.Extensions.Configuration;
+using Serilog;
 
 public sealed class AppSettings
 {
-    public VisualizerSettings Visualizer { get; set; } = new();
+    public VizualizerSettings Visualizer { get; set; } = new();
 
     public static AppSettings Load(string path)
     {
@@ -15,6 +16,7 @@ public sealed class AppSettings
 
             if (string.IsNullOrWhiteSpace(directory) || string.IsNullOrWhiteSpace(fileName))
             {
+                Log.Warning("App settings path is invalid: {Path}. Falling back to defaults.", path);
                 return new AppSettings();
             }
 
@@ -24,10 +26,18 @@ public sealed class AppSettings
                 .Build();
 
             // FloatColor4 uses [TypeConverter(typeof(FloatColor4TypeConverter))] so string values bind.
-            return configuration.Get<AppSettings>() ?? new AppSettings();
+            AppSettings? settings = configuration.Get<AppSettings>();
+            if (settings is null)
+            {
+                Log.Warning("Failed to bind app settings from {Path}. Falling back to defaults.", path);
+                return new AppSettings();
+            }
+
+            return settings;
         }
-        catch
+        catch (Exception ex)
         {
+            Log.Error(ex, "Error while loading app settings from {Path}. Falling back to defaults.", path);
             return new AppSettings();
         }
     }
