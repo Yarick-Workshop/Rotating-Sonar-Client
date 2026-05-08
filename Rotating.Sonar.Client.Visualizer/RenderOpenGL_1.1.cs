@@ -233,6 +233,13 @@ public class RenderOpenGL_1_1 : IZoomable
             this.gl.Translate(this.cx, this.cy, 0f);
             this.gl.Rotate(-angle, 0f, 0f, 1f);
             this.gl.Translate(radius, 0f, 0f);
+
+            // TODO, add option to enable/disable this?
+            if (this.pointRenderStyle == SolidSquare || this.pointRenderStyle == OutlineSquare)
+            {
+                his.gl.Rotate(angle, 0f, 0f, 1f);
+            }
+
             this.glPrimitives.DrawPointPrimitive(this.pointRenderStyle);
             this.gl.PopMatrix();
         }
