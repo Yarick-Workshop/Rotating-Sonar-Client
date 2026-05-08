@@ -1,0 +1,11 @@
+---
+description: Preserve Git history when renaming files/classes
+alwaysApply: true
+---
+
+# Rename guidance
+
+- If you’re asked to rename a file, directory, or any entity that maps to a file path, prefer a Git rename (`git mv` or equivalent) over delete+add.
+- Preserve history even when changing the file contents: rename first, then modify the moved file(s).
+- Avoid workflows that break rename detection (e.g., removing the old file and creating a new one with the same content).
+- After a file rename, ensure the code still matches project conventions (for example, C# class/file name alignment) without reverting the Git rename.
