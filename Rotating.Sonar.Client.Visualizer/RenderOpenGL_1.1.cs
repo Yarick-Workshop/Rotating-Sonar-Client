@@ -17,6 +17,7 @@ public class RenderOpenGL_1_1 : IZoomable
     private const float OuterTickLength5DegPx = 7f;
 
     private readonly GL gl;
+    private readonly OpenGL_1_1_Primitives glPrimitives;
 
     private readonly SonarDataCache sonarDataCache;
     private float cx;
@@ -35,6 +36,7 @@ public class RenderOpenGL_1_1 : IZoomable
     public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, AppSettings appSettings, float width, float height, float maxDistanceCm, TextRenderOpenGL_1_1 textRenderer)
     {
         this.gl = gl;
+        this.glPrimitives = new OpenGL_1_1_Primitives(gl);
         this.sonarDataCache = sonarDataCache;
 
         // TODO, investigate why option this.UpdateViewport(width, height); does not work
@@ -106,7 +108,8 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.MatrixMode(GLEnum.Modelview);
         this.gl.LoadIdentity();
 
-        this.DrawPoints();
+        float pointSize = Math.Max(1f, this.visualizerColors.Points.PointSize); // TODO, validation instead!!!
+        this.DrawPoints(pointSize);
         this.DrawPolarGrid();
 
         var uiText = this.visualizerColors.UiTextColor;
@@ -140,7 +143,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.radius = MathF.Min(this.cx, this.cy) - 40;
     }
 
-    private void DrawPoints()
+    private void DrawPoints(float pointSize)
     {
         var points = this.sonarDataCache.GetPoints();
 
@@ -158,7 +161,6 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.Color4(echoPoint.R, echoPoint.G, echoPoint.B, echoPoint.A);
 
         var overflowArrows = new List<(float Cos, float Sin, float Radius)>();
-        float pointSize = Math.Max(1f, this.visualizerColors.Points.PointSize); // TODO, validation instead!!!
         foreach (var (angle, distance) in points)
         {
             double rad = -angle * Math.PI / 180.0;
@@ -167,7 +169,7 @@ public class RenderOpenGL_1_1 : IZoomable
             float rEcho = this.ScaledEchoRadius(distance);
             if (rEcho <= this.radius + InsideRingEpsilon)
             {
-                this.gl.DrawPointMarker(this.cx + rEcho * cos, this.cy + rEcho * sin, pointSize, this.pointRenderStyle);
+                this.glPrimitives.DrawPointMarker(this.cx + rEcho * cos, this.cy + rEcho * sin, this.pointRenderStyle, pointSize);
             }
             else
             {
@@ -182,7 +184,7 @@ public class RenderOpenGL_1_1 : IZoomable
         // Draw a white point at the center
         var centerPoint = this.visualizerColors.Points.CenterColor;
         this.gl.Color4(centerPoint.R, centerPoint.G, centerPoint.B, centerPoint.A);
-        this.gl.DrawPointMarker(this.cx, this.cy, pointSize, this.pointRenderStyle);
+        this.glPrimitives.DrawPointMarker(this.cx, this.cy, this.pointRenderStyle, pointSize);
     }
 
     private void DrawPolarGrid()
@@ -202,14 +204,14 @@ public class RenderOpenGL_1_1 : IZoomable
                 float ringR = this.ScaledEchoRadius(i * RangeRingStepCm);
                 if (ringR <= this.radius + InsideRingEpsilon)
                 {
-                    this.gl.DrawCircle(this.cx, this.cy, ringR);
+                    this.glPrimitives.DrawCircle(this.cx, this.cy, ringR);
                 }
             }
         }
 
         if (this.maxDistanceCm > 0f)
         {
-            this.gl.DrawCircle(this.cx, this.cy, this.radius, lineWidth: 2f);
+            this.glPrimitives.DrawCircle(this.cx, this.cy, this.radius, lineWidth: 2f);
         }
 
         // Draw radial lines
