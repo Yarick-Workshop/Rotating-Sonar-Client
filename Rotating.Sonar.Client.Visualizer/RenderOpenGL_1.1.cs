@@ -151,41 +151,82 @@ public class RenderOpenGL_1_1 : IZoomable
             Log.Warning("No points to draw in polar plot.");
             return;
         }
+        
+        // TODO refactor
+        float distanceScale = this.radius * this.zoomScale / this.maxDistanceCm;
+        float tipRadius = this.radius - OverflowArrowRimInsetPx;
+        float maxHeadBack = tipRadius - OverflowArrowMinTailRadiusPx;
+        float arrowHeadBack = maxHeadBack > InsideRingEpsilon
+            ? Math.Clamp(OverflowArrowHeadLengthPx, 2.5f, maxHeadBack)
+            : 0f;
+        var pointItems = new List<(float Angle, float Radius)>(points.Count);
+        var arrowAngles = new List<float>(points.Count);
+        foreach (var (angle, distance) in points)
+        {
+            float pointRadius = distance * distanceScale;
+            float overflow = pointRadius - this.radius;
+            bool isArrow = overflow > InsideRingEpsilon && maxHeadBack > InsideRingEpsilon;
+            if (!isArrow)
+            {
+                pointItems.Add((angle, pointRadius));
+                continue;
+            }
+
+            arrowAngles.Add(angle);
+        }
 
         this.gl.PushMatrix();
         this.gl.Translate(this.cx, this.cy, 0f);
-        this.gl.Rotate(90f, 0f, 0f, 1f); // 90 degrees CCW around Z
+        this.gl.Rotate(90f, 0f, 0f, 1f); // Keep the same world orientation as before.
         this.gl.Translate(-this.cx, -this.cy, 0f);
+
         var echoPoint = this.visualizerColors.Points.EchoColor;
         this.gl.Color4(echoPoint.R, echoPoint.G, echoPoint.B, echoPoint.A);
+        this.DrawPolarPointsOnly(pointItems);
 
-        var visiblePoints = new List<(float X, float Y)>(points.Count);
-        var overflowArrows = new List<(float Cos, float Sin, float Radius)>();
-        foreach (var (angle, distance) in points)
-        {
-            double rad = -angle * Math.PI / 180.0;
-            float cos = (float)Math.Cos(rad);
-            float sin = (float)Math.Sin(rad);   
-            float rEcho = this.ScaledEchoRadius(distance);
-            if (rEcho <= this.radius + InsideRingEpsilon)
-            {
-                visiblePoints.Add((this.cx + rEcho * cos, this.cy + rEcho * sin));
-            }
-            else
-            {
-                overflowArrows.Add((cos, sin, rEcho));
-            }
-        }
-
-        this.glPrimitives.DrawPoints(visiblePoints, this.pointRenderStyle);
-        this.DrawOverflowArrows(overflowArrows);
-
+        var overflowArrow = this.visualizerColors.Points.OverflowArrowColor;
+        this.gl.Color4(overflowArrow.R, overflowArrow.G, overflowArrow.B, overflowArrow.A);
+        this.DrawPolarArrowsOnly(arrowAngles, tipRadius, arrowHeadBack);
         this.gl.PopMatrix();
 
         // Draw a white point at the center
         var centerPoint = this.visualizerColors.Points.CenterColor;
         this.gl.Color4(centerPoint.R, centerPoint.G, centerPoint.B, centerPoint.A);
-        this.glPrimitives.DrawPoint(this.cx, this.cy, this.pointRenderStyle);
+        this.gl.PushMatrix();
+        this.gl.Translate(this.cx, this.cy, 0f);
+        this.glPrimitives.DrawPointPrimitive(this.pointRenderStyle);
+        this.gl.PopMatrix();
+    }
+
+    private void DrawPolarPointsOnly(IReadOnlyList<(float Angle, float Radius)> pointItems)
+    {
+        foreach (var (angle, radius) in pointItems)
+        {
+            this.gl.PushMatrix();
+            this.gl.Translate(this.cx, this.cy, 0f);
+            this.gl.Rotate(-angle, 0f, 0f, 1f);
+            this.gl.Translate(radius, 0f, 0f);
+            this.glPrimitives.DrawPointPrimitive(this.pointRenderStyle);
+            this.gl.PopMatrix();
+        }
+    }
+
+    private void DrawPolarArrowsOnly(IReadOnlyList<float> arrowAngles, float tipRadius, float arrowHeadBack)
+    {
+        if (arrowHeadBack <= InsideRingEpsilon)
+        {
+            return;
+        }
+
+        foreach (var angle in arrowAngles)
+        {
+            this.gl.PushMatrix();
+            this.gl.Translate(this.cx, this.cy, 0f);
+            this.gl.Rotate(-angle, 0f, 0f, 1f);
+            this.gl.Translate(tipRadius, 0f, 0f);
+            this.glPrimitives.DrawArrowPrimitive(arrowHeadBack, OverflowArrowHalfWidthPx);
+            this.gl.PopMatrix();
+        }
     }
 
     private void DrawPolarGrid()
@@ -278,61 +319,6 @@ public class RenderOpenGL_1_1 : IZoomable
         return distanceCm / this.maxDistanceCm * this.radius * this.zoomScale;
     }
 
-    private void DrawOverflowArrows(List<(float Cos, float Sin, float Radius)> arrows)
-    {
-        if (arrows.Count == 0)
-        {
-            return;
-        }
-
-        var overflowArrow = this.visualizerColors.Points.OverflowArrowColor;
-        this.gl.Color4(overflowArrow.R, overflowArrow.G, overflowArrow.B, overflowArrow.A);
-        foreach (var (cos, sin, rEcho) in arrows)
-        {
-            this.DrawOverflowArrow(this.cx, this.cy, cos, sin, rEcho);
-        }
-    }
-
-    private void DrawOverflowArrow(float centerX, float centerY, float cos, float sin, float rEcho)
-    {
-        float overflow = rEcho - this.radius;
-        if (overflow <= InsideRingEpsilon)
-        {
-            return;
-        }
-
-        float rTip = this.radius - OverflowArrowRimInsetPx;
-        float maxHeadBack = rTip - OverflowArrowMinTailRadiusPx;
-        if (maxHeadBack <= InsideRingEpsilon)
-        {
-            return;
-        }
-
-        float stretch = Math.Min(overflow * 0.08f, 12f);
-        float headBack = Math.Min(OverflowArrowHeadLengthPx + stretch * 0.25f, maxHeadBack);
-        headBack = Math.Max(headBack, 2.5f);
-
-        float rHeadBase = rTip - headBack;
-
-        float tipX = centerX + rTip * cos;
-        float tipY = centerY + rTip * sin;
-        float baseMidX = centerX + rHeadBase * cos;
-        float baseMidY = centerY + rHeadBase * sin;
-        float px = -sin;
-        float py = cos;
-
-        float w = OverflowArrowHalfWidthPx;
-        float b0x = baseMidX + w * px;
-        float b0y = baseMidY + w * py;
-        float b1x = baseMidX - w * px;
-        float b1y = baseMidY - w * py;
-
-        this.gl.Begin(GLEnum.Triangles);
-        this.gl.Vertex2(tipX, tipY);
-        this.gl.Vertex2(b0x, b0y);
-        this.gl.Vertex2(b1x, b1y);
-        this.gl.End();
-    }
 }
 
 #pragma warning restore CS0618

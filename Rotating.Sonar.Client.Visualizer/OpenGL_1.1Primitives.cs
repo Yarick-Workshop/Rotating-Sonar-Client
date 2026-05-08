@@ -45,7 +45,7 @@ public class OpenGL_1_1_Primitives
         this.gl.LineWidth(previousWidth[0]);
     }
 
-    public void DrawPoint(float x, float y, PointRenderStyle pointRenderStyle)
+    public void DrawPointPrimitive(PointRenderStyle pointRenderStyle)
     {
         ((float X, float Y)[] unitPoints, bool filled) = pointRenderStyle switch
         {
@@ -56,31 +56,18 @@ public class OpenGL_1_1_Primitives
             _ => throw new ArgumentOutOfRangeException(nameof(pointRenderStyle), pointRenderStyle, "Unknown point render style value."),
         };
 
-        this.DrawPointPolygon(x, y, unitPoints, filled);
+        this.DrawPointPolygon(unitPoints, filled);
     }
 
-    public void DrawPoints(IReadOnlyList<(float X, float Y)> points, PointRenderStyle pointRenderStyle)
+    public void DrawArrowPrimitive(float headBack, float halfWidth)
     {
-        if (points.Count == 0)
-        {
-            return;
-        }
-
-        ((float X, float Y)[] unitPoints, bool filled) = pointRenderStyle switch
-        {
-            PointRenderStyle.OutlineSquare => (this.pointSquareCorners, false),
-            PointRenderStyle.SolidSquare => (this.pointSquareCorners, true),
-            PointRenderStyle.SolidCircle => (this.pointCirclePoints, true),
-            PointRenderStyle.OutlineCircle => (this.pointCirclePoints, false),
-            _ => throw new ArgumentOutOfRangeException(nameof(pointRenderStyle), pointRenderStyle, "Unknown point render style value."),
-        };
-
-        foreach (var (x, y) in points)
-        {
-            this.DrawPointPolygon(x, y, unitPoints, filled);
-        }
+        this.gl.Begin(GLEnum.Triangles);
+        this.gl.Vertex2(0f, 0f);
+        this.gl.Vertex2(-headBack, halfWidth);
+        this.gl.Vertex2(-headBack, -halfWidth);
+        this.gl.End();
     }
-    
+
     private static (float X, float Y)[] CreateUnitCirclePoints(int segments)
     {
         var points = new (float X, float Y)[segments];
@@ -93,18 +80,18 @@ public class OpenGL_1_1_Primitives
         return points;
     }
 
-    private void DrawPointPolygon(float x, float y, (float X, float Y)[] points, bool filled)
+    private void DrawPointPolygon((float X, float Y)[] points, bool filled)
     {
         this.gl.Begin(filled ? GLEnum.TriangleFan : GLEnum.LineLoop);
         if (filled)
         {
-            this.gl.Vertex2(x, y);
+            this.gl.Vertex2(0f, 0f);
         }
 
         for (int i = 0; i <= points.Length; i++)
         {
             var (pointX, pointY) = points[i % points.Length];
-            this.gl.Vertex2(x + pointX, y + pointY);
+            this.gl.Vertex2(pointX, pointY);
         }
 
         this.gl.End();
