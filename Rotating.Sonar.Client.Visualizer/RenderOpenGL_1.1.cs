@@ -168,7 +168,7 @@ public class RenderOpenGL_1_1 : IZoomable
             float rEcho = this.ScaledEchoRadius(distance);
             if (rEcho <= this.radius + InsideRingEpsilon)
             {
-                this.glPrimitives.DrawPointMarker(this.cx + rEcho * cos, this.cy + rEcho * sin, this.pointRenderStyle);
+                this.glPrimitives.DrawPoint(this.cx + rEcho * cos, this.cy + rEcho * sin, this.pointRenderStyle);
             }
             else
             {
@@ -183,7 +183,7 @@ public class RenderOpenGL_1_1 : IZoomable
         // Draw a white point at the center
         var centerPoint = this.visualizerColors.Points.CenterColor;
         this.gl.Color4(centerPoint.R, centerPoint.G, centerPoint.B, centerPoint.A);
-        this.glPrimitives.DrawPointMarker(this.cx, this.cy, this.pointRenderStyle);
+        this.glPrimitives.DrawPoint(this.cx, this.cy, this.pointRenderStyle);
     }
 
     private void DrawPolarGrid()

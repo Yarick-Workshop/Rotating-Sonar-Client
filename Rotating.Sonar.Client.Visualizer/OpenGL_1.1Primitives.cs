@@ -6,13 +6,13 @@ using Silk.NET.OpenGL.Legacy;
 public class OpenGL_1_1_Primitives
 {
     private const int CircleSegments = 64;
-    private const int MarkerCircleSegments = 16;
+    private const int PointCircleSegments = 16;
 
     private readonly GL gl;
     private readonly float pointSize;
     private static readonly (float X, float Y)[] UnitCirclePoints = CreateUnitCirclePoints(CircleSegments);
-    private readonly (float X, float Y)[] markerCirclePoints;
-    private readonly (float X, float Y)[] markerSquareCorners;
+    private readonly (float X, float Y)[] pointCirclePoints;
+    private readonly (float X, float Y)[] pointSquareCorners;
 
     public OpenGL_1_1_Primitives(GL gl, VisualizerSettings settings)
     {
@@ -20,8 +20,8 @@ public class OpenGL_1_1_Primitives
         this.pointSize = Math.Max(1f, settings.Points.PointSize);
 
         float radiusPx = this.pointSize / 2f;
-        this.markerCirclePoints = CreateScaledCirclePoints(MarkerCircleSegments, radiusPx);
-        this.markerSquareCorners =
+        this.pointCirclePoints = CreateScaledCirclePoints(PointCircleSegments, radiusPx);
+        this.pointSquareCorners =
         [
             (-radiusPx, -radiusPx),
             (radiusPx, -radiusPx),
@@ -46,18 +46,18 @@ public class OpenGL_1_1_Primitives
         this.gl.LineWidth(previousWidth[0]);
     }
 
-    public void DrawPointMarker(float x, float y, PointRenderStyle pointRenderStyle)
+    public void DrawPoint(float x, float y, PointRenderStyle pointRenderStyle)
     {
         ((float X, float Y)[] unitPoints, bool filled) = pointRenderStyle switch
         {
-            PointRenderStyle.OutlineSquare => (this.markerSquareCorners, false),
-            PointRenderStyle.SolidSquare => (this.markerSquareCorners, true),
-            PointRenderStyle.SolidCircle => (this.markerCirclePoints, true),
-            PointRenderStyle.OutlineCircle => (this.markerCirclePoints, false),
+            PointRenderStyle.OutlineSquare => (this.pointSquareCorners, false),
+            PointRenderStyle.SolidSquare => (this.pointSquareCorners, true),
+            PointRenderStyle.SolidCircle => (this.pointCirclePoints, true),
+            PointRenderStyle.OutlineCircle => (this.pointCirclePoints, false),
             _ => throw new ArgumentOutOfRangeException(nameof(pointRenderStyle), pointRenderStyle, "Unknown point render style value."),
         };
 
-        this.DrawMarkerPolygon(x, y, unitPoints, filled);
+        this.DrawPointPolygon(x, y, unitPoints, filled);
     }
     
     private static (float X, float Y)[] CreateUnitCirclePoints(int segments)
@@ -72,7 +72,7 @@ public class OpenGL_1_1_Primitives
         return points;
     }
 
-    private void DrawMarkerPolygon(float x, float y, (float X, float Y)[] points, bool filled)
+    private void DrawPointPolygon(float x, float y, (float X, float Y)[] points, bool filled)
     {
         this.gl.Begin(filled ? GLEnum.TriangleFan : GLEnum.LineLoop);
         if (filled)
