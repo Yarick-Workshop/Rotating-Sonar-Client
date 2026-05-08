@@ -36,7 +36,7 @@ public class RenderOpenGL_1_1 : IZoomable
     public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, AppSettings appSettings, float width, float height, float maxDistanceCm, TextRenderOpenGL_1_1 textRenderer)
     {
         this.gl = gl;
-        this.glPrimitives = new OpenGL_1_1_Primitives(gl);
+        this.glPrimitives = new OpenGL_1_1_Primitives(gl, appSettings.Visualizer);
         this.sonarDataCache = sonarDataCache;
 
         // TODO, investigate why option this.UpdateViewport(width, height); does not work
@@ -108,8 +108,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.MatrixMode(GLEnum.Modelview);
         this.gl.LoadIdentity();
 
-        float pointSize = Math.Max(1f, this.visualizerColors.Points.PointSize); // TODO, validation instead!!!
-        this.DrawPoints(pointSize);
+        this.DrawPoints();
         this.DrawPolarGrid();
 
         var uiText = this.visualizerColors.UiTextColor;
@@ -143,7 +142,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.radius = MathF.Min(this.cx, this.cy) - 40;
     }
 
-    private void DrawPoints(float pointSize)
+    private void DrawPoints()
     {
         var points = this.sonarDataCache.GetPoints();
 
@@ -169,7 +168,7 @@ public class RenderOpenGL_1_1 : IZoomable
             float rEcho = this.ScaledEchoRadius(distance);
             if (rEcho <= this.radius + InsideRingEpsilon)
             {
-                this.glPrimitives.DrawPointMarker(this.cx + rEcho * cos, this.cy + rEcho * sin, this.pointRenderStyle, pointSize);
+                this.glPrimitives.DrawPointMarker(this.cx + rEcho * cos, this.cy + rEcho * sin, this.pointRenderStyle);
             }
             else
             {
@@ -184,7 +183,7 @@ public class RenderOpenGL_1_1 : IZoomable
         // Draw a white point at the center
         var centerPoint = this.visualizerColors.Points.CenterColor;
         this.gl.Color4(centerPoint.R, centerPoint.G, centerPoint.B, centerPoint.A);
-        this.glPrimitives.DrawPointMarker(this.cx, this.cy, this.pointRenderStyle, pointSize);
+        this.glPrimitives.DrawPointMarker(this.cx, this.cy, this.pointRenderStyle);
     }
 
     private void DrawPolarGrid()

@@ -9,19 +9,25 @@ public class OpenGL_1_1_Primitives
     private const int MarkerCircleSegments = 16;
 
     private readonly GL gl;
+    private readonly float pointSize;
     private static readonly (float X, float Y)[] UnitCirclePoints = CreateUnitCirclePoints(CircleSegments);
-    private static readonly (float X, float Y)[] UnitMarkerCirclePoints = CreateUnitCirclePoints(MarkerCircleSegments);
-    private static readonly (float X, float Y)[] UnitSquareCorners =
-    [
-        (-1f, -1f),
-        (1f, -1f),
-        (1f, 1f),
-        (-1f, 1f),
-    ];
+    private readonly (float X, float Y)[] markerCirclePoints;
+    private readonly (float X, float Y)[] markerSquareCorners;
 
-    public OpenGL_1_1_Primitives(GL gl)
+    public OpenGL_1_1_Primitives(GL gl, VisualizerSettings settings)
     {
         this.gl = gl;
+        this.pointSize = Math.Max(1f, settings.Points.PointSize);
+
+        float radiusPx = this.pointSize / 2f;
+        this.markerCirclePoints = CreateScaledCirclePoints(MarkerCircleSegments, radiusPx);
+        this.markerSquareCorners =
+        [
+            (-radiusPx, -radiusPx),
+            (radiusPx, -radiusPx),
+            (radiusPx, radiusPx),
+            (-radiusPx, radiusPx),
+        ];
     }
 
     public void DrawCircle(float centerX, float centerY, float radius, float lineWidth = 1f)
@@ -40,18 +46,18 @@ public class OpenGL_1_1_Primitives
         this.gl.LineWidth(previousWidth[0]);
     }
 
-    public void DrawPointMarker(float x, float y, PointRenderStyle pointRenderStyle, float pointSize)
+    public void DrawPointMarker(float x, float y, PointRenderStyle pointRenderStyle)
     {
         ((float X, float Y)[] unitPoints, bool filled) = pointRenderStyle switch
         {
-            PointRenderStyle.OutlineSquare => (UnitSquareCorners, false),
-            PointRenderStyle.SolidSquare => (UnitSquareCorners, true),
-            PointRenderStyle.SolidCircle => (UnitMarkerCirclePoints, true),
-            PointRenderStyle.OutlineCircle => (UnitMarkerCirclePoints, false),
+            PointRenderStyle.OutlineSquare => (this.markerSquareCorners, false),
+            PointRenderStyle.SolidSquare => (this.markerSquareCorners, true),
+            PointRenderStyle.SolidCircle => (this.markerCirclePoints, true),
+            PointRenderStyle.OutlineCircle => (this.markerCirclePoints, false),
             _ => throw new ArgumentOutOfRangeException(nameof(pointRenderStyle), pointRenderStyle, "Unknown point render style value."),
         };
 
-        this.DrawMarkerPolygon(x, y, pointSize, unitPoints, filled);
+        this.DrawMarkerPolygon(x, y, unitPoints, filled);
     }
     
     private static (float X, float Y)[] CreateUnitCirclePoints(int segments)
@@ -66,22 +72,33 @@ public class OpenGL_1_1_Primitives
         return points;
     }
 
-    private void DrawMarkerPolygon(float x, float y, float size, (float X, float Y)[] unitPoints, bool filled)
+    private void DrawMarkerPolygon(float x, float y, (float X, float Y)[] points, bool filled)
     {
-        float radiusPx = size / 2f;
         this.gl.Begin(filled ? GLEnum.TriangleFan : GLEnum.LineLoop);
         if (filled)
         {
             this.gl.Vertex2(x, y);
         }
 
-        for (int i = 0; i <= unitPoints.Length; i++)
+        for (int i = 0; i <= points.Length; i++)
         {
-            var (unitX, unitY) = unitPoints[i % unitPoints.Length];
-            this.gl.Vertex2(x + radiusPx * unitX, y + radiusPx * unitY);
+            var (pointX, pointY) = points[i % points.Length];
+            this.gl.Vertex2(x + pointX, y + pointY);
         }
 
         this.gl.End();
+    }
+
+    private static (float X, float Y)[] CreateScaledCirclePoints(int segments, float radius)
+    {
+        var points = new (float X, float Y)[segments];
+        for (int i = 0; i < segments; i++)
+        {
+            double theta = 2d * Math.PI * i / segments;
+            points[i] = ((float)Math.Cos(theta) * radius, (float)Math.Sin(theta) * radius);
+        }
+
+        return points;
     }
 }
 #pragma warning restore CS0618
