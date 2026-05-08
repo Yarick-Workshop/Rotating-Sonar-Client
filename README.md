@@ -10,6 +10,7 @@ A desktop client to visualize data from Rotating-Sonar-Arduino
 | P             | Toggle point style                          |
 | F, F3         | Toggle FPS display on/off                   |
 | Z             | Toggle zoom display on/off                  |
+| R             | Toggle latest-ray display on/off            |
 | F11, Alt+Enter| Toggle fullscreen mode                      |
 | Ctrl+=, Ctrl+- | Zoom in / zoom out (`=` / `-`; numpad `+` / `-` too) |
 | Ctrl+0        | Reset zoom to default                       |

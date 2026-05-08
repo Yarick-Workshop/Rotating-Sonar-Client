@@ -28,9 +28,10 @@ public class RenderOpenGL_1_1 : IZoomable
     private float width;
     private float height;
     private readonly TextRenderOpenGL_1_1 textRenderer;
-    private readonly VisualizerSettings visualizerColors;
+    private readonly VisualizerSettings visualizerSettings;
     private bool showFps = true;
     private bool showZoom = true;
+    private bool showRay = false;
     private PointRenderStyle pointRenderStyle = PointRenderStyle.SolidSquare;
 
     public RenderOpenGL_1_1(GL gl, SonarDataCache sonarDataCache, AppSettings appSettings, float width, float height, float maxDistanceCm, TextRenderOpenGL_1_1 textRenderer)
@@ -50,9 +51,9 @@ public class RenderOpenGL_1_1 : IZoomable
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxDistanceCm, 0f);
         this.maxDistanceCm = maxDistanceCm;
         this.textRenderer = textRenderer;
-        this.visualizerColors = appSettings.Visualizer;
+        this.visualizerSettings = appSettings.Visualizer;
 
-        var bg = this.visualizerColors.BackgroundColor;
+        var bg = this.visualizerSettings.BackgroundColor;
         this.gl.ClearColor(bg.R, bg.G, bg.B, bg.A);
         this.gl.Disable(GLEnum.DepthTest);
         this.gl.Disable(GLEnum.CullFace);
@@ -81,6 +82,12 @@ public class RenderOpenGL_1_1 : IZoomable
     {
         this.showZoom = !this.showZoom;
         return this.showZoom;
+    }
+
+    public bool ToggleRayDisplay()
+    {
+        this.showRay = !this.showRay;
+        return this.showRay;
     }
 
     public PointRenderStyle TogglePointRenderStyle()
@@ -112,7 +119,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.DrawPoints();
         this.DrawPolarGrid();
 
-        var uiText = this.visualizerColors.UiTextColor;
+        var uiText = this.visualizerSettings.UiTextColor;
         this.gl.Color4(uiText.R, uiText.G, uiText.B, uiText.A);
 
         if (this.showFps)
@@ -176,22 +183,34 @@ public class RenderOpenGL_1_1 : IZoomable
             arrowAngles.Add(angle);
         }
 
+        RaySettings raySettings = this.visualizerSettings.Ray;
+        (int angle, int distance) latestPoint = default;
+        bool shouldDrawLatestRay = this.showRay && this.sonarDataCache.TryGetLatestPoint(out latestPoint);
+        float latestRayRadius = shouldDrawLatestRay
+            ? this.radius * (raySettings.LengthPercent / 100f)
+            : 0f;
+
         this.gl.PushMatrix();
         this.gl.Translate(this.cx, this.cy, 0f);
         this.gl.Rotate(90f, 0f, 0f, 1f); // Keep the same world orientation as before.
         this.gl.Translate(-this.cx, -this.cy, 0f);
 
-        var echoPoint = this.visualizerColors.Points.EchoColor;
+        var echoPoint = this.visualizerSettings.Points.EchoColor;
         this.gl.Color4(echoPoint.R, echoPoint.G, echoPoint.B, echoPoint.A);
         this.DrawPolarPointsOnly(pointItems);
 
-        var overflowArrow = this.visualizerColors.Points.OverflowArrowColor;
+        if (shouldDrawLatestRay)
+        {
+            this.DrawLatestRay(latestPoint.angle, latestRayRadius, raySettings);
+        }
+
+        var overflowArrow = this.visualizerSettings.Points.OverflowArrowColor;
         this.gl.Color4(overflowArrow.R, overflowArrow.G, overflowArrow.B, overflowArrow.A);
         this.DrawPolarArrowsOnly(arrowAngles, tipRadius, arrowHeadBack);
         this.gl.PopMatrix();
 
         // Draw a white point at the center
-        var centerPoint = this.visualizerColors.Points.CenterColor;
+        var centerPoint = this.visualizerSettings.Points.CenterColor;
         this.gl.Color4(centerPoint.R, centerPoint.G, centerPoint.B, centerPoint.A);
         this.gl.PushMatrix();
         this.gl.Translate(this.cx, this.cy, 0f);
@@ -210,6 +229,54 @@ public class RenderOpenGL_1_1 : IZoomable
             this.glPrimitives.DrawPointPrimitive(this.pointRenderStyle);
             this.gl.PopMatrix();
         }
+    }
+
+    // TODO, optimize!
+    private void DrawLatestRay(float angle, float radius, RaySettings raySettings)
+    {
+        FloatColor4 color = raySettings.Color;
+        float sweepHalfAngleDeg = Math.Max(0f, raySettings.SweepAngleDeg) / 2f;
+        int sweepSegments = Math.Max(1, raySettings.SweepSegments);
+        float coneCenterAlpha = Math.Clamp(raySettings.ConeCenterAlpha, 0f, 1f);
+        float coneEdgeAlpha = Math.Clamp(raySettings.ConeEdgeAlpha, 0f, 1f);
+        float lineAlpha = Math.Clamp(raySettings.LineAlpha, 0f, 1f);
+        float lineWidth = Math.Max(0.1f, raySettings.LineWidth);
+
+        this.gl.PushMatrix();
+        this.gl.Translate(this.cx, this.cy, 0f);
+        this.gl.Rotate(-angle, 0f, 0f, 1f);
+
+        float centerAlpha = Math.Clamp(color.A * coneCenterAlpha, 0f, 1f);
+        float edgeAlpha = Math.Clamp(color.A * coneEdgeAlpha, 0f, 1f);
+
+        // Draw a soft radar-like sweep cone.
+        this.gl.Begin(GLEnum.TriangleFan);
+        this.gl.Color4(color.R, color.G, color.B, centerAlpha);
+        this.gl.Vertex2(0f, 0f);
+        for (int i = 0; i <= sweepSegments; i++)
+        {
+            float t = i / (float)sweepSegments;
+            float beamAngleDeg = -sweepHalfAngleDeg + (t * sweepHalfAngleDeg * 2f);
+            float beamAngleRad = beamAngleDeg * (MathF.PI / 180f);
+            float x = MathF.Cos(beamAngleRad) * radius;
+            float y = MathF.Sin(beamAngleRad) * radius;
+
+            this.gl.Color4(color.R, color.G, color.B, edgeAlpha);
+            this.gl.Vertex2(x, y);
+        }
+        this.gl.End();
+
+        Span<float> previousWidth = stackalloc float[1];
+        this.gl.GetFloat(GLEnum.LineWidth, previousWidth);
+        this.gl.LineWidth(lineWidth);
+        this.gl.Begin(GLEnum.Lines);
+        this.gl.Color4(color.R, color.G, color.B, Math.Clamp(color.A * lineAlpha, 0f, 1f));
+        this.gl.Vertex2(0f, 0f);
+        this.gl.Vertex2(radius, 0f);
+        this.gl.End();
+        this.gl.LineWidth(previousWidth[0]);
+
+        this.gl.PopMatrix();
     }
 
     private void DrawPolarArrowsOnly(IReadOnlyList<float> arrowAngles, float tipRadius, float arrowHeadBack)
@@ -237,7 +304,7 @@ public class RenderOpenGL_1_1 : IZoomable
 
         // Every 100 cm ring that fits inside the rim (same scale as echoes). Fills disc: farthest
         // ring at d = maxDistanceCm/zoomScale coincides with the plot edge when zoom ≠ 1.
-        var gridLine = this.visualizerColors.Grid.LineColor;
+        var gridLine = this.visualizerSettings.Grid.LineColor;
         this.gl.Color4(gridLine.R, gridLine.G, gridLine.B, gridLine.A);
         if (this.maxDistanceCm > 0f && this.zoomScale > 0f)
         {
@@ -274,7 +341,7 @@ public class RenderOpenGL_1_1 : IZoomable
         }
 
         // Draw short rim ticks every 5 degrees; longer marks every 10 degrees.
-        var gridTickLabel = this.visualizerColors.Grid.TickLabelColor;
+        var gridTickLabel = this.visualizerSettings.Grid.TickLabelColor;
         this.gl.Color4(gridTickLabel.R, gridTickLabel.G, gridTickLabel.B, gridTickLabel.A);
         this.gl.Begin(GLEnum.Lines);
         for (int a = 0; a < 360; a += 5)
@@ -294,7 +361,7 @@ public class RenderOpenGL_1_1 : IZoomable
         }
         this.gl.End();
 
-        var gridLabel = this.visualizerColors.Grid.LabelColor;
+        var gridLabel = this.visualizerSettings.Grid.LabelColor;
         this.gl.Color4(gridLabel.R, gridLabel.G, gridLabel.B, gridLabel.A);
 
         // Draw compass-like degree labels around the largest circle

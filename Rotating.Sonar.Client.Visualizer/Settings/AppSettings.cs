@@ -26,14 +26,14 @@ public sealed class AppSettings
                 .Build();
 
             // FloatColor4 uses [TypeConverter(typeof(FloatColor4TypeConverter))] so string values bind.
-            AppSettings? settings = configuration.Get<AppSettings>();
-            if (settings is null)
+            AppSettings? appSettings = configuration.Get<AppSettings>();
+            if (appSettings is null)
             {
                 Log.Warning("Failed to bind app settings from {Path}. Falling back to defaults.", path);
                 return new AppSettings();
             }
 
-            return settings;
+            return appSettings;
         }
         catch (Exception ex)
         {

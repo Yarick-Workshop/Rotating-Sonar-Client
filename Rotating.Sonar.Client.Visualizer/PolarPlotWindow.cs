@@ -153,6 +153,10 @@ internal class PolarPlotWindow : IDisposable
                 bool showZoom = this.render!.ToggleZoomDisplay();
                 Log.Information("Zoom display toggled: {ShowZoom}", showZoom);
                 break;
+            case Key.R:
+                bool showRay = this.render!.ToggleRayDisplay();
+                Log.Information("Ray display toggled: {ShowRay}", showRay);
+                break;
             case Key.F11:
                 this.ToggleFullscreen();
                 break;

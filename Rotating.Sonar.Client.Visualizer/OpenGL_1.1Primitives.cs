@@ -14,11 +14,11 @@ public class OpenGL_1_1_Primitives
     private readonly (float X, float Y)[] pointSquareCorners;
     private readonly float pointRadius;
 
-    public OpenGL_1_1_Primitives(GL gl, VisualizerSettings settings)
+    public OpenGL_1_1_Primitives(GL gl, VisualizerSettings visualizerSettings)
     {
         this.gl = gl;
 
-        float pointSize = Math.Max(1f, settings.Points.PointSize);
+        float pointSize = Math.Max(1f, visualizerSettings.Points.PointSize);
         this.pointRadius = pointSize / 2f;
         this.pointCirclePoints = CreateScaledCirclePoints(PointCircleSegments, this.pointRadius);
         this.pointSquareCorners =
