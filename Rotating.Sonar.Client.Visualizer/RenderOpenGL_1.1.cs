@@ -90,8 +90,9 @@ public class RenderOpenGL_1_1 : IZoomable
             PointRenderStyle.OutlineSquare => PointRenderStyle.SolidSquare,
             PointRenderStyle.SolidSquare => PointRenderStyle.SolidCircle,
             PointRenderStyle.SolidCircle => PointRenderStyle.OutlineCircle,
-            PointRenderStyle.OutlineCircle => PointRenderStyle.OutlineSquare,
-            _ => throw new ArgumentOutOfRangeException(nameof(this.pointRenderStyle), this.pointRenderStyle, "Unknown point render style value."),
+            PointRenderStyle.OutlineCircle => PointRenderStyle.Line,
+            PointRenderStyle.Line => PointRenderStyle.OutlineSquare,
+            _ => throw new NotImplementedException($"Point render style '{this.pointRenderStyle}' is not implemented."),
         };
 
         return this.pointRenderStyle;

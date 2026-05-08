@@ -12,20 +12,21 @@ public class OpenGL_1_1_Primitives
     private static readonly (float X, float Y)[] UnitCirclePoints = CreateUnitCirclePoints(CircleSegments);
     private readonly (float X, float Y)[] pointCirclePoints;
     private readonly (float X, float Y)[] pointSquareCorners;
+    private readonly float pointRadius;
 
     public OpenGL_1_1_Primitives(GL gl, VisualizerSettings settings)
     {
         this.gl = gl;
 
         float pointSize = Math.Max(1f, settings.Points.PointSize);
-        float radiusPx = pointSize / 2f;
-        this.pointCirclePoints = CreateScaledCirclePoints(PointCircleSegments, radiusPx);
+        this.pointRadius = pointSize / 2f;
+        this.pointCirclePoints = CreateScaledCirclePoints(PointCircleSegments, this.pointRadius);
         this.pointSquareCorners =
         [
-            (-radiusPx, -radiusPx),
-            (radiusPx, -radiusPx),
-            (radiusPx, radiusPx),
-            (-radiusPx, radiusPx),
+            (-this.pointRadius, -this.pointRadius),
+            (this.pointRadius, -this.pointRadius),
+            (this.pointRadius, this.pointRadius),
+            (-this.pointRadius, this.pointRadius),
         ];
     }
 
@@ -47,16 +48,37 @@ public class OpenGL_1_1_Primitives
 
     public void DrawPointPrimitive(PointRenderStyle pointRenderStyle)
     {
+        if (pointRenderStyle == PointRenderStyle.Line)
+        {
+            this.DrawPointLinePrimitive();
+            return;
+        }
+
         ((float X, float Y)[] unitPoints, bool filled) = pointRenderStyle switch
         {
             PointRenderStyle.OutlineSquare => (this.pointSquareCorners, false),
             PointRenderStyle.SolidSquare => (this.pointSquareCorners, true),
             PointRenderStyle.SolidCircle => (this.pointCirclePoints, true),
             PointRenderStyle.OutlineCircle => (this.pointCirclePoints, false),
-            _ => throw new ArgumentOutOfRangeException(nameof(pointRenderStyle), pointRenderStyle, "Unknown point render style value."),
+            _ => throw new NotImplementedException($"Point render style '{pointRenderStyle}' is not implemented."),
         };
 
         this.DrawPointPolygon(unitPoints, filled);
+    }
+
+    private void DrawPointLinePrimitive()
+    {
+        // TODO: move line-point width to visualizer configuration.
+        Span<float> previousWidth = stackalloc float[1];
+        this.gl.GetFloat(GLEnum.LineWidth, previousWidth);
+        this.gl.LineWidth(2f);
+
+        this.gl.Begin(GLEnum.Lines);
+        this.gl.Vertex2(0f, -this.pointRadius);
+        this.gl.Vertex2(0f, this.pointRadius);
+        this.gl.End();
+
+        this.gl.LineWidth(previousWidth[0]);
     }
 
     public void DrawArrowPrimitive(float headBack, float halfWidth)
@@ -97,13 +119,13 @@ public class OpenGL_1_1_Primitives
         this.gl.End();
     }
 
-    private static (float X, float Y)[] CreateScaledCirclePoints(int segments, float radius)
+    private static (float X, float Y)[] CreateScaledCirclePoints(int segments, float pointRadius)
     {
         var points = new (float X, float Y)[segments];
         for (int i = 0; i < segments; i++)
         {
             double theta = 2d * Math.PI * i / segments;
-            points[i] = ((float)Math.Cos(theta) * radius, (float)Math.Sin(theta) * radius);
+            points[i] = ((float)Math.Cos(theta) * pointRadius, (float)Math.Sin(theta) * pointRadius);
         }
 
         return points;

@@ -6,4 +6,5 @@ public enum PointRenderStyle
     SolidSquare,
     SolidCircle,
     OutlineCircle,
+    Line,
 }
