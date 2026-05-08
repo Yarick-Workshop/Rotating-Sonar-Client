@@ -28,10 +28,15 @@ internal class PolarPlotWindow : IDisposable
     
     private bool _disposed = false;
 
-    public PolarPlotWindow(SonarDataCache sonarDataCache, AppSettings appSettings, int width, int height, string title)
+    public PolarPlotWindow(
+        SonarDataCache sonarDataCache,
+        AppSettings appSettings,
+        int windowWidthPx,
+        int windowHeightPx,
+        string title)
     {
         var options = WindowOptions.Default;
-        options.Size = new Vector2D<int>(width, height);
+        options.Size = new Vector2D<int>(windowWidthPx, windowHeightPx);
         options.Title = title;
         options.API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(1, 1));
 
@@ -71,7 +76,7 @@ internal class PolarPlotWindow : IDisposable
             this.inputContext.Mice[i].Scroll += this.OnMouseScroll;
         }
 
-        this.textRenderer = new TextRenderOpenGL_1_1(gl, this.appSettings, "°");
+        this.textRenderer = new TextRenderOpenGL_1_1(gl, "°");
         this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
         this.zoomControl = new RenderZoomControl(this.render);
         /* 
@@ -82,12 +87,12 @@ internal class PolarPlotWindow : IDisposable
         Log.Information("OpenGL extensions: {Extensions}", gl.GetString(StringName.Extensions));*/
     }
 
-    private void OnRender(double delta)
+    private void OnRender(double deltaSeconds)
     {
-        if (delta > 0)
+        if (deltaSeconds > 0)
         {
             // TODO, optimize
-            double fps = 1.0 / delta;
+            double fps = 1.0 / deltaSeconds;
             if (this.fpsHistory.Count == FpsWindowSize)
             {
                 this.fpsHistory.Dequeue();
@@ -99,18 +104,18 @@ internal class PolarPlotWindow : IDisposable
         this.render!.Render(this.latestFps);
     }
 
-    private void OnResize(Vector2D<int> newSize)
+    private void OnResize(Vector2D<int> newWindowSize)
     {
         Log.Information(
             "Window resized: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}", 
             this.previousSize.X,
             this.previousSize.Y,
-            newSize.X,
-            newSize.Y);
+            newWindowSize.X,
+            newWindowSize.Y);
 
-        this.previousSize = newSize;
+        this.previousSize = newWindowSize;
 
-        this.render?.UpdateViewport((float)newSize.X, (float)newSize.Y);
+        this.render?.UpdateViewport((float)newWindowSize.X, (float)newWindowSize.Y);
     }
 
     private void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
@@ -187,14 +192,14 @@ internal class PolarPlotWindow : IDisposable
         return false;
     }
 
-    private void OnMouseScroll(IMouse mouse, ScrollWheel scroll)
+    private void OnMouseScroll(IMouse mouse, ScrollWheel scrollWheel)
     {
         if (!this.IsCtrlPressed())
         {
             return;
         }
 
-        this.zoomControl?.ZoomWheel(scroll.Y);
+        this.zoomControl?.ZoomWheel(scrollWheel.Y);
     }
 
     public void ToggleFullscreen()

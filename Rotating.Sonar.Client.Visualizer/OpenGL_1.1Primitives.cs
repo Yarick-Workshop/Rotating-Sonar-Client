@@ -18,7 +18,7 @@ public class OpenGL_1_1_Primitives
     {
         this.gl = gl;
 
-        float pointSize = Math.Max(1f, visualizerSettings.Points.PointSize);
+        float pointSize = Math.Max(1f, visualizerSettings.Points.PointSizePx);
         this.pointRadius = pointSize / 2f;
         this.pointCirclePoints = CreateScaledCirclePoints(PointCircleSegments, this.pointRadius);
         this.pointSquareCorners =
@@ -30,16 +30,16 @@ public class OpenGL_1_1_Primitives
         ];
     }
 
-    public void DrawCircle(float centerX, float centerY, float radius, float lineWidth = 1f)
+    public void DrawCircle(float centerXPx, float centerYPx, float radiusPx, float lineWidthPx = 1f)
     {
         Span<float> previousWidth = stackalloc float[1];
         this.gl.GetFloat(GLEnum.LineWidth, previousWidth);
-        this.gl.LineWidth(lineWidth);
+        this.gl.LineWidth(lineWidthPx);
         
         this.gl.Begin(GLEnum.LineLoop);
         foreach (var (unitX, unitY) in UnitCirclePoints)
         {
-            this.gl.Vertex2(centerX + (radius * unitX), centerY + (radius * unitY));
+            this.gl.Vertex2(centerXPx + (radiusPx * unitX), centerYPx + (radiusPx * unitY));
         }
 
         this.gl.End();
@@ -81,21 +81,21 @@ public class OpenGL_1_1_Primitives
         this.gl.LineWidth(previousWidth[0]);
     }
 
-    public void DrawArrowPrimitive(float headBack, float halfWidth)
+    public void DrawArrowPrimitive(float arrowHeadBackPx, float arrowHalfWidthPx)
     {
         this.gl.Begin(GLEnum.Triangles);
         this.gl.Vertex2(0f, 0f);
-        this.gl.Vertex2(-headBack, halfWidth);
-        this.gl.Vertex2(-headBack, -halfWidth);
+        this.gl.Vertex2(-arrowHeadBackPx, arrowHalfWidthPx);
+        this.gl.Vertex2(-arrowHeadBackPx, -arrowHalfWidthPx);
         this.gl.End();
     }
 
-    private static (float X, float Y)[] CreateUnitCirclePoints(int segments)
+    private static (float X, float Y)[] CreateUnitCirclePoints(int segmentCount)
     {
-        var points = new (float X, float Y)[segments];
-        for (int i = 0; i < segments; i++)
+        var points = new (float X, float Y)[segmentCount];
+        for (int i = 0; i < segmentCount; i++)
         {
-            double theta = 2d * Math.PI * i / segments;
+            double theta = 2d * Math.PI * i / segmentCount;
             points[i] = ((float)Math.Cos(theta), (float)Math.Sin(theta));
         }
 

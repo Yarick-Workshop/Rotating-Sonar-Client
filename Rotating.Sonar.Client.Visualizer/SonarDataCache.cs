@@ -13,12 +13,12 @@ public class SonarDataCache
 
     public int LatestAngle => this.latestAngle;
 
-    public void Update(int angle, int distance)
+    public void Update(int angleDeg, int distanceCm)
     {
-        this.sonarPoints[angle] = distance;
-        this.latestAngle = angle;
+        this.sonarPoints[angleDeg] = distanceCm;
+        this.latestAngle = angleDeg;
 
-        Log.Debug("Updated with {Angle}° {Distance}cm", angle, distance);
+        Log.Debug("Updated with {Angle}° {Distance}cm", angleDeg, distanceCm);
     }
 
     public List<(int angle, int distance)> GetPoints()
@@ -26,21 +26,21 @@ public class SonarDataCache
         return this.sonarPoints.Select(kv => (kv.Key, kv.Value)).ToList();
     }
 
-    public bool TryGetLatestPoint(out (int angle, int distance) point)
+    public bool TryGetLatestPoint(out (int angle, int distance) latestPoint)
     {
         if (this.latestAngle == UninitializedLatestAngle)
         {
-            point = default;
+            latestPoint = default;
             return false;
         }
 
         if (!this.sonarPoints.TryGetValue(this.latestAngle, out int latestDistance))
         {
-            point = default;
+            latestPoint = default;
             return false;
         }
 
-        point = (this.latestAngle, latestDistance);
+        latestPoint = (this.latestAngle, latestDistance);
         return true;
     }
 }

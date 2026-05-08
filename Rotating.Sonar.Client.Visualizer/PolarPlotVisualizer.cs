@@ -15,17 +15,17 @@ public class PolarPlotVisualizer : IDisposable
         this.appSettings = appSettings ?? new AppSettings();
     }
 
-    public void Start(int width = 1920, int height = 1080, string title = "OpenGL Polar Plot Visualizer")
+    public void Start(int windowWidthPx = 1920, int windowHeightPx = 1080, string title = "OpenGL Polar Plot Visualizer")
     {
-        var win = new PolarPlotWindow(this.sonarDataCache, this.appSettings, width, height, title);
+        var win = new PolarPlotWindow(this.sonarDataCache, this.appSettings, windowWidthPx, windowHeightPx, title);
         this.window = win;
         win.Run();
     }
 
-    public void FeedData(int angle, int distance)
+    public void FeedData(int angleDeg, int distanceCm)
     {
-        Log.Debug("Plot is fed with angle: {Angle}, distance: {Distance}", angle, distance);
-        this.sonarDataCache.Update(angle, distance);
+        Log.Debug("Plot is fed with angle: {Angle}, distance: {Distance}", angleDeg, distanceCm);
+        this.sonarDataCache.Update(angleDeg, distanceCm);
     }
 
     public void Dispose()
