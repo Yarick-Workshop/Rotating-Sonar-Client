@@ -5,7 +5,7 @@ using Serilog;
 
 public sealed class AppSettings
 {
-    public VizualizerSettings Visualizer { get; set; } = new();
+    public VisualizerSettings Visualizer { get; set; } = new();
 
     public static AppSettings Load(string path)
     {
