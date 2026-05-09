@@ -7,9 +7,8 @@ public class SonarDataCache
 {
     public const int UninitializedLatestAngle = int.MinValue;
 
-    // TODO, refactor
     private readonly ConcurrentDictionary<int, int> sonarPoints = new();
-    private int latestAngle = UninitializedLatestAngle;
+    private volatile int latestAngle = UninitializedLatestAngle;
 
     public int LatestAngle => this.latestAngle;
 
@@ -28,19 +27,20 @@ public class SonarDataCache
 
     public bool TryGetLatestPoint(out (int angle, int distance) latestPoint)
     {
-        if (this.latestAngle == UninitializedLatestAngle)
+        int angleDeg = this.latestAngle;
+        if (angleDeg == UninitializedLatestAngle)
         {
             latestPoint = default;
             return false;
         }
 
-        if (!this.sonarPoints.TryGetValue(this.latestAngle, out int latestDistance))
+        if (!this.sonarPoints.TryGetValue(angleDeg, out int latestDistance))
         {
             latestPoint = default;
             return false;
         }
 
-        latestPoint = (this.latestAngle, latestDistance);
+        latestPoint = (angleDeg, latestDistance);
         return true;
     }
 }
