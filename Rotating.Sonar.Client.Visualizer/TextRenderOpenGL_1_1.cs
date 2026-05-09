@@ -38,8 +38,8 @@ public class TextRenderOpenGL_1_1
     {
     }
 
-    public TextRenderOpenGL_1_1(GL gl, string additionalChars)
-        : this(gl, GetASCIITable().Union(additionalChars).ToList())
+    public TextRenderOpenGL_1_1(GL gl, string extraGlyphs)
+        : this(gl, GetASCIITable().Union(extraGlyphs).ToList())
     {
     }
 
@@ -116,12 +116,12 @@ public class TextRenderOpenGL_1_1
         return totalWidth;
     }
 
-    private Dictionary<char, GlyphInfo> GenerateFontAtlas(List<char> charTable, int tileSize, int columns)
+    private Dictionary<char, GlyphInfo> GenerateFontAtlas(List<char> glyphChars, int glyphTileSizePx, int columnsPerRow)
     {
-        var count = charTable.Count;
-        int rows = (int)Math.Ceiling(count / (float)columns);
-        int atlasWidth = columns * tileSize;
-        int atlasHeight = rows * tileSize;
+        var count = glyphChars.Count;
+        int rows = (int)Math.Ceiling(count / (float)columnsPerRow);
+        int atlasWidth = columnsPerRow * glyphTileSizePx;
+        int atlasHeight = rows * glyphTileSizePx;
 
         using var bitmap = new SKBitmap(atlasWidth, atlasHeight);
         using var canvas = new SKCanvas(bitmap);
@@ -129,7 +129,7 @@ public class TextRenderOpenGL_1_1
 
         using var paint = new SKPaint
         {
-            TextSize = tileSize * 0.75f,
+            TextSize = glyphTileSizePx * 0.75f,
             Typeface = SKTypeface.Default,
             IsAntialias = true,
             Color = SKColors.White,
@@ -138,23 +138,23 @@ public class TextRenderOpenGL_1_1
 
         var glyphMap = new Dictionary<char, GlyphInfo>();
 
-        for (var i = 0; i < charTable.Count; i++)
+        for (var i = 0; i < glyphChars.Count; i++)
         {
-            var c = charTable[i];
-            int col = i % columns;
-            int row = i / columns;
-            float x = col * tileSize;
-            float y = row * tileSize;
+            var c = glyphChars[i];
+            int col = i % columnsPerRow;
+            int row = i / columnsPerRow;
+            float x = col * glyphTileSizePx;
+            float y = row * glyphTileSizePx;
 
-            canvas.DrawText(c.ToString(), x, y + tileSize * 0.75f, paint);
+            canvas.DrawText(c.ToString(), x, y + glyphTileSizePx * 0.75f, paint);
 
             float u1 = x / (float)atlasWidth;
             float v1 = y / (float)atlasHeight;
-            float u2 = (x + tileSize) / (float)atlasWidth;
-            float v2 = (y + tileSize) / (float)atlasHeight;
+            float u2 = (x + glyphTileSizePx) / (float)atlasWidth;
+            float v2 = (y + glyphTileSizePx) / (float)atlasHeight;
 
             float advance = paint.MeasureText(c.ToString());
-            glyphMap[c] = new GlyphInfo(u1, v1, u2, v2, tileSize, tileSize, advance);
+            glyphMap[c] = new GlyphInfo(u1, v1, u2, v2, glyphTileSizePx, glyphTileSizePx, advance);
         }
 
         this.atlasTexture = this.UploadToGL(bitmap);
@@ -162,16 +162,16 @@ public class TextRenderOpenGL_1_1
         return glyphMap;
     }
 
-    unsafe uint UploadToGL(SKBitmap bitmap)
+    unsafe uint UploadToGL(SKBitmap atlasBitmap)
     {
         uint tex = this.gl.GenTexture();
         this.gl.BindTexture(TextureTarget.Texture2D, tex);
 
-        var data = bitmap.Bytes;
+        var data = atlasBitmap.Bytes;
         fixed (void* ptr = data)
         {
             this.gl.TexImage2D(TextureTarget.Texture2D, 0, (int)InternalFormat.Rgba,
-                (uint)bitmap.Width, (uint)bitmap.Height, 0,
+                (uint)atlasBitmap.Width, (uint)atlasBitmap.Height, 0,
                 PixelFormat.Bgra, PixelType.UnsignedByte, ptr);
         }
 
