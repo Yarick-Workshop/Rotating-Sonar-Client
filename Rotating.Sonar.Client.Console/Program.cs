@@ -1,5 +1,6 @@
 namespace Rotating.Sonar.ClientApp.Console;
 
+using Rotating.Sonar.Client.Common.Settings;
 using System;
 using Rotating.Sonar.Client.Common.ComPortListeners;
 using Rotating.Sonar.Client.Common.SerialPorts;

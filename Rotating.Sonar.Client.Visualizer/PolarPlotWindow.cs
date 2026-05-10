@@ -1,5 +1,6 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
+using Rotating.Sonar.Client.Common.Settings;
 using System;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL.Legacy;

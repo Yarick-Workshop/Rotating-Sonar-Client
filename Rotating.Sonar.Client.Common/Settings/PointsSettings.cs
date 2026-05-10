@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.Client.Visualizer;
+namespace Rotating.Sonar.Client.Common.Settings;
 
 public sealed class PointsSettings
 {
