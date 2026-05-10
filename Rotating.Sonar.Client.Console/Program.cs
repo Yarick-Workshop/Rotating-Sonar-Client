@@ -1,8 +1,8 @@
 namespace Rotating.Sonar.ClientApp.Console;
 
 using System;
-using System.IO.Ports;
 using Rotating.Sonar.Client.Common.ComPortListeners;
+using Rotating.Sonar.Client.Common.SerialPorts;
 using Rotating.Sonar.ClientApp.Console.Extensions;
 using System.Text.RegularExpressions;
 using Rotating.Sonar.Client.Visualizer;
@@ -148,7 +148,7 @@ class Program
             }
 
             // Fetch and display all available COM ports
-            var portNames = SerialPort.GetPortNames();
+            var portNames = SerialPortProvider.GetPortNames();
 
             // Check if the specified port exists
             if (!portNames.Contains(targetPort))
@@ -191,7 +191,7 @@ class Program
     /// </summary>
     static void DisplayAvailablePorts()
     {
-        var portNames = SerialPort.GetPortNames();
+        var portNames = SerialPortProvider.GetPortNames();
         
         if (portNames.Length == 0)
         {
