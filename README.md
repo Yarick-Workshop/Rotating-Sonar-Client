@@ -112,15 +112,17 @@ Examples:
 - `255,255,0`
 - `255,255,0,128`
 
-See `VisualizerSettings`, `GridColorsSettings`, `RaySettings`, and `PointsSettings` for all tunable values.
+See the settings types in `Rotating.Sonar.Client.Common/Settings` for all tunable values.
 
 ## Development
 
-The solution contains two projects:
+The solution contains three projects:
 
-- `Rotating.Sonar.Client.Console` — entry point, serial handling, settings
-- `Rotating.Sonar.Client.Visualizer` — OpenGL polar plot, data cache, rendering primitives
+- `Rotating.Sonar.Client.Console` — entry point, command-line parsing, appsettings file, and app orchestration
+- `Rotating.Sonar.Client.Common` — shared COM port listeners, serial port helpers, app settings, and color parsing
+- `Rotating.Sonar.Client.Visualizer` — OpenGL polar plot, data cache, rendering primitives, and visualizer window
 
+Keep serial port I/O (`System.IO.Ports`) and settings serialization in `Rotating.Sonar.Client.Common`.
 Follow the class-per-file rule and keep one top-level class per `.cs` file.
 
 ## Support future projects
