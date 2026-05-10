@@ -2,6 +2,7 @@ namespace Rotating.Sonar.ClientApp.Console;
 
 using System;
 using System.IO.Ports;
+using Rotating.Sonar.Client.Common.ComPortListeners;
 using Rotating.Sonar.ClientApp.Console.Extensions;
 using System.Text.RegularExpressions;
 using Rotating.Sonar.Client.Visualizer;

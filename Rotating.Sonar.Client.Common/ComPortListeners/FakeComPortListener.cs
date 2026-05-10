@@ -1,8 +1,7 @@
-namespace Rotating.Sonar.ClientApp.Console;
+namespace Rotating.Sonar.Client.Common.ComPortListeners;
 
 using System;
 using Serilog;
-using Silk.NET.GLFW;
 
 public class FakeComPortListener : IComPortListener
 {

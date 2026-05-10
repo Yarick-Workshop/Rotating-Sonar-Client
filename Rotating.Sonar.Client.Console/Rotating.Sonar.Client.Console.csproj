@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Rotating.Sonar.Client.Visualizer\Rotating.Sonar.Client.Visualizer.csproj" />
+    <ProjectReference Include="..\Rotating.Sonar.Client.Common\Rotating.Sonar.Client.Common.csproj" />
   </ItemGroup>
 
 
