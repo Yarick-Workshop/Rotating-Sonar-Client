@@ -28,9 +28,9 @@ class Program
             .WriteTo.Async(a => a.Console())
             .CreateLogger();
         
-        Log.Information("Rotating Sonar Client Console");
+        Log.Information("Scan Display Client Console");
         Log.Information("=============================");
-        Log.Information("Desktop client to visualize data from Rotating-Sonar-Arduino");
+        Log.Information("Desktop client to visualize range/angle data from sonar or lidar-style sensors");
         Log.Information("");
 
         try
@@ -42,7 +42,7 @@ class Program
             // Print visualization info if requested
             if (visualizeMode)
             {
-                Log.Information("Visualization mode enabled: sonar data will be shown in the polar plot window.");
+                Log.Information("Visualization mode enabled: range/angle data will be shown in the scan display window.");
             }
 
             try
@@ -55,7 +55,7 @@ class Program
                 {
                     var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
                     var appSettings = AppSettings.Load(appSettingsPath);
-                    using var visualizer = new PolarPlotVisualizer(appSettings);
+                    using var visualizer = new ScanDisplayVisualizer(appSettings);
                     using var cancellationTokenSource = new CancellationTokenSource();
 
                     var serialThread = new Thread(() =>
@@ -175,7 +175,7 @@ class Program
         Log.Information("Parameters:");
         Log.Information("  -port <port_name>    COM port to connect to (required)");
         Log.Information("  -rate <baud_rate>    Baud rate (optional, default: {DefaultBaudRate})", DEFAULT_BAUD_RATE);
-        Log.Information("  -visualize           Enable visualization of sonar data (optional)");
+        Log.Information("  -visualize           Enable scan display visualization (optional)");
         Log.Information("  -fake                Generate fake randomize COM port data. A fake com port (optional). If the parameter is set no real COM port configuration is needed");
         Log.Information("");
         Log.Information("Examples:");

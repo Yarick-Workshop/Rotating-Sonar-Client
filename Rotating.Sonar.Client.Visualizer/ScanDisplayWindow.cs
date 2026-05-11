@@ -10,18 +10,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Silk.NET.Input;
 
-internal class PolarPlotWindow : IDisposable
+internal class ScanDisplayWindow : IDisposable
 {
     private const int FpsWindowSize = 60;// TODO to config
     private const float MaxDistanceCm = 200f;
 
-    private readonly SonarDataCache sonarDataCache;
+    private readonly ScanPointBuffer scanPointBuffer;
     private readonly AppSettings appSettings;
     private IWindow window;
     private IInputContext? inputContext;
-    private RenderOpenGL_1_1? render;
+    private OpenGlScanDisplayRenderer? render;
     private RenderZoomControl? zoomControl;
-    private TextRenderOpenGL_1_1? textRenderer;
+    private OpenGlTextRenderer? textRenderer;
     private double latestFps = 0;
     private readonly Queue<double> fpsHistory = new Queue<double>(FpsWindowSize);
 
@@ -29,8 +29,8 @@ internal class PolarPlotWindow : IDisposable
     
     private bool _disposed = false;
 
-    public PolarPlotWindow(
-        SonarDataCache sonarDataCache,
+    public ScanDisplayWindow(
+        ScanPointBuffer scanPointBuffer,
         AppSettings appSettings,
         int windowWidthPx,
         int windowHeightPx,
@@ -47,7 +47,7 @@ internal class PolarPlotWindow : IDisposable
         this.window.Render += this.OnRender;
         this.window.Resize += this.OnResize;
 
-        this.sonarDataCache = sonarDataCache;
+        this.scanPointBuffer = scanPointBuffer;
         this.appSettings = appSettings;
     }
 
@@ -64,7 +64,7 @@ internal class PolarPlotWindow : IDisposable
 
         this.previousSize = this.window.Size;
 
-        Log.Information("OpenGL Polar Plot Visualizer initialized with size {Width}x{Height}", width, height);
+        Log.Information("OpenGL scan display initialized with size {Width}x{Height}", width, height);
 
         this.inputContext = this.window.CreateInput();
         for (int i = 0; i < this.inputContext.Keyboards.Count; i++)
@@ -77,8 +77,8 @@ internal class PolarPlotWindow : IDisposable
             this.inputContext.Mice[i].Scroll += this.OnMouseScroll;
         }
 
-        this.textRenderer = new TextRenderOpenGL_1_1(gl, "°");
-        this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
+        this.textRenderer = new OpenGlTextRenderer(gl, "°");
+        this.render = new OpenGlScanDisplayRenderer(gl, this.scanPointBuffer, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
         this.zoomControl = new RenderZoomControl(this.render);
         /* 
         Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));
@@ -147,7 +147,7 @@ internal class PolarPlotWindow : IDisposable
         switch (key)
         {
             case Key.P:
-                PointRenderStyle pointStyle = this.render!.TogglePointRenderStyle();
+                ScanPointRenderStyle pointStyle = this.render!.ToggleScanPointRenderStyle();
                 Log.Information("Point style toggled: {PointStyle}", pointStyle);
                 break;
             case Key.F:
@@ -159,9 +159,9 @@ internal class PolarPlotWindow : IDisposable
                 bool showZoom = this.render!.ToggleZoomDisplay();
                 Log.Information("Zoom display toggled: {ShowZoom}", showZoom);
                 break;
-            case Key.R:
-                bool showRay = this.render!.ToggleRayDisplay();
-                Log.Information("Ray display toggled: {ShowRay}", showRay);
+            case Key.S:
+                bool showSweep = this.render!.ToggleSweepDisplay();
+                Log.Information("Sweep display toggled: {ShowSweep}", showSweep);
                 break;
             case Key.F11:
                 this.ToggleFullscreen();

@@ -6,7 +6,7 @@ using Silk.NET.OpenGL.Legacy;
 
 #pragma warning disable CS0618
 
-public class RenderOpenGL_1_1 : IZoomable
+public class OpenGlScanDisplayRenderer : IZoomable
 {
     private const float OverflowArrowHeadLengthPx = 8f;
     private const float OverflowArrowHalfWidthPx = 5f;
@@ -18,9 +18,9 @@ public class RenderOpenGL_1_1 : IZoomable
     private const float OuterTickLength5DegPx = 7f;
 
     private readonly GL gl;
-    private readonly OpenGL_1_1_Primitives glPrimitives;
+    private readonly OpenGlPrimitives glPrimitives;
 
-    private readonly SonarDataCache sonarDataCache;
+    private readonly ScanPointBuffer scanPointBuffer;
     private float cx;
     private float cy;
     private float radius;
@@ -28,25 +28,25 @@ public class RenderOpenGL_1_1 : IZoomable
     private readonly float maxDistanceCm;
     private float width;
     private float height;
-    private readonly TextRenderOpenGL_1_1 textRenderer;
+    private readonly OpenGlTextRenderer textRenderer;
     private readonly VisualizerSettings visualizerSettings;
     private bool showFps = true;
     private bool showZoom = true;
-    private bool showRay = false;
-    private PointRenderStyle pointRenderStyle = PointRenderStyle.SolidSquare;
+    private bool showSweep = false;
+    private ScanPointRenderStyle pointRenderStyle = ScanPointRenderStyle.SolidSquare;
 
-    public RenderOpenGL_1_1(
+    public OpenGlScanDisplayRenderer(
         GL gl,
-        SonarDataCache sonarDataCache,
+        ScanPointBuffer scanPointBuffer,
         AppSettings appSettings,
         float viewportWidthPx,
         float viewportHeightPx,
         float maxDistanceCm,
-        TextRenderOpenGL_1_1 textRenderer)
+        OpenGlTextRenderer textRenderer)
     {
         this.gl = gl;
-        this.glPrimitives = new OpenGL_1_1_Primitives(gl, appSettings.Visualizer);
-        this.sonarDataCache = sonarDataCache;
+        this.glPrimitives = new OpenGlPrimitives(gl, appSettings.Visualizer);
+        this.scanPointBuffer = scanPointBuffer;
 
         // TODO, investigate why option this.UpdateViewport(width, height); does not work
         this.width = viewportWidthPx;
@@ -92,21 +92,21 @@ public class RenderOpenGL_1_1 : IZoomable
         return this.showZoom;
     }
 
-    public bool ToggleRayDisplay()
+    public bool ToggleSweepDisplay()
     {
-        this.showRay = !this.showRay;
-        return this.showRay;
+        this.showSweep = !this.showSweep;
+        return this.showSweep;
     }
 
-    public PointRenderStyle TogglePointRenderStyle()
+    public ScanPointRenderStyle ToggleScanPointRenderStyle()
     {
         this.pointRenderStyle = this.pointRenderStyle switch
         {
-            PointRenderStyle.OutlineSquare => PointRenderStyle.SolidSquare,
-            PointRenderStyle.SolidSquare => PointRenderStyle.SolidCircle,
-            PointRenderStyle.SolidCircle => PointRenderStyle.OutlineCircle,
-            PointRenderStyle.OutlineCircle => PointRenderStyle.Line,
-            PointRenderStyle.Line => PointRenderStyle.OutlineSquare,
+            ScanPointRenderStyle.OutlineSquare => ScanPointRenderStyle.SolidSquare,
+            ScanPointRenderStyle.SolidSquare => ScanPointRenderStyle.SolidCircle,
+            ScanPointRenderStyle.SolidCircle => ScanPointRenderStyle.OutlineCircle,
+            ScanPointRenderStyle.OutlineCircle => ScanPointRenderStyle.Line,
+            ScanPointRenderStyle.Line => ScanPointRenderStyle.OutlineSquare,
             _ => throw new NotImplementedException($"Point render style '{this.pointRenderStyle}' is not implemented."),
         };
 
@@ -127,7 +127,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.DrawPoints();
         this.DrawPolarGrid();
 
-        var uiText = this.visualizerSettings.UiTextColor;
+        var uiText = this.visualizerSettings.OverlayTextColor;
         this.gl.Color4(uiText.R, uiText.G, uiText.B, uiText.A);
 
         if (this.showFps)
@@ -160,11 +160,11 @@ public class RenderOpenGL_1_1 : IZoomable
 
     private void DrawPoints()
     {
-        var points = this.sonarDataCache.GetPoints();
+        var points = this.scanPointBuffer.GetPoints();
 
         if (points.Count == 0)
         {
-            Log.Warning("No points to draw in polar plot.");
+            Log.Warning("No scan points to draw.");
             return;
         }
         
@@ -191,11 +191,11 @@ public class RenderOpenGL_1_1 : IZoomable
             arrowAngles.Add(angle);
         }
 
-        RaySettings raySettings = this.visualizerSettings.Ray;
+        SweepSettings sweepSettings = this.visualizerSettings.Sweep;
         (int angle, int distance) latestPoint = default;
-        bool shouldDrawLatestRay = this.showRay && this.sonarDataCache.TryGetLatestPoint(out latestPoint);
-        float latestRayRadius = shouldDrawLatestRay
-            ? this.radius * (raySettings.LengthPercentOfRadius / 100f)
+        bool shouldDrawLatestSweep = this.showSweep && this.scanPointBuffer.TryGetLatestPoint(out latestPoint);
+        float latestSweepRadius = shouldDrawLatestSweep
+            ? this.radius * (sweepSettings.LengthPercentOfRadius / 100f)
             : 0f;
 
         this.gl.PushMatrix();
@@ -203,22 +203,22 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.Rotate(90f, 0f, 0f, 1f); // Keep the same world orientation as before.
         this.gl.Translate(-this.cx, -this.cy, 0f);
 
-        var echoPoint = this.visualizerSettings.Points.EchoColor;
-        this.gl.Color4(echoPoint.R, echoPoint.G, echoPoint.B, echoPoint.A);
+        var scanPoint = this.visualizerSettings.ScanPoints.ScanPointColor;
+        this.gl.Color4(scanPoint.R, scanPoint.G, scanPoint.B, scanPoint.A);
         this.DrawPolarPointsOnly(pointItems);
 
-        if (shouldDrawLatestRay)
+        if (shouldDrawLatestSweep)
         {
-            this.DrawLatestRay(latestPoint.angle, latestRayRadius, raySettings);
+            this.DrawLatestSweep(latestPoint.angle, latestSweepRadius, sweepSettings);
         }
 
-        var overflowArrow = this.visualizerSettings.Points.OverflowArrowColor;
+        var overflowArrow = this.visualizerSettings.ScanPoints.OffScaleIndicatorColor;
         this.gl.Color4(overflowArrow.R, overflowArrow.G, overflowArrow.B, overflowArrow.A);
         this.DrawPolarArrowsOnly(arrowAngles, tipRadius, arrowHeadBack);
         this.gl.PopMatrix();
 
         // Draw a white point at the center
-        var centerPoint = this.visualizerSettings.Points.CenterPointColor;
+        var centerPoint = this.visualizerSettings.ScanPoints.OriginMarkerColor;
         this.gl.Color4(centerPoint.R, centerPoint.G, centerPoint.B, centerPoint.A);
         this.gl.PushMatrix();
         this.gl.Translate(this.cx, this.cy, 0f);
@@ -236,7 +236,7 @@ public class RenderOpenGL_1_1 : IZoomable
             this.gl.Translate(radius, 0f, 0f);
 
             // TODO, add option to enable/disable this?
-            if (this.pointRenderStyle == PointRenderStyle.SolidSquare || this.pointRenderStyle == PointRenderStyle.OutlineSquare)
+            if (this.pointRenderStyle == ScanPointRenderStyle.SolidSquare || this.pointRenderStyle == ScanPointRenderStyle.OutlineSquare)
             {
                 this.gl.Rotate(angle, 0f, 0f, 1f);
             }
@@ -247,19 +247,19 @@ public class RenderOpenGL_1_1 : IZoomable
     }
 
     // TODO, optimize!
-    private void DrawLatestRay(float rayAngleDeg, float rayRadiusPx, RaySettings raySettings)
+    private void DrawLatestSweep(float sweepAngleDeg, float sweepRadiusPx, SweepSettings sweepSettings)
     {
-        FloatColor4 color = raySettings.RayColor;
-        float sweepHalfAngleDeg = Math.Max(0f, raySettings.SweepAngleDeg) / 2f;
-        int sweepSegments = Math.Max(1, raySettings.SweepSegmentCount);
-        float coneCenterAlpha = Math.Clamp(raySettings.ConeCenterAlpha, 0f, 1f);
-        float coneEdgeAlpha = Math.Clamp(raySettings.ConeEdgeAlpha, 0f, 1f);
-        float lineAlpha = Math.Clamp(raySettings.LineAlpha, 0f, 1f);
-        float lineWidth = Math.Max(0.1f, raySettings.LineWidthPx);
+        FloatColor4 color = sweepSettings.SweepColor;
+        float sweepHalfAngleDeg = Math.Max(0f, sweepSettings.SweepAngleDeg) / 2f;
+        int sweepSegments = Math.Max(1, sweepSettings.SweepSegmentCount);
+        float coneCenterAlpha = Math.Clamp(sweepSettings.ConeCenterAlpha, 0f, 1f);
+        float coneEdgeAlpha = Math.Clamp(sweepSettings.ConeEdgeAlpha, 0f, 1f);
+        float lineAlpha = Math.Clamp(sweepSettings.LineAlpha, 0f, 1f);
+        float lineWidth = Math.Max(0.1f, sweepSettings.LineWidthPx);
 
         this.gl.PushMatrix();
         this.gl.Translate(this.cx, this.cy, 0f);
-        this.gl.Rotate(-rayAngleDeg, 0f, 0f, 1f);
+        this.gl.Rotate(-sweepAngleDeg, 0f, 0f, 1f);
 
         float centerAlpha = Math.Clamp(color.A * coneCenterAlpha, 0f, 1f);
         float edgeAlpha = Math.Clamp(color.A * coneEdgeAlpha, 0f, 1f);
@@ -273,8 +273,8 @@ public class RenderOpenGL_1_1 : IZoomable
             float t = i / (float)sweepSegments;
             float beamAngleDeg = -sweepHalfAngleDeg + (t * sweepHalfAngleDeg * 2f);
             float beamAngleRad = beamAngleDeg * (MathF.PI / 180f);
-            float x = MathF.Cos(beamAngleRad) * rayRadiusPx;
-            float y = MathF.Sin(beamAngleRad) * rayRadiusPx;
+            float x = MathF.Cos(beamAngleRad) * sweepRadiusPx;
+            float y = MathF.Sin(beamAngleRad) * sweepRadiusPx;
 
             this.gl.Color4(color.R, color.G, color.B, edgeAlpha);
             this.gl.Vertex2(x, y);
@@ -287,7 +287,7 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.Begin(GLEnum.Lines);
         this.gl.Color4(color.R, color.G, color.B, Math.Clamp(color.A * lineAlpha, 0f, 1f));
         this.gl.Vertex2(0f, 0f);
-        this.gl.Vertex2(rayRadiusPx, 0f);
+        this.gl.Vertex2(sweepRadiusPx, 0f);
         this.gl.End();
         this.gl.LineWidth(previousWidth[0]);
 
@@ -320,16 +320,16 @@ public class RenderOpenGL_1_1 : IZoomable
         this.gl.Enable(GLEnum.Blend);
         this.gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
 
-        // Every 100 cm ring that fits inside the rim (same scale as echoes). Fills disc: farthest
+        // Every 100 cm ring that fits inside the rim (same scale as scan points). Fills disc: farthest
         // ring at d = maxDistanceCm/zoomScale coincides with the plot edge when zoom ≠ 1.
-        var gridLine = this.visualizerSettings.Grid.LineColor;
+        var gridLine = this.visualizerSettings.RangeGrid.LineColor;
         this.gl.Color4(gridLine.R, gridLine.G, gridLine.B, gridLine.A);
         if (this.maxDistanceCm > 0f && this.zoomScale > 0f)
         {
             float dMax = this.maxDistanceCm / this.zoomScale;
             for (int i = 1; i * RangeRingStepCm <= dMax + InsideRingEpsilon; i++)
             {
-                float ringR = this.ScaledEchoRadius(i * RangeRingStepCm);
+                float ringR = this.ScaledScanPointRadius(i * RangeRingStepCm);
                 if (ringR <= this.radius + InsideRingEpsilon)
                 {
                     this.glPrimitives.DrawCircle(this.cx, this.cy, ringR);
@@ -359,7 +359,7 @@ public class RenderOpenGL_1_1 : IZoomable
         }
 
         // Draw short rim ticks every 5 degrees; longer marks every 10 degrees.
-        var gridTickLabel = this.visualizerSettings.Grid.TickLabelColor;
+        var gridTickLabel = this.visualizerSettings.RangeGrid.RangeLabelColor;
         this.gl.Color4(gridTickLabel.R, gridTickLabel.G, gridTickLabel.B, gridTickLabel.A);
         this.gl.Begin(GLEnum.Lines);
         for (int a = 0; a < 360; a += 5)
@@ -379,7 +379,7 @@ public class RenderOpenGL_1_1 : IZoomable
         }
         this.gl.End();
 
-        var gridLabel = this.visualizerSettings.Grid.AngleLabelColor;
+        var gridLabel = this.visualizerSettings.RangeGrid.BearingLabelColor;
         this.gl.Color4(gridLabel.R, gridLabel.G, gridLabel.B, gridLabel.A);
 
         // Draw compass-like degree labels around the largest circle
@@ -400,7 +400,7 @@ public class RenderOpenGL_1_1 : IZoomable
         }
     }
 
-    private float ScaledEchoRadius(float distanceCm)
+    private float ScaledScanPointRadius(float distanceCm)
     {
         return distanceCm / this.maxDistanceCm * this.radius * this.zoomScale;
     }

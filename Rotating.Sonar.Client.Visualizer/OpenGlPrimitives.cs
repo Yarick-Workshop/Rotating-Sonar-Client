@@ -4,7 +4,7 @@ using Rotating.Sonar.Client.Common.Settings;
 using Silk.NET.OpenGL.Legacy;
 
 #pragma warning disable CS0618
-public class OpenGL_1_1_Primitives
+public class OpenGlPrimitives
 {
     private const int CircleSegments = 64;
     private const int PointCircleSegments = 16;
@@ -15,11 +15,11 @@ public class OpenGL_1_1_Primitives
     private readonly (float X, float Y)[] pointSquareCorners;
     private readonly float pointRadius;
 
-    public OpenGL_1_1_Primitives(GL gl, VisualizerSettings visualizerSettings)
+    public OpenGlPrimitives(GL gl, VisualizerSettings visualizerSettings)
     {
         this.gl = gl;
 
-        float pointSize = Math.Max(1f, visualizerSettings.Points.PointSizePx);
+        float pointSize = Math.Max(1f, visualizerSettings.ScanPoints.PointSizePx);
         this.pointRadius = pointSize / 2f;
         this.pointCirclePoints = CreateScaledCirclePoints(PointCircleSegments, this.pointRadius);
         this.pointSquareCorners =
@@ -47,9 +47,9 @@ public class OpenGL_1_1_Primitives
         this.gl.LineWidth(previousWidth[0]);
     }
 
-    public void DrawPointPrimitive(PointRenderStyle pointRenderStyle)
+    public void DrawPointPrimitive(ScanPointRenderStyle pointRenderStyle)
     {
-        if (pointRenderStyle == PointRenderStyle.Line)
+        if (pointRenderStyle == ScanPointRenderStyle.Line)
         {
             this.DrawPointLinePrimitive();
             return;
@@ -57,10 +57,10 @@ public class OpenGL_1_1_Primitives
 
         ((float X, float Y)[] unitPoints, bool filled) = pointRenderStyle switch
         {
-            PointRenderStyle.OutlineSquare => (this.pointSquareCorners, false),
-            PointRenderStyle.SolidSquare => (this.pointSquareCorners, true),
-            PointRenderStyle.SolidCircle => (this.pointCirclePoints, true),
-            PointRenderStyle.OutlineCircle => (this.pointCirclePoints, false),
+            ScanPointRenderStyle.OutlineSquare => (this.pointSquareCorners, false),
+            ScanPointRenderStyle.SolidSquare => (this.pointSquareCorners, true),
+            ScanPointRenderStyle.SolidCircle => (this.pointCirclePoints, true),
+            ScanPointRenderStyle.OutlineCircle => (this.pointCirclePoints, false),
             _ => throw new NotImplementedException($"Point render style '{pointRenderStyle}' is not implemented."),
         };
 
