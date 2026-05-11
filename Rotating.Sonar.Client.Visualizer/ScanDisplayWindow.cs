@@ -125,27 +125,32 @@ internal class ScanDisplayWindow : IDisposable
         // so Ctrl held on another physical device still qualifies.
         bool ctrl = keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight);
 
-        if (ctrl)
-        {
-            switch (key)
-            {
-                case Key.Equal:
-                case Key.KeypadAdd:
-                    this.zoomControl?.ZoomIn();
-                    return;
-                case Key.Minus:
-                case Key.KeypadSubtract:
-                    this.zoomControl?.ZoomOut();
-                    return;
-                case Key.D0:
-                case Key.Keypad0:
-                    this.zoomControl?.ResetZoom();
-                    return;
-            }
-        }
-
         switch (key)
         {
+            case Key.Equal:
+            case Key.KeypadAdd:
+                if (ctrl)
+                {
+                    this.zoomControl?.ZoomIn();
+                }
+
+                break;
+            case Key.Minus:
+            case Key.KeypadSubtract:
+                if (ctrl)
+                {
+                    this.zoomControl?.ZoomOut();
+                }
+
+                break;
+            case Key.D0:
+            case Key.Keypad0:
+                if (ctrl)
+                {
+                    this.zoomControl?.ResetZoom();
+                }
+
+                break;
             case Key.P:
                 ScanPointRenderStyle pointStyle = this.render!.ToggleScanPointRenderStyle();
                 Log.Information("Point style toggled: {PointStyle}", pointStyle);
