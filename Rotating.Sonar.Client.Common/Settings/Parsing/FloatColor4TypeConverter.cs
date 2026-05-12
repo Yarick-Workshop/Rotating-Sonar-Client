@@ -31,7 +31,7 @@ public sealed class FloatColor4TypeConverter : TypeConverter
 
     public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
     {
-        return sourceType == typeof(string)/* TODO, check if this is needed || base.CanConvertFrom(context, sourceType)*/;
+        return sourceType == typeof(string);
     }
 
     public override object? ConvertFrom(
@@ -49,7 +49,7 @@ public sealed class FloatColor4TypeConverter : TypeConverter
 
     public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
     {
-        return destinationType == typeof(string)/* TODO, is it needed? || base.CanConvertTo(context, destinationType)*/;
+        return destinationType == typeof(string);
     }
 
     public override object? ConvertTo(
