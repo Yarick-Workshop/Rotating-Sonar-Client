@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.Client.Visualizer;
+namespace Rotating.Sonar.Client.Common.Zoom;
 
 public interface IZoomable
 {

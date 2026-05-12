@@ -1,6 +1,7 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Zoom;
 using System;
 using System.Runtime.InteropServices;
 using Silk.NET.Maths;
