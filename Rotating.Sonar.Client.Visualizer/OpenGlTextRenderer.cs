@@ -15,12 +15,12 @@ record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, 
 // TODO, refactor
 public class OpenGlTextRenderer
 {
+    private const int TileSize = 32;
+    private const int Columns = 16;
+
     private readonly GL gl;
     private uint atlasTexture;//TODO, temp
     private readonly Dictionary<char, GlyphInfo> glyphs;
-
-    const int TileSize = 32;
-    const int Columns = 16;
 
     public OpenGlTextRenderer(GL gl, List<char> charTable)
     {

@@ -4,9 +4,9 @@ using System.Reflection;
 
 internal sealed class ChainColorParser : IColorParser
 {
-    public static ChainColorParser Instance { get; } = new();
-
     private readonly IColorParser[] parsers;
+
+    public static ChainColorParser Instance { get; } = new();
 
     private ChainColorParser()
     {

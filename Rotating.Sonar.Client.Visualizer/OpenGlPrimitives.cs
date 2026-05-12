@@ -67,6 +67,15 @@ public class OpenGlPrimitives
         this.DrawPointPolygon(unitPoints, filled);
     }
 
+    public void DrawArrowPrimitive(float arrowHeadBackPx, float arrowHalfWidthPx)
+    {
+        this.gl.Begin(GLEnum.Triangles);
+        this.gl.Vertex2(0f, 0f);
+        this.gl.Vertex2(-arrowHeadBackPx, arrowHalfWidthPx);
+        this.gl.Vertex2(-arrowHeadBackPx, -arrowHalfWidthPx);
+        this.gl.End();
+    }
+
     private void DrawPointLinePrimitive()
     {
         // TODO: move line-point width to visualizer configuration.
@@ -80,27 +89,6 @@ public class OpenGlPrimitives
         this.gl.End();
 
         this.gl.LineWidth(previousWidth[0]);
-    }
-
-    public void DrawArrowPrimitive(float arrowHeadBackPx, float arrowHalfWidthPx)
-    {
-        this.gl.Begin(GLEnum.Triangles);
-        this.gl.Vertex2(0f, 0f);
-        this.gl.Vertex2(-arrowHeadBackPx, arrowHalfWidthPx);
-        this.gl.Vertex2(-arrowHeadBackPx, -arrowHalfWidthPx);
-        this.gl.End();
-    }
-
-    private static (float X, float Y)[] CreateUnitCirclePoints(int segmentCount)
-    {
-        var points = new (float X, float Y)[segmentCount];
-        for (int i = 0; i < segmentCount; i++)
-        {
-            double theta = 2d * Math.PI * i / segmentCount;
-            points[i] = ((float)Math.Cos(theta), (float)Math.Sin(theta));
-        }
-
-        return points;
     }
 
     private void DrawPointPolygon((float X, float Y)[] points, bool filled)
@@ -118,6 +106,18 @@ public class OpenGlPrimitives
         }
 
         this.gl.End();
+    }
+
+    private static (float X, float Y)[] CreateUnitCirclePoints(int segmentCount)
+    {
+        var points = new (float X, float Y)[segmentCount];
+        for (int i = 0; i < segmentCount; i++)
+        {
+            double theta = 2d * Math.PI * i / segmentCount;
+            points[i] = ((float)Math.Cos(theta), (float)Math.Sin(theta));
+        }
+
+        return points;
     }
 
     private static (float X, float Y)[] CreateScaledCirclePoints(int segments, float pointRadius)

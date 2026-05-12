@@ -7,9 +7,9 @@ public class ComPortListener : IComPortListener
 {
     private const int ReadTimeoutMilliseconds = 250;
 
-    public string PortName { get; }
-
     private readonly int portBaudRate;
+
+    public string PortName { get; }
 
     public ComPortListener(string portName, int portBaudRate)
     {

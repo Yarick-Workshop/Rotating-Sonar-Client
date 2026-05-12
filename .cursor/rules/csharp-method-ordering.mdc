@@ -1,0 +1,24 @@
+---
+description: C# type member order — fields/properties, constructors, then methods
+globs: **/*.cs
+alwaysApply: false
+---
+
+# Member order (classes, structs, records)
+
+Within a type, use this order:
+
+1. **Constants and fields** — `const`, `static readonly`, then instance fields (including `readonly`).
+2. **Properties** — auto-properties and full properties (including `public static` properties such as singleton `Instance`).
+3. **Constructors** — instance constructors first, then `static` constructor if present.
+4. **`public` methods** — non-static (instance) first, then `static`.
+5. **`protected` methods** — non-static first, then `static`.
+6. **`private` methods** — non-static first, then `static`.
+
+**Rules**
+
+- Do not place fields or properties after a constructor.
+- Do not interleave `static` before instance methods at the same visibility.
+- Nested types and explicit interface implementations: keep them after private methods unless the file already uses a stable local convention.
+
+When editing a type, align its layout with this scheme whenever member order is already part of the change.

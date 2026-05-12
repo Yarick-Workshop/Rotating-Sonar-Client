@@ -57,6 +57,42 @@ internal class ScanDisplayWindow : IDisposable
         this.window!.Run();
     }
 
+    public void ToggleFullscreen()
+    {
+        var oldState = this.window.WindowState;
+
+        if (oldState == WindowState.Fullscreen)
+        {
+            this.window.WindowState = WindowState.Normal;
+        }
+        else
+        {
+            // It is not an useless line.
+            // It is a fix of a bug when going back to normal from fullscreen
+            // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
+            this.window.WindowState = WindowState.Normal;
+
+            this.window.WindowState = WindowState.Fullscreen;
+        }
+
+        Log.Information(
+            "Toggling fullscreen: {OldState} -> {NewState}",
+            oldState, 
+            this.window.WindowState);
+    }
+
+    public void Dispose()
+    {
+        if (this._disposed)
+        {
+            return;
+        }
+
+        this._disposed = true;
+        this.ReleaseInput();
+        this.window?.Dispose();
+    }
+
     private void OnLoad()
     {
         var gl = GL.GetApi(this.window);
@@ -205,30 +241,6 @@ internal class ScanDisplayWindow : IDisposable
         this.zoomControl?.ZoomWheel(scrollWheel.Y);
     }
 
-    public void ToggleFullscreen()
-    {
-        var oldState = this.window.WindowState;
-
-        if (oldState == WindowState.Fullscreen)
-        {
-            this.window.WindowState = WindowState.Normal;
-        }
-        else
-        {
-            // It is not an useless line.
-            // It is a fix of a bug when going back to normal from fullscreen
-            // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
-            this.window.WindowState = WindowState.Normal;
-
-            this.window.WindowState = WindowState.Fullscreen;
-        }
-
-        Log.Information(
-            "Toggling fullscreen: {OldState} -> {NewState}",
-            oldState, 
-            this.window.WindowState);
-    }
-
     private void ReleaseInput()
     {
         if (this.inputContext == null)
@@ -252,18 +264,6 @@ internal class ScanDisplayWindow : IDisposable
         }
 
         this.inputContext = null;
-    }
-
-    public void Dispose()
-    {
-        if (this._disposed)
-        {
-            return;
-        }
-
-        this._disposed = true;
-        this.ReleaseInput();
-        this.window?.Dispose();
     }
 
     private static void LogOpenGlDriverInfo(GL gl)

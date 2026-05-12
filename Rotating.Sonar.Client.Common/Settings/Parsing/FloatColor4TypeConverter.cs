@@ -7,28 +7,6 @@ public sealed class FloatColor4TypeConverter : TypeConverter
 {
     private static readonly IColorParser Parser = ChainColorParser.Instance;
 
-    public static FloatColor4 Parse(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            throw new FormatException("FloatColor4 cannot be null or empty.");
-        }
-
-        var s = raw.Trim();
-        if (Parser.TryParse(s, out var color))
-        {
-            return color;
-        }
-
-        throw new FormatException(
-            $"Invalid FloatColor4 format: '{raw}'. Use '#RRGGBB', '#RRGGBBAA', 'R,G,B', or 'R,G,B,A'.");
-    }
-
-    internal static byte FormatByte(float value)
-    {
-        return (byte)Math.Clamp((int)Math.Round(value * 255f), 0, 255);
-    }
-
     public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
     {
         return sourceType == typeof(string);
@@ -66,5 +44,27 @@ public sealed class FloatColor4TypeConverter : TypeConverter
         }
 
         throw this.GetConvertToException(value, destinationType);
+    }
+
+    public static FloatColor4 Parse(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            throw new FormatException("FloatColor4 cannot be null or empty.");
+        }
+
+        var s = raw.Trim();
+        if (Parser.TryParse(s, out var color))
+        {
+            return color;
+        }
+
+        throw new FormatException(
+            $"Invalid FloatColor4 format: '{raw}'. Use '#RRGGBB', '#RRGGBBAA', 'R,G,B', or 'R,G,B,A'.");
+    }
+
+    internal static byte FormatByte(float value)
+    {
+        return (byte)Math.Clamp((int)Math.Round(value * 255f), 0, 255);
     }
 }

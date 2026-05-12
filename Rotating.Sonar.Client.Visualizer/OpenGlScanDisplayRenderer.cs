@@ -35,6 +35,14 @@ public class OpenGlScanDisplayRenderer : IZoomable
     private bool showSweep = false;
     private ScanPointRenderStyle pointRenderStyle = ScanPointRenderStyle.SolidSquare;
 
+    public float ZoomScale
+    {
+        get
+        {
+            return this.zoomScale;
+        }
+    }
+
     public OpenGlScanDisplayRenderer(
         GL gl,
         ScanPointBuffer scanPointBuffer,
@@ -65,14 +73,6 @@ public class OpenGlScanDisplayRenderer : IZoomable
         this.gl.ClearColor(bg.R, bg.G, bg.B, bg.A);
         this.gl.Disable(GLEnum.DepthTest);
         this.gl.Disable(GLEnum.CullFace);
-    }
-
-    public float ZoomScale
-    {
-        get
-        {
-            return this.zoomScale;
-        }
     }
 
     public void SetZoom(float zoomScale)
