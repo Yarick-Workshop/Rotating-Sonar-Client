@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.Client.Visualizer;
+namespace Rotating.Sonar.Client.Visualizer.Text;
 
 public enum HorizontalAlignment
 {

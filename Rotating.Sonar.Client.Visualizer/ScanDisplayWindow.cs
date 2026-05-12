@@ -1,16 +1,9 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
-using Rotating.Sonar.Client.Common.Settings;
-using Rotating.Sonar.Client.Common.Zoom;
 using System;
 using System.Runtime.InteropServices;
-using Silk.NET.Maths;
-using Silk.NET.OpenGL.Legacy;
-using Silk.NET.Windowing;
-using Serilog;
 using System.Collections.Generic;
 using System.Linq;
-using Silk.NET.Input;
 
 internal class ScanDisplayWindow : IDisposable
 {
