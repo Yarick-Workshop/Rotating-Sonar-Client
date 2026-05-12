@@ -8,7 +8,7 @@
 
 # Rotating-Sonar-Client
 
-A desktop client to visualize real-time data from [Rotating-Sonar-Arduino](https://github.com/Yarick-Workshop/Rotating-Sonar-Arduino). It connects via serial (COM port), parses angle:distance readings, and renders an interactive polar plot using OpenGL 1.1.
+A desktop scan display client for real-time range/angle data from sonar or lidar-style sensors. It can connect via serial (COM port), parse angle:distance readings, and render an interactive PPI-style scan display using OpenGL 1.1.
 
 ⚠️ If anything is unclear, ask in the [Telegram group or use the other contact options below](#contact).
 
@@ -28,11 +28,11 @@ A desktop client to visualize real-time data from [Rotating-Sonar-Arduino](https
 
 ## Features
 
-- Real-time serial data ingestion from Arduino (or fake data for testing)
-- Interactive polar plot visualization with zoom, and style toggles
-- Configurable colors, ray, grid, and point rendering via JSON settings
+- Real-time serial data ingestion from a sensor device (or fake data for testing)
+- Interactive scan display visualization with zoom and point style toggles
+- Configurable colors, sweep, range grid, and scan point rendering via JSON settings
 - Cross-platform (Windows/Linux) .NET 8 console + OpenGL window
-- FPS, zoom, and latest-ray overlays for debugging
+- FPS, zoom, and latest-sweep overlays for debugging
 
 ## Requirements
 
@@ -58,7 +58,7 @@ dotnet run --project Rotating.Sonar.Client.Console
 
 ## Usage
 
-Run the console app and connect to your sonar device.
+Run the console app and connect to your range/angle sensor device.
 
 ### Command-line options
 
@@ -68,7 +68,7 @@ Usage: dotnet run -- -port <port_name> [-rate <baud_rate>] [-visualize] [-fake]
 
 - `-port <port_name>` — COM port (e.g. `/dev/ttyUSB0` or `COM3`). If omitted or not found, the list of available ports is displayed and the app exits. Use `-fake` for UI testing without a real port.
 - `-rate <baud_rate>` — baud rate (default 9600)
-- `-visualize` — open the polar plot window
+- `-visualize` — open the scan display window
 - `-fake` — generate random test data (no hardware needed)
 
 Examples:
@@ -87,7 +87,7 @@ dotnet run -- -fake -visualize
 | P               | Toggle point style                          |
 | F, F3           | Toggle FPS display on/off                   |
 | Z               | Toggle zoom display on/off                  |
-| R               | Toggle latest-ray display on/off            |
+| S               | Toggle latest sweep display on/off          |
 | F11, Alt+Enter  | Toggle fullscreen mode                      |
 | Ctrl+=, Ctrl+-  | Zoom in / zoom out (`=` / `-`; numpad too)  |
 | Ctrl+0          | Reset zoom to default                       |
@@ -97,6 +97,7 @@ dotnet run -- -fake -visualize
 ## Configuration
 
 Color and rendering settings live in `Rotating.Sonar.Client.Console/appsettings.json` (copied to output).
+The main configuration groups are `Visualizer.ScanPoints`, `Visualizer.Sweep`, and `Visualizer.RangeGrid`.
 
 ### Supported Color Formats
 
@@ -112,15 +113,17 @@ Examples:
 - `255,255,0`
 - `255,255,0,128`
 
-See `VisualizerSettings`, `GridColorsSettings`, `RaySettings`, and `PointsSettings` for all tunable values.
+See the settings types in `Rotating.Sonar.Client.Common/Settings` for all tunable values.
 
 ## Development
 
-The solution contains two projects:
+The solution contains three projects:
 
-- `Rotating.Sonar.Client.Console` — entry point, serial handling, settings
-- `Rotating.Sonar.Client.Visualizer` — OpenGL polar plot, data cache, rendering primitives
+- `Rotating.Sonar.Client.Console` — entry point, command-line parsing, appsettings file, and app orchestration
+- `Rotating.Sonar.Client.Common` — shared COM port listeners, serial port helpers, app settings, and color parsing
+- `Rotating.Sonar.Client.Visualizer` — OpenGL scan display, point buffer, rendering primitives, and visualizer window
 
+Keep serial port I/O (`System.IO.Ports`) and settings/color serialization in `Rotating.Sonar.Client.Common`.
 Follow the class-per-file rule and keep one top-level class per `.cs` file.
 
 ## Support future projects

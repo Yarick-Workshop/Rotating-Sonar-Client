@@ -1,6 +1,6 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
-public enum PointRenderStyle
+public enum ScanPointRenderStyle
 {
     OutlineSquare,
     SolidSquare,

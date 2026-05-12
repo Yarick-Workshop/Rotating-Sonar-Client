@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.ClientApp.Console;
+namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 
 using System;
 

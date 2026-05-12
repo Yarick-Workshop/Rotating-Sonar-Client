@@ -1,16 +1,15 @@
-namespace Rotating.Sonar.ClientApp.Console;
+namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 
 using System;
 using System.IO.Ports;
 using Serilog;
-
 public class ComPortListener : IComPortListener
 {
     private const int ReadTimeoutMilliseconds = 250;
 
-    public string PortName { get; }
-
     private readonly int portBaudRate;
+
+    public string PortName { get; }
 
     public ComPortListener(string portName, int portBaudRate)
     {
@@ -32,9 +31,6 @@ public class ComPortListener : IComPortListener
         try
         {
             serialPort.Open();
-            Log.Information("Port {PortName} opened successfully at {BaudRate} baud.", this.PortName, serialPort.BaudRate);
-            Log.Information("Reading data from port... (Press any key to stop)");//TODO, get rid of a button
-            Log.Information("----------------------------------------");
 
             while (!isCancelled())
             {
@@ -42,8 +38,9 @@ public class ComPortListener : IComPortListener
                 {
                     var line = serialPort.ReadLine()
                         .TrimEnd('\r');
-                    Log.Debug("Received line: \"{Line}\".", line);
 
+                    Log.Debug("Received line: \"{Line}\".", line);
+                    
                     newLineCallBack?.Invoke(line);
                 }
                 catch (TimeoutException)

@@ -1,7 +1,9 @@
 namespace Rotating.Sonar.ClientApp.Console;
 
+using Rotating.Sonar.Client.Common.Settings;
 using System;
-using System.IO.Ports;
+using Rotating.Sonar.Client.Common.SerialPorts.Listeners;
+using Rotating.Sonar.Client.Common.SerialPorts;
 using Rotating.Sonar.ClientApp.Console.Extensions;
 using System.Text.RegularExpressions;
 using Rotating.Sonar.Client.Visualizer;
@@ -26,9 +28,9 @@ class Program
             .WriteTo.Async(a => a.Console())
             .CreateLogger();
         
-        Log.Information("Rotating Sonar Client Console");
+        Log.Information("Scan Display Client Console");
         Log.Information("=============================");
-        Log.Information("Desktop client to visualize data from Rotating-Sonar-Arduino");
+        Log.Information("Desktop client to visualize range/angle data from sonar or lidar-style sensors");
         Log.Information("");
 
         try
@@ -40,7 +42,7 @@ class Program
             // Print visualization info if requested
             if (visualizeMode)
             {
-                Log.Information("Visualization mode enabled: sonar data will be shown in the polar plot window.");
+                Log.Information("Visualization mode enabled: range/angle data will be shown in the scan display window.");
             }
 
             try
@@ -53,8 +55,11 @@ class Program
                 {
                     var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
                     var appSettings = AppSettings.Load(appSettingsPath);
-                    using var visualizer = new PolarPlotVisualizer(appSettings);
+                    using var visualizer = new ScanDisplayVisualizer(appSettings);
                     using var cancellationTokenSource = new CancellationTokenSource();
+                    
+                    Log.Information("Reading data from port: {PortName}.", comPortListener.PortName);
+                    Log.Information("----------------------------------------");
 
                     var serialThread = new Thread(() =>
                         comPortListener.Listen(
@@ -85,6 +90,8 @@ class Program
                 }
                 else
                 {
+                    Log.Information("Reading data from port: {PortName}. (Press any key to stop)", comPortListener.PortName);
+                    Log.Information("----------------------------------------");
                     comPortListener.Listen(() => Console.KeyAvailable);
                 }
             }
@@ -147,7 +154,7 @@ class Program
             }
 
             // Fetch and display all available COM ports
-            var portNames = SerialPort.GetPortNames();
+            var portNames = SerialPortProvider.GetPortNames();
 
             // Check if the specified port exists
             if (!portNames.Contains(targetPort))
@@ -173,7 +180,7 @@ class Program
         Log.Information("Parameters:");
         Log.Information("  -port <port_name>    COM port to connect to (required)");
         Log.Information("  -rate <baud_rate>    Baud rate (optional, default: {DefaultBaudRate})", DEFAULT_BAUD_RATE);
-        Log.Information("  -visualize           Enable visualization of sonar data (optional)");
+        Log.Information("  -visualize           Enable scan display visualization (optional)");
         Log.Information("  -fake                Generate fake randomize COM port data. A fake com port (optional). If the parameter is set no real COM port configuration is needed");
         Log.Information("");
         Log.Information("Examples:");
@@ -190,7 +197,7 @@ class Program
     /// </summary>
     static void DisplayAvailablePorts()
     {
-        var portNames = SerialPort.GetPortNames();
+        var portNames = SerialPortProvider.GetPortNames();
         
         if (portNames.Length == 0)
         {

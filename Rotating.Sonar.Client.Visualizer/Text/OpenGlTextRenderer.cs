@@ -1,28 +1,25 @@
 #pragma warning disable CS0618
-namespace Rotating.Sonar.Client.Visualizer;
+namespace Rotating.Sonar.Client.Visualizer.Text;
 
 using Silk.NET.OpenGL.Legacy;
-using Silk.NET.Windowing;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Linq;
 
 record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, float Advance);
 
 // TODO, refactor
-public class TextRenderOpenGL_1_1
+public class OpenGlTextRenderer
 {
+    private const int TileSize = 32;
+    private const int Columns = 16;
+
     private readonly GL gl;
     private uint atlasTexture;//TODO, temp
     private readonly Dictionary<char, GlyphInfo> glyphs;
 
-    const int TileSize = 32;
-    const int Columns = 16;
-
-    public TextRenderOpenGL_1_1(GL gl, List<char> charTable)
+    public OpenGlTextRenderer(GL gl, List<char> charTable)
     {
         this.gl = gl;
 
@@ -33,12 +30,12 @@ public class TextRenderOpenGL_1_1
         gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
     }
 
-    public TextRenderOpenGL_1_1(GL gl)
+    public OpenGlTextRenderer(GL gl)
         : this(gl, GetASCIITable())
     {
     }
 
-    public TextRenderOpenGL_1_1(GL gl, string extraGlyphs)
+    public OpenGlTextRenderer(GL gl, string extraGlyphs)
         : this(gl, GetASCIITable().Union(extraGlyphs).ToList())
     {
     }

@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 
 // [assembly: AssemblyTitle("Rotating.Sonar.Client.Console")]
-// [assembly: AssemblyDescription("Desktop client to visualize data from Rotating-Sonar-Arduino")]
+// [assembly: AssemblyDescription("Desktop client to visualize range/angle data from sonar or lidar-style sensors")]
 // [assembly: AssemblyConfiguration("")]
 // [assembly: AssemblyCompany("")]
 // [assembly: AssemblyProduct("Rotating.Sonar.Client.Console")]

@@ -1,8 +1,7 @@
-namespace Rotating.Sonar.ClientApp.Console;
+namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 
 using System;
 using Serilog;
-using Silk.NET.GLFW;
 
 public class FakeComPortListener : IComPortListener
 {
@@ -10,10 +9,6 @@ public class FakeComPortListener : IComPortListener
 
     public void Listen(Func<bool> isCancelled, Action<string>? newLineCallBack = null)
     {
-        Log.Information("Port with FAKE data \"opened\" successfully.");
-        Log.Information("(Press any key to stop)");//TODO, get rid of a button
-        Log.Information("----------------------------------------");
-
         //TODO, to configuration???
         int min = -90, max = 90;
         int currentAngle = min, step = 15, distance = 120;

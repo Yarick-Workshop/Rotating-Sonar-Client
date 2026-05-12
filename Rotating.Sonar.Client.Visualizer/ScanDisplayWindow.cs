@@ -1,26 +1,30 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
-using System;
+using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Zoom;
+using Rotating.Sonar.Client.Visualizer.Text;
+using Serilog;
+using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL.Legacy;
 using Silk.NET.Windowing;
-using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Silk.NET.Input;
+using System.Runtime.InteropServices;
 
-internal class PolarPlotWindow : IDisposable
+internal class ScanDisplayWindow : IDisposable
 {
     private const int FpsWindowSize = 60;// TODO to config
     private const float MaxDistanceCm = 200f;
 
-    private readonly SonarDataCache sonarDataCache;
+    private readonly ScanPointBuffer scanPointBuffer;
     private readonly AppSettings appSettings;
     private IWindow window;
     private IInputContext? inputContext;
-    private RenderOpenGL_1_1? render;
+    private OpenGlScanDisplayRenderer? render;
     private RenderZoomControl? zoomControl;
-    private TextRenderOpenGL_1_1? textRenderer;
+    private OpenGlTextRenderer? textRenderer;
     private double latestFps = 0;
     private readonly Queue<double> fpsHistory = new Queue<double>(FpsWindowSize);
 
@@ -28,8 +32,8 @@ internal class PolarPlotWindow : IDisposable
     
     private bool _disposed = false;
 
-    public PolarPlotWindow(
-        SonarDataCache sonarDataCache,
+    public ScanDisplayWindow(
+        ScanPointBuffer scanPointBuffer,
         AppSettings appSettings,
         int windowWidthPx,
         int windowHeightPx,
@@ -46,13 +50,49 @@ internal class PolarPlotWindow : IDisposable
         this.window.Render += this.OnRender;
         this.window.Resize += this.OnResize;
 
-        this.sonarDataCache = sonarDataCache;
+        this.scanPointBuffer = scanPointBuffer;
         this.appSettings = appSettings;
     }
 
     public void Run()
     {        
         this.window!.Run();
+    }
+
+    public void ToggleFullscreen()
+    {
+        var oldState = this.window.WindowState;
+
+        if (oldState == WindowState.Fullscreen)
+        {
+            this.window.WindowState = WindowState.Normal;
+        }
+        else
+        {
+            // It is not an useless line.
+            // It is a fix of a bug when going back to normal from fullscreen
+            // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
+            this.window.WindowState = WindowState.Normal;
+
+            this.window.WindowState = WindowState.Fullscreen;
+        }
+
+        Log.Information(
+            "Toggling fullscreen: {OldState} -> {NewState}",
+            oldState, 
+            this.window.WindowState);
+    }
+
+    public void Dispose()
+    {
+        if (this._disposed)
+        {
+            return;
+        }
+
+        this._disposed = true;
+        this.ReleaseInput();
+        this.window?.Dispose();
     }
 
     private void OnLoad()
@@ -63,7 +103,7 @@ internal class PolarPlotWindow : IDisposable
 
         this.previousSize = this.window.Size;
 
-        Log.Information("OpenGL Polar Plot Visualizer initialized with size {Width}x{Height}", width, height);
+        Log.Information("OpenGL scan display initialized with size {Width}x{Height}", width, height);
 
         this.inputContext = this.window.CreateInput();
         for (int i = 0; i < this.inputContext.Keyboards.Count; i++)
@@ -76,15 +116,11 @@ internal class PolarPlotWindow : IDisposable
             this.inputContext.Mice[i].Scroll += this.OnMouseScroll;
         }
 
-        this.textRenderer = new TextRenderOpenGL_1_1(gl, "°");
-        this.render = new RenderOpenGL_1_1(gl, this.sonarDataCache, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
+        this.textRenderer = new OpenGlTextRenderer(gl, "°");
+        this.render = new OpenGlScanDisplayRenderer(gl, this.scanPointBuffer, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
         this.zoomControl = new RenderZoomControl(this.render);
-        /* 
-        Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));
-        Log.Information("OpenGL vendor: {Vendor}", gl.GetString(StringName.Vendor));
-        Log.Information("OpenGL renderer: {Renderer}", gl.GetString(StringName.Renderer));
-        Log.Information("OpenGL shading language version: {ShadingLanguageVersion}", gl.GetString(StringName.ShadingLanguageVersion));
-        Log.Information("OpenGL extensions: {Extensions}", gl.GetString(StringName.Extensions));*/
+
+        LogOpenGlDriverInfo(gl);
     }
 
     private void OnRender(double deltaSeconds)
@@ -124,29 +160,34 @@ internal class PolarPlotWindow : IDisposable
         // so Ctrl held on another physical device still qualifies.
         bool ctrl = keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight);
 
-        if (ctrl)
-        {
-            switch (key)
-            {
-                case Key.Equal:
-                case Key.KeypadAdd:
-                    this.zoomControl?.ZoomIn();
-                    return;
-                case Key.Minus:
-                case Key.KeypadSubtract:
-                    this.zoomControl?.ZoomOut();
-                    return;
-                case Key.D0:
-                case Key.Keypad0:
-                    this.zoomControl?.ResetZoom();
-                    return;
-            }
-        }
-
         switch (key)
         {
+            case Key.Equal:
+            case Key.KeypadAdd:
+                if (ctrl)
+                {
+                    this.zoomControl?.ZoomIn();
+                }
+
+                break;
+            case Key.Minus:
+            case Key.KeypadSubtract:
+                if (ctrl)
+                {
+                    this.zoomControl?.ZoomOut();
+                }
+
+                break;
+            case Key.D0:
+            case Key.Keypad0:
+                if (ctrl)
+                {
+                    this.zoomControl?.ResetZoom();
+                }
+
+                break;
             case Key.P:
-                PointRenderStyle pointStyle = this.render!.TogglePointRenderStyle();
+                ScanPointRenderStyle pointStyle = this.render!.ToggleScanPointRenderStyle();
                 Log.Information("Point style toggled: {PointStyle}", pointStyle);
                 break;
             case Key.F:
@@ -158,9 +199,9 @@ internal class PolarPlotWindow : IDisposable
                 bool showZoom = this.render!.ToggleZoomDisplay();
                 Log.Information("Zoom display toggled: {ShowZoom}", showZoom);
                 break;
-            case Key.R:
-                bool showRay = this.render!.ToggleRayDisplay();
-                Log.Information("Ray display toggled: {ShowRay}", showRay);
+            case Key.S:
+                bool showSweep = this.render!.ToggleSweepDisplay();
+                Log.Information("Sweep display toggled: {ShowSweep}", showSweep);
                 break;
             case Key.F11:
                 this.ToggleFullscreen();
@@ -202,30 +243,6 @@ internal class PolarPlotWindow : IDisposable
         this.zoomControl?.ZoomWheel(scrollWheel.Y);
     }
 
-    public void ToggleFullscreen()
-    {
-        var oldState = this.window.WindowState;
-
-        if (oldState == WindowState.Fullscreen)
-        {
-            this.window.WindowState = WindowState.Normal;
-        }
-        else
-        {
-            // It is not an useless line.
-            // It is a fix of a bug when going back to normal from fullscreen
-            // STR: Maximize => Full screen => Try to go back with either F11 or Alt+Enter
-            this.window.WindowState = WindowState.Normal;
-
-            this.window.WindowState = WindowState.Fullscreen;
-        }
-
-        Log.Information(
-            "Toggling fullscreen: {OldState} -> {NewState}",
-            oldState, 
-            this.window.WindowState);
-    }
-
     private void ReleaseInput()
     {
         if (this.inputContext == null)
@@ -251,15 +268,23 @@ internal class PolarPlotWindow : IDisposable
         this.inputContext = null;
     }
 
-    public void Dispose()
+    private static void LogOpenGlDriverInfo(GL gl)
     {
-        if (this._disposed)
+        Log.Information(
+            "OpenGL version: {Version}; OpenGL vendor: {Vendor}; OpenGL renderer: {Renderer}",
+            GlString(gl, StringName.Version),
+            GlString(gl, StringName.Vendor),
+            GlString(gl, StringName.Renderer));
+    }
+
+    private static unsafe string GlString(GL gl, StringName name)
+    {
+        byte* p = gl.GetString(name);
+        if (p == null)
         {
-            return;
+            return "(not available)";
         }
 
-        this._disposed = true;
-        this.ReleaseInput();
-        this.window?.Dispose();
+        return Marshal.PtrToStringUTF8((nint)p) ?? "(not available)";
     }
 }

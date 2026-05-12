@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.Client.Visualizer;
+namespace Rotating.Sonar.Client.Common.Settings;
 
 using System.ComponentModel;
 using System.Globalization;
@@ -6,6 +6,45 @@ using System.Globalization;
 public sealed class FloatColor4TypeConverter : TypeConverter
 {
     private static readonly IColorParser Parser = ChainColorParser.Instance;
+
+    public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+    {
+        return sourceType == typeof(string);
+    }
+
+    public override object? ConvertFrom(
+        ITypeDescriptorContext? context,
+        CultureInfo? culture,
+        object value)
+    {
+        if (value is string s)
+        {
+            return Parse(s);
+        }
+
+        throw this.GetConvertFromException(value);
+    }
+
+    public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
+    {
+        return destinationType == typeof(string);
+    }
+
+    public override object? ConvertTo(
+        ITypeDescriptorContext? context,
+        CultureInfo? culture,
+        object? value,
+        Type destinationType)
+    {
+        ArgumentNullException.ThrowIfNull(destinationType);
+
+        if (destinationType == typeof(string) && value is FloatColor4 c)
+        {
+            return $"{FormatByte(c.R)},{FormatByte(c.G)},{FormatByte(c.B)},{FormatByte(c.A)}";
+        }
+
+        throw this.GetConvertToException(value, destinationType);
+    }
 
     public static FloatColor4 Parse(string? raw)
     {
@@ -27,44 +66,5 @@ public sealed class FloatColor4TypeConverter : TypeConverter
     internal static byte FormatByte(float value)
     {
         return (byte)Math.Clamp((int)Math.Round(value * 255f), 0, 255);
-    }
-
-    public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
-    {
-        return sourceType == typeof(string)/* TODO, check if this is needed || base.CanConvertFrom(context, sourceType)*/;
-    }
-
-    public override object? ConvertFrom(
-        ITypeDescriptorContext? context,
-        CultureInfo? culture,
-        object value)
-    {
-        if (value is string s)
-        {
-            return Parse(s);
-        }
-
-        throw this.GetConvertFromException(value);
-    }
-
-    public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
-    {
-        return destinationType == typeof(string)/* TODO, is it needed? || base.CanConvertTo(context, destinationType)*/;
-    }
-
-    public override object? ConvertTo(
-        ITypeDescriptorContext? context,
-        CultureInfo? culture,
-        object? value,
-        Type destinationType)
-    {
-        ArgumentNullException.ThrowIfNull(destinationType);
-
-        if (destinationType == typeof(string) && value is FloatColor4 c)
-        {
-            return $"{FormatByte(c.R)},{FormatByte(c.G)},{FormatByte(c.B)},{FormatByte(c.A)}";
-        }
-
-        throw this.GetConvertToException(value, destinationType);
     }
 }
