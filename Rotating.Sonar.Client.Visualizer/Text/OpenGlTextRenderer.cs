@@ -1,6 +1,8 @@
 #pragma warning disable CS0618
 namespace Rotating.Sonar.Client.Visualizer.Text;
 
+using Silk.NET.OpenGL.Legacy;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;

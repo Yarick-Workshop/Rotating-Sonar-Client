@@ -1,4 +1,11 @@
 namespace Rotating.Sonar.Client.Visualizer;
+
+using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Zoom;
+using Rotating.Sonar.Client.Visualizer.Text;
+using Serilog;
+using Silk.NET.OpenGL.Legacy;
+
 #pragma warning disable CS0618
 
 public class OpenGlScanDisplayRenderer : IZoomable
