@@ -57,6 +57,9 @@ class Program
                     var appSettings = AppSettings.Load(appSettingsPath);
                     using var visualizer = new ScanDisplayVisualizer(appSettings);
                     using var cancellationTokenSource = new CancellationTokenSource();
+                    
+                    Log.Information("Reading data from port: {PortName}.", comPortListener.PortName);
+                    Log.Information("----------------------------------------");
 
                     var serialThread = new Thread(() =>
                         comPortListener.Listen(
@@ -87,6 +90,8 @@ class Program
                 }
                 else
                 {
+                    Log.Information("Reading data from port: {PortName}. (Press any key to stop)", comPortListener.PortName);
+                    Log.Information("----------------------------------------");
                     comPortListener.Listen(() => Console.KeyAvailable);
                 }
             }
