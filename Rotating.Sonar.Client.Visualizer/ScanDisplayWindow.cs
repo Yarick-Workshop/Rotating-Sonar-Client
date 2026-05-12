@@ -2,6 +2,7 @@ namespace Rotating.Sonar.Client.Visualizer;
 
 using Rotating.Sonar.Client.Common.Settings;
 using System;
+using System.Runtime.InteropServices;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL.Legacy;
 using Silk.NET.Windowing;
@@ -80,12 +81,8 @@ internal class ScanDisplayWindow : IDisposable
         this.textRenderer = new OpenGlTextRenderer(gl, "°");
         this.render = new OpenGlScanDisplayRenderer(gl, this.scanPointBuffer, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
         this.zoomControl = new RenderZoomControl(this.render);
-        /* 
-        Log.Information("OpenGL version: {Version}", gl.GetString(StringName.Version));
-        Log.Information("OpenGL vendor: {Vendor}", gl.GetString(StringName.Vendor));
-        Log.Information("OpenGL renderer: {Renderer}", gl.GetString(StringName.Renderer));
-        Log.Information("OpenGL shading language version: {ShadingLanguageVersion}", gl.GetString(StringName.ShadingLanguageVersion));
-        Log.Information("OpenGL extensions: {Extensions}", gl.GetString(StringName.Extensions));*/
+
+        LogOpenGlDriverInfo(gl);
     }
 
     private void OnRender(double deltaSeconds)
@@ -267,5 +264,25 @@ internal class ScanDisplayWindow : IDisposable
         this._disposed = true;
         this.ReleaseInput();
         this.window?.Dispose();
+    }
+
+    private static void LogOpenGlDriverInfo(GL gl)
+    {
+        Log.Information(
+            "OpenGL version: {Version}; OpenGL vendor: {Vendor}; OpenGL renderer: {Renderer}",
+            GlString(gl, StringName.Version),
+            GlString(gl, StringName.Vendor),
+            GlString(gl, StringName.Renderer));
+    }
+
+    private static unsafe string GlString(GL gl, StringName name)
+    {
+        byte* p = gl.GetString(name);
+        if (p == null)
+        {
+            return "(not available)";
+        }
+
+        return Marshal.PtrToStringUTF8((nint)p) ?? "(not available)";
     }
 }
