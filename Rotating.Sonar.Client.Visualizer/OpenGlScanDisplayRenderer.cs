@@ -62,10 +62,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
         this.cy = this.height / 2f;
         this.radius = MathF.Min(this.cx, this.cy) - this.visualizerSettings.ScanArea.OuterMarginPx;
 
-        float maxDistanceCm = this.visualizerSettings.ScanArea.MaxDistanceCm;
-        // TODO: validate settings during loading instead of checking invalid values here.
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxDistanceCm, 0f);
-        this.maxDistanceCm = maxDistanceCm;
+        this.maxDistanceCm = this.visualizerSettings.ScanArea.MaxDistanceCm;
         this.textRenderer = textRenderer;
 
         var bg = this.visualizerSettings.BackgroundColor;
@@ -173,7 +170,6 @@ public class OpenGlScanDisplayRenderer : IZoomable
         OffScaleIndicatorSettings offScaleIndicator = this.visualizerSettings.ScanPoints.OffScaleIndicator;
         float tipRadius = this.radius - offScaleIndicator.RimInsetPx;
         float maxHeadBack = tipRadius - offScaleIndicator.MinTailRadiusPx;
-        // TODO: validate settings during loading instead of correcting invalid values here.
         float arrowHeadBack = maxHeadBack > InsideRingEpsilon
             ? Math.Clamp(offScaleIndicator.ArrowHeadLengthPx, offScaleIndicator.MinArrowHeadBackPx, maxHeadBack)
             : 0f;
@@ -252,13 +248,12 @@ public class OpenGlScanDisplayRenderer : IZoomable
     private void DrawLatestSweep(float sweepAngleDeg, float sweepRadiusPx, SweepSettings sweepSettings)
     {
         FloatColor4 color = sweepSettings.SweepColor;
-        // TODO: validate settings during loading instead of correcting invalid values here.
-        float sweepHalfAngleDeg = Math.Max(0f, sweepSettings.SweepAngleDeg) / 2f;
-        int sweepSegments = Math.Max(1, sweepSettings.SweepSegmentCount);
-        float coneCenterAlpha = Math.Clamp(sweepSettings.ConeCenterAlpha, 0f, 1f);
-        float coneEdgeAlpha = Math.Clamp(sweepSettings.ConeEdgeAlpha, 0f, 1f);
-        float lineAlpha = Math.Clamp(sweepSettings.LineAlpha, 0f, 1f);
-        float lineWidth = Math.Max(0.1f, sweepSettings.LineWidthPx);
+        float sweepHalfAngleDeg = sweepSettings.SweepAngleDeg / 2f;
+        int sweepSegments = sweepSettings.SweepSegmentCount;
+        float coneCenterAlpha = sweepSettings.ConeCenterAlpha;
+        float coneEdgeAlpha = sweepSettings.ConeEdgeAlpha;
+        float lineAlpha = sweepSettings.LineAlpha;
+        float lineWidth = sweepSettings.LineWidthPx;
 
         this.gl.PushMatrix();
         this.gl.Translate(this.cx, this.cy, 0f);
@@ -330,8 +325,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
         this.gl.Color4(gridLine.R, gridLine.G, gridLine.B, gridLine.A);
         if (this.maxDistanceCm > 0f && this.zoomScale > 0f)
         {
-            // TODO: validate settings during loading instead of correcting invalid values here.
-            float rangeRingStepCm = Math.Max(InsideRingEpsilon, this.visualizerSettings.RangeGrid.RangeRingStepCm);
+            float rangeRingStepCm = this.visualizerSettings.RangeGrid.RangeRingStepCm;
             float dMax = this.maxDistanceCm / this.zoomScale;
             for (int i = 1; i * rangeRingStepCm <= dMax + InsideRingEpsilon; i++)
             {
@@ -345,17 +339,15 @@ public class OpenGlScanDisplayRenderer : IZoomable
 
         if (this.maxDistanceCm > 0f)
         {
-            // TODO: validate settings during loading instead of correcting invalid values here.
             this.glPrimitives.DrawCircle(
                 this.cx,
                 this.cy,
                 this.radius,
-                lineWidthPx: Math.Max(0.1f, this.visualizerSettings.RangeGrid.OuterRingLineWidthPx));
+                lineWidthPx: this.visualizerSettings.RangeGrid.OuterRingLineWidthPx);
         }
 
         // Draw radial lines
-        // TODO: validate settings during loading instead of correcting invalid values here.
-        int radialLineStepDeg = Math.Max(1, this.visualizerSettings.RangeGrid.RadialLineStepDeg);
+        int radialLineStepDeg = this.visualizerSettings.RangeGrid.RadialLineStepDeg;
         for (int a = 0; a < 360; a += radialLineStepDeg)
         {
             this.gl.PushMatrix();
@@ -375,9 +367,8 @@ public class OpenGlScanDisplayRenderer : IZoomable
         var gridTickLabel = this.visualizerSettings.RangeGrid.RangeLabelColor;
         this.gl.Color4(gridTickLabel.R, gridTickLabel.G, gridTickLabel.B, gridTickLabel.A);
         this.gl.Begin(GLEnum.Lines);
-        // TODO: validate settings during loading instead of correcting invalid values here.
-        int tickStepDeg = Math.Max(1, this.visualizerSettings.RangeGrid.TickStepDeg);
-        int majorTickStepDeg = Math.Max(1, this.visualizerSettings.RangeGrid.MajorTickStepDeg);
+        int tickStepDeg = this.visualizerSettings.RangeGrid.TickStepDeg;
+        int majorTickStepDeg = this.visualizerSettings.RangeGrid.MajorTickStepDeg;
         for (int a = 0; a < 360; a += tickStepDeg)
         {
             float tickLength = a % majorTickStepDeg == 0
@@ -401,8 +392,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
         this.gl.Color4(gridLabel.R, gridLabel.G, gridLabel.B, gridLabel.A);
 
         // Draw compass-like degree labels around the largest circle
-        // TODO: validate settings during loading instead of correcting invalid values here.
-        int bearingLabelStepDeg = Math.Max(1, this.visualizerSettings.RangeGrid.BearingLabelStepDeg);
+        int bearingLabelStepDeg = this.visualizerSettings.RangeGrid.BearingLabelStepDeg;
         for (int a = 0; a < 360; a += bearingLabelStepDeg)
         {
             string angleText = $"{a}°";

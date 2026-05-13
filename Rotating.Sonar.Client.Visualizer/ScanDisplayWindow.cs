@@ -50,8 +50,7 @@ internal class ScanDisplayWindow : IDisposable
 
         this.scanPointBuffer = scanPointBuffer;
         this.appSettings = appSettings;
-        // TODO: validate settings during loading instead of correcting invalid values here.
-        this.fpsHistorySize = Math.Max(1, appSettings.Visualizer.Fps.HistorySize);
+        this.fpsHistorySize = appSettings.Visualizer.Fps.HistorySize;
     }
 
     public void Run()

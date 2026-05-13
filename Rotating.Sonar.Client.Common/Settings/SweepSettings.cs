@@ -1,22 +1,29 @@
 namespace Rotating.Sonar.Client.Common.Settings;
 
+using System.ComponentModel.DataAnnotations;
+
 public sealed class SweepSettings
 {
     public FloatColor4 SweepColor { get; set; } = ChainColorParser.Instance.ParseOrThrow("#141414", nameof(SweepColor));
 
-    // TODO: add validation to ensure value is within [0..100].
+    [Range(0, 100, ErrorMessage = "LengthPercentOfRadius must be between 0 and 100.")]
     public float LengthPercentOfRadius { get; set; } = 100f;
 
-    // Full cone sweep angle in degrees.
+    [Range(0, float.MaxValue, ErrorMessage = "SweepAngleDeg must be non-negative.")]
     public float SweepAngleDeg { get; set; } = 15f;
 
-    // Number of segments for the sweep cone interpolation.
+    [Range(1, int.MaxValue, ErrorMessage = "SweepSegmentCount must be at least 1.")]
     public int SweepSegmentCount { get; set; } = 24;
 
-    // Transparency controls for different sweep parts (0..1).
+    [Range(0, 1, ErrorMessage = "ConeCenterAlpha must be between 0 and 1.")]
     public float ConeCenterAlpha { get; set; } = 0.75f;
+
+    [Range(0, 1, ErrorMessage = "ConeEdgeAlpha must be between 0 and 1.")]
     public float ConeEdgeAlpha { get; set; } = 0.05f;
+
+    [Range(0, 1, ErrorMessage = "LineAlpha must be between 0 and 1.")]
     public float LineAlpha { get; set; } = 0.65f;
 
+    [Range(0.01, float.MaxValue, ErrorMessage = "LineWidthPx must be positive.")]
     public float LineWidthPx { get; set; } = 1.5f;
 }

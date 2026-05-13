@@ -17,13 +17,12 @@ public class OpenGlPrimitives
     {
         this.gl = gl;
 
-        // TODO: validate settings during loading instead of correcting invalid values here.
-        float pointSize = Math.Max(1f, visualizerSettings.ScanPoints.PointSizePx);
+        float pointSize = visualizerSettings.ScanPoints.PointSizePx;
         this.pointRadius = pointSize / 2f;
-        this.pointLineWidthPx = Math.Max(0.1f, visualizerSettings.ScanPoints.LineWidthPx);
+        this.pointLineWidthPx = visualizerSettings.ScanPoints.LineWidthPx;
         // TODO: generalize circle segment settings instead of keeping this grid-specific.
-        this.unitCirclePoints = CreateUnitCirclePoints(Math.Max(3, visualizerSettings.RangeGrid.GridCircleSegments));
-        this.pointCirclePoints = CreateScaledCirclePoints(Math.Max(3, visualizerSettings.ScanPoints.CircleSegments), this.pointRadius);
+        this.unitCirclePoints = CreateUnitCirclePoints(visualizerSettings.RangeGrid.GridCircleSegments);
+        this.pointCirclePoints = CreateScaledCirclePoints(visualizerSettings.ScanPoints.CircleSegments, this.pointRadius);
         this.pointSquareCorners =
         [
             (-this.pointRadius, -this.pointRadius),

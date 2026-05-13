@@ -22,9 +22,8 @@ public class FakeComPortListener : IComPortListener
         int currentAngle = min;
         int step = this.fakeDataSettings.AngleStepDeg;
         int distance = this.fakeDataSettings.BaseDistanceCm;
-        // TODO: validate settings during loading instead of correcting invalid values here.
-        int jitter = Math.Max(0, this.fakeDataSettings.DistanceJitterCm);
-        int intervalMilliseconds = Math.Max(0, this.fakeDataSettings.IntervalMilliseconds);
+        int jitter = this.fakeDataSettings.DistanceJitterCm;
+        int intervalMilliseconds = this.fakeDataSettings.IntervalMilliseconds;
 
         var rnd = new Random();
 

@@ -35,6 +35,7 @@ public sealed class AppSettings
                 return new AppSettings();
             }
 
+            SettingsValidator.ValidateRecursively(appSettings, nameof(AppSettings));
             return appSettings;
         }
         catch (Exception ex)
