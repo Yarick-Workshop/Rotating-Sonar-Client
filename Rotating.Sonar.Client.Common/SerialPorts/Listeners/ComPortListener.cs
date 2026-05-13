@@ -3,18 +3,19 @@ namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 using System;
 using System.IO.Ports;
 using Serilog;
+
 public class ComPortListener : IComPortListener
 {
-    private const int ReadTimeoutMilliseconds = 250;
-
     private readonly int portBaudRate;
+    private readonly int readTimeoutMilliseconds;
 
     public string PortName { get; }
 
-    public ComPortListener(string portName, int portBaudRate)
+    public ComPortListener(string portName, int portBaudRate, int readTimeoutMilliseconds)
     {
         this.PortName = portName;
         this.portBaudRate = portBaudRate;
+        this.readTimeoutMilliseconds = readTimeoutMilliseconds;
     }
 
     public void Listen(Func<bool> isCancelled, Action<string>? newLineCallBack = null)
@@ -25,7 +26,7 @@ public class ComPortListener : IComPortListener
             DataBits = 8,
             Parity = Parity.None,
             StopBits = StopBits.One,
-            ReadTimeout = ReadTimeoutMilliseconds,
+            ReadTimeout = this.readTimeoutMilliseconds,
         };
 
         try

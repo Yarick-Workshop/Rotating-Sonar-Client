@@ -5,6 +5,8 @@ using Serilog;
 
 public sealed class AppSettings
 {
+    public SerialSettings Serial { get; set; } = new();
+
     public VisualizerSettings Visualizer { get; set; } = new();
 
     public static AppSettings Load(string path)

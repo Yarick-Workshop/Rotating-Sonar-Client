@@ -16,9 +16,15 @@ public class ScanDisplayVisualizer : IDisposable
         this.appSettings = appSettings ?? new AppSettings();
     }
 
-    public void Start(int windowWidthPx = 1920, int windowHeightPx = 1080, string title = "OpenGL Scan Display")
+    public void Start()
     {
-        var win = new ScanDisplayWindow(this.scanPointBuffer, this.appSettings, windowWidthPx, windowHeightPx, title);
+        WindowSettings windowSettings = this.appSettings.Visualizer.Window;
+        var win = new ScanDisplayWindow(
+            this.scanPointBuffer,
+            this.appSettings,
+            windowSettings.WidthPx,
+            windowSettings.HeightPx,
+            windowSettings.Title);
         this.window = win;
         win.Run();
     }

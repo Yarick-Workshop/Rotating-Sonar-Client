@@ -6,22 +6,24 @@ using Silk.NET.OpenGL.Legacy;
 #pragma warning disable CS0618
 public class OpenGlPrimitives
 {
-    private const int CircleSegments = 64;
-    private const int PointCircleSegments = 16;
-
     private readonly GL gl;
-    private static readonly (float X, float Y)[] UnitCirclePoints = CreateUnitCirclePoints(CircleSegments);
+    private readonly (float X, float Y)[] unitCirclePoints;
     private readonly (float X, float Y)[] pointCirclePoints;
     private readonly (float X, float Y)[] pointSquareCorners;
     private readonly float pointRadius;
+    private readonly float pointLineWidthPx;
 
     public OpenGlPrimitives(GL gl, VisualizerSettings visualizerSettings)
     {
         this.gl = gl;
 
+        // TODO: validate settings during loading instead of correcting invalid values here.
         float pointSize = Math.Max(1f, visualizerSettings.ScanPoints.PointSizePx);
         this.pointRadius = pointSize / 2f;
-        this.pointCirclePoints = CreateScaledCirclePoints(PointCircleSegments, this.pointRadius);
+        this.pointLineWidthPx = Math.Max(0.1f, visualizerSettings.ScanPoints.LineWidthPx);
+        // TODO: generalize circle segment settings instead of keeping this grid-specific.
+        this.unitCirclePoints = CreateUnitCirclePoints(Math.Max(3, visualizerSettings.RangeGrid.GridCircleSegments));
+        this.pointCirclePoints = CreateScaledCirclePoints(Math.Max(3, visualizerSettings.ScanPoints.CircleSegments), this.pointRadius);
         this.pointSquareCorners =
         [
             (-this.pointRadius, -this.pointRadius),
@@ -38,7 +40,7 @@ public class OpenGlPrimitives
         this.gl.LineWidth(lineWidthPx);
         
         this.gl.Begin(GLEnum.LineLoop);
-        foreach (var (unitX, unitY) in UnitCirclePoints)
+        foreach (var (unitX, unitY) in this.unitCirclePoints)
         {
             this.gl.Vertex2(centerXPx + (radiusPx * unitX), centerYPx + (radiusPx * unitY));
         }
@@ -78,10 +80,9 @@ public class OpenGlPrimitives
 
     private void DrawPointLinePrimitive()
     {
-        // TODO: move line-point width to visualizer configuration.
         Span<float> previousWidth = stackalloc float[1];
         this.gl.GetFloat(GLEnum.LineWidth, previousWidth);
-        this.gl.LineWidth(2f);
+        this.gl.LineWidth(this.pointLineWidthPx);
 
         this.gl.Begin(GLEnum.Lines);
         this.gl.Vertex2(0f, -this.pointRadius);

@@ -15,18 +15,16 @@ using System.Runtime.InteropServices;
 
 internal class ScanDisplayWindow : IDisposable
 {
-    private const int FpsWindowSize = 60;// TODO to config
-    private const float MaxDistanceCm = 200f;
-
     private readonly ScanPointBuffer scanPointBuffer;
     private readonly AppSettings appSettings;
+    private readonly int fpsHistorySize;
     private IWindow window;
     private IInputContext? inputContext;
     private OpenGlScanDisplayRenderer? render;
     private RenderZoomControl? zoomControl;
     private OpenGlTextRenderer? textRenderer;
     private double latestFps = 0;
-    private readonly Queue<double> fpsHistory = new Queue<double>(FpsWindowSize);
+    private readonly Queue<double> fpsHistory = new();
 
     private Vector2D<int> previousSize;
     
@@ -52,6 +50,8 @@ internal class ScanDisplayWindow : IDisposable
 
         this.scanPointBuffer = scanPointBuffer;
         this.appSettings = appSettings;
+        // TODO: validate settings during loading instead of correcting invalid values here.
+        this.fpsHistorySize = Math.Max(1, appSettings.Visualizer.Fps.HistorySize);
     }
 
     public void Run()
@@ -116,9 +116,9 @@ internal class ScanDisplayWindow : IDisposable
             this.inputContext.Mice[i].Scroll += this.OnMouseScroll;
         }
 
-        this.textRenderer = new OpenGlTextRenderer(gl, "°");
-        this.render = new OpenGlScanDisplayRenderer(gl, this.scanPointBuffer, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
-        this.zoomControl = new RenderZoomControl(this.render);
+        this.textRenderer = new OpenGlTextRenderer(gl, this.appSettings.Visualizer.TextRender);
+        this.render = new OpenGlScanDisplayRenderer(gl, this.scanPointBuffer, this.appSettings, this.window.Size.X, this.window.Size.Y, this.textRenderer);
+        this.zoomControl = new RenderZoomControl(this.render, this.appSettings.Visualizer.Zoom);
 
         LogOpenGlDriverInfo(gl);
     }
@@ -129,7 +129,7 @@ internal class ScanDisplayWindow : IDisposable
         {
             // TODO, optimize
             double fps = 1.0 / deltaSeconds;
-            if (this.fpsHistory.Count == FpsWindowSize)
+            if (this.fpsHistory.Count == this.fpsHistorySize)
             {
                 this.fpsHistory.Dequeue();
             }

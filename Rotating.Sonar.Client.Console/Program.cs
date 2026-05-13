@@ -12,8 +12,6 @@ using System.Diagnostics;
 
 class Program
 {
-    private const int DEFAULT_BAUD_RATE = 9600; // Standard Arduino speed
-
     static void Main(string[] args)
     {
         if (args.Length == 0 && Debugger.IsAttached)
@@ -33,6 +31,9 @@ class Program
         Log.Information("Desktop client to visualize range/angle data from sonar or lidar-style sensors");
         Log.Information("");
 
+        var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+        var appSettings = AppSettings.Load(appSettingsPath);
+
         try
         {
             args.ValidateCommandOptions();
@@ -49,12 +50,10 @@ class Program
             {
                 var regex = new Regex(@"([+-]?\d+):\s*(\d+)cm", RegexOptions.Compiled);
 
-                var comPortListener = CreateComPortListener(args);
+                var comPortListener = CreateComPortListener(args, appSettings.Serial);
                 
                 if (visualizeMode)
                 {
-                    var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
-                    var appSettings = AppSettings.Load(appSettingsPath);
                     using var visualizer = new ScanDisplayVisualizer(appSettings);
                     using var cancellationTokenSource = new CancellationTokenSource();
                     
@@ -104,7 +103,7 @@ class Program
         {
             Log.Error(ex, "Error: {ErrorMessage}", ex.Message);
 
-            LogHelp();
+            LogHelp(appSettings.Serial);
         }
         finally
         {
@@ -112,7 +111,7 @@ class Program
         }
     }
 
-    private static IComPortListener CreateComPortListener(string[] args)
+    private static IComPortListener CreateComPortListener(string[] args, SerialSettings serialSettings)
     {
         // Parse command line arguments
         string? targetPort = args.GetCommandOption("port");
@@ -122,7 +121,7 @@ class Program
         if ((!fakeDataMode && string.IsNullOrEmpty(targetPort)) || targetPort?.ToLower() == "help")
         {
             DisplayAvailablePorts();
-            LogHelp();
+            LogHelp(serialSettings);
             throw new ArgumentException("Arguments are not specified.");
         }
 
@@ -130,22 +129,22 @@ class Program
 
         if (fakeDataMode)
         {
-            result = new FakeComPortListener();
+            result = new FakeComPortListener(serialSettings.FakeData);
         }
         else
         {
             // Parse baud rate
-            int baudRate = DEFAULT_BAUD_RATE; // Default baud rate
+            int baudRate = serialSettings.DefaultBaudRate;
             if (string.IsNullOrEmpty(baudRateStr))
             {
-                Log.Information("Baud rate not specified, using default: {DefaultBaudRate}", DEFAULT_BAUD_RATE);
+                Log.Information("Baud rate not specified, using default: {DefaultBaudRate}", serialSettings.DefaultBaudRate);
             }
             else
             {
                 if (!int.TryParse(baudRateStr, out baudRate))
                 {
-                    Log.Warning("Invalid baud rate '{BaudRate}'. Using default: {DefaultBaudRate}", baudRateStr, DEFAULT_BAUD_RATE);
-                    baudRate = DEFAULT_BAUD_RATE;
+                    Log.Warning("Invalid baud rate '{BaudRate}'. Using default: {DefaultBaudRate}", baudRateStr, serialSettings.DefaultBaudRate);
+                    baudRate = serialSettings.DefaultBaudRate;
                 }
                 else
                 {
@@ -164,7 +163,7 @@ class Program
                 throw new ArgumentException($"Port '{targetPort}' not found.");
             }
 
-            result = new ComPortListener(targetPort!, baudRate);
+            result = new ComPortListener(targetPort!, baudRate, serialSettings.ReadTimeoutMilliseconds);
         }
 
         // Open the created port and read data
@@ -173,13 +172,13 @@ class Program
         return result;
     }
 
-    private static void LogHelp()
+    private static void LogHelp(SerialSettings serialSettings)
     {
         Log.Information("");
         Log.Information("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>] [-visualize]");
         Log.Information("Parameters:");
         Log.Information("  -port <port_name>    COM port to connect to (required)");
-        Log.Information("  -rate <baud_rate>    Baud rate (optional, default: {DefaultBaudRate})", DEFAULT_BAUD_RATE);
+        Log.Information("  -rate <baud_rate>    Baud rate (optional, default: {DefaultBaudRate})", serialSettings.DefaultBaudRate);
         Log.Information("  -visualize           Enable scan display visualization (optional)");
         Log.Information("  -fake                Generate fake randomize COM port data. A fake com port (optional). If the parameter is set no real COM port configuration is needed");
         Log.Information("");

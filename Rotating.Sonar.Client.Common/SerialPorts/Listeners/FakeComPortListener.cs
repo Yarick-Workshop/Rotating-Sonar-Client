@@ -1,23 +1,36 @@
 namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 
+using Rotating.Sonar.Client.Common.Settings;
 using System;
 using Serilog;
 
 public class FakeComPortListener : IComPortListener
 {
+    private readonly FakeSerialDataSettings fakeDataSettings;
+
     public string PortName => "FAKE";
+
+    public FakeComPortListener(FakeSerialDataSettings fakeDataSettings)
+    {
+        this.fakeDataSettings = fakeDataSettings;
+    }
 
     public void Listen(Func<bool> isCancelled, Action<string>? newLineCallBack = null)
     {
-        //TODO, to configuration???
-        int min = -90, max = 90;
-        int currentAngle = min, step = 15, distance = 120;
+        int min = this.fakeDataSettings.MinAngleDeg;
+        int max = this.fakeDataSettings.MaxAngleDeg;
+        int currentAngle = min;
+        int step = this.fakeDataSettings.AngleStepDeg;
+        int distance = this.fakeDataSettings.BaseDistanceCm;
+        // TODO: validate settings during loading instead of correcting invalid values here.
+        int jitter = Math.Max(0, this.fakeDataSettings.DistanceJitterCm);
+        int intervalMilliseconds = Math.Max(0, this.fakeDataSettings.IntervalMilliseconds);
 
         var rnd = new Random();
 
         while (!isCancelled())
         {
-            var line = $"{currentAngle}: {distance + rnd.Next(-10, 11)}cm"; // TODO, to config file?
+            var line = $"{currentAngle}: {distance + rnd.Next(-jitter, jitter + 1)}cm";
 
             Log.Debug("Received line: \"{Line}\".", line);
 
@@ -30,7 +43,7 @@ public class FakeComPortListener : IComPortListener
                 step = -step;
             }
 
-            Thread.Sleep(100);
+            Thread.Sleep(intervalMilliseconds);
         }
     }
 }

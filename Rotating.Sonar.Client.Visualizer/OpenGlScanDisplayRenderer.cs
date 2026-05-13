@@ -10,14 +10,7 @@ using Silk.NET.OpenGL.Legacy;
 
 public class OpenGlScanDisplayRenderer : IZoomable
 {
-    private const float OverflowArrowHeadLengthPx = 8f;
-    private const float OverflowArrowHalfWidthPx = 5f;
-    private const float OverflowArrowRimInsetPx = 8f;
-    private const float OverflowArrowMinTailRadiusPx = 26f;
     private const float InsideRingEpsilon = 1e-4f;
-    private const float RangeRingStepCm = 100f;
-    private const float OuterTickLength10DegPx = 12f;
-    private const float OuterTickLength5DegPx = 7f;
 
     private readonly GL gl;
     private readonly OpenGlPrimitives glPrimitives;
@@ -32,7 +25,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
     private float height;
     private readonly OpenGlTextRenderer textRenderer;
     private readonly VisualizerSettings visualizerSettings;
-    private bool showFps = true;
+    private bool showFps;
     private bool showZoom = true;
     private bool showSweep = false;
     private ScanPointRenderStyle pointRenderStyle = ScanPointRenderStyle.SolidSquare;
@@ -51,12 +44,15 @@ public class OpenGlScanDisplayRenderer : IZoomable
         AppSettings appSettings,
         float viewportWidthPx,
         float viewportHeightPx,
-        float maxDistanceCm,
         OpenGlTextRenderer textRenderer)
     {
         this.gl = gl;
         this.glPrimitives = new OpenGlPrimitives(gl, appSettings.Visualizer);
         this.scanPointBuffer = scanPointBuffer;
+        this.visualizerSettings = appSettings.Visualizer;
+        this.zoomScale = this.visualizerSettings.Zoom.DefaultScale;
+        this.showFps = this.visualizerSettings.Fps.ShowByDefault;
+        this.showZoom = this.visualizerSettings.Zoom.ShowByDefault;
 
         // TODO, investigate why option this.UpdateViewport(width, height); does not work
         this.width = viewportWidthPx;
@@ -64,12 +60,13 @@ public class OpenGlScanDisplayRenderer : IZoomable
         
         this.cx = viewportWidthPx / 2f;
         this.cy = this.height / 2f;
-        this.radius = MathF.Min(this.cx, this.cy) - 40;
+        this.radius = MathF.Min(this.cx, this.cy) - this.visualizerSettings.ScanArea.OuterMarginPx;
 
+        float maxDistanceCm = this.visualizerSettings.ScanArea.MaxDistanceCm;
+        // TODO: validate settings during loading instead of checking invalid values here.
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxDistanceCm, 0f);
         this.maxDistanceCm = maxDistanceCm;
         this.textRenderer = textRenderer;
-        this.visualizerSettings = appSettings.Visualizer;
 
         var bg = this.visualizerSettings.BackgroundColor;
         this.gl.ClearColor(bg.R, bg.G, bg.B, bg.A);
@@ -79,7 +76,8 @@ public class OpenGlScanDisplayRenderer : IZoomable
 
     public void SetZoom(float zoomScale)
     {
-        this.zoomScale = Math.Clamp(zoomScale, RenderZoomControl.MinScale, RenderZoomControl.MaxScale);
+        ZoomSettings zoomSettings = this.visualizerSettings.Zoom;
+        this.zoomScale = Math.Clamp(zoomScale, zoomSettings.MinScale, zoomSettings.MaxScale);
     }
 
     public bool ToggleFpsDisplay()
@@ -136,15 +134,15 @@ public class OpenGlScanDisplayRenderer : IZoomable
         {
             // Draw FPS in top-left corner
             string fpsText = $"{framesPerSecond:F0}FPS";
-            float textX = 10;
-            float textY = this.height - 40;
+            float textX = this.visualizerSettings.Fps.OffsetXPx;
+            float textY = this.height - this.visualizerSettings.Fps.OffsetFromTopPx;
             this.textRenderer.DrawText(fpsText, textX, textY);
         }
 
         if (this.showZoom)
         {
             string zoomText = $"Zoom {this.zoomScale * 100f:F0}%";
-            float zoomMargin = 10f;
+            float zoomMargin = this.visualizerSettings.ScanArea.OverlayMarginPx;
             this.textRenderer.DrawText(zoomText, this.width - zoomMargin, zoomMargin, HorizontalAlignment.Right);
         }
     }
@@ -157,7 +155,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
         // Update center and radius based on new dimensions
         this.cx = this.width / 2f;
         this.cy = this.height / 2f;
-        this.radius = MathF.Min(this.cx, this.cy) - 40;
+        this.radius = MathF.Min(this.cx, this.cy) - this.visualizerSettings.ScanArea.OuterMarginPx;
     }
 
     private void DrawPoints()
@@ -172,10 +170,12 @@ public class OpenGlScanDisplayRenderer : IZoomable
         
         // TODO refactor
         float distanceScale = this.radius * this.zoomScale / this.maxDistanceCm;
-        float tipRadius = this.radius - OverflowArrowRimInsetPx;
-        float maxHeadBack = tipRadius - OverflowArrowMinTailRadiusPx;
+        OffScaleIndicatorSettings offScaleIndicator = this.visualizerSettings.ScanPoints.OffScaleIndicator;
+        float tipRadius = this.radius - offScaleIndicator.RimInsetPx;
+        float maxHeadBack = tipRadius - offScaleIndicator.MinTailRadiusPx;
+        // TODO: validate settings during loading instead of correcting invalid values here.
         float arrowHeadBack = maxHeadBack > InsideRingEpsilon
-            ? Math.Clamp(OverflowArrowHeadLengthPx, 2.5f, maxHeadBack)
+            ? Math.Clamp(offScaleIndicator.ArrowHeadLengthPx, offScaleIndicator.MinArrowHeadBackPx, maxHeadBack)
             : 0f;
         var pointItems = new List<(float Angle, float Radius)>(points.Count);
         var arrowAngles = new List<float>(points.Count);
@@ -216,7 +216,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
 
         var overflowArrow = this.visualizerSettings.ScanPoints.OffScaleIndicatorColor;
         this.gl.Color4(overflowArrow.R, overflowArrow.G, overflowArrow.B, overflowArrow.A);
-        this.DrawPolarArrowsOnly(arrowAngles, tipRadius, arrowHeadBack);
+        this.DrawPolarArrowsOnly(arrowAngles, tipRadius, arrowHeadBack, offScaleIndicator.ArrowHalfWidthPx);
         this.gl.PopMatrix();
 
         // Draw a white point at the center
@@ -252,6 +252,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
     private void DrawLatestSweep(float sweepAngleDeg, float sweepRadiusPx, SweepSettings sweepSettings)
     {
         FloatColor4 color = sweepSettings.SweepColor;
+        // TODO: validate settings during loading instead of correcting invalid values here.
         float sweepHalfAngleDeg = Math.Max(0f, sweepSettings.SweepAngleDeg) / 2f;
         int sweepSegments = Math.Max(1, sweepSettings.SweepSegmentCount);
         float coneCenterAlpha = Math.Clamp(sweepSettings.ConeCenterAlpha, 0f, 1f);
@@ -299,7 +300,8 @@ public class OpenGlScanDisplayRenderer : IZoomable
     private void DrawPolarArrowsOnly(
         IReadOnlyList<float> arrowAnglesDeg,
         float arrowTipRadiusPx,
-        float arrowHeadBackPx)
+        float arrowHeadBackPx,
+        float arrowHalfWidthPx)
     {
         if (arrowHeadBackPx <= InsideRingEpsilon)
         {
@@ -312,7 +314,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
             this.gl.Translate(this.cx, this.cy, 0f);
             this.gl.Rotate(-angle, 0f, 0f, 1f);
             this.gl.Translate(arrowTipRadiusPx, 0f, 0f);
-            this.glPrimitives.DrawArrowPrimitive(arrowHeadBackPx, OverflowArrowHalfWidthPx);
+            this.glPrimitives.DrawArrowPrimitive(arrowHeadBackPx, arrowHalfWidthPx);
             this.gl.PopMatrix();
         }
     }
@@ -323,15 +325,17 @@ public class OpenGlScanDisplayRenderer : IZoomable
         this.gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
 
         // Every 100 cm ring that fits inside the rim (same scale as scan points). Fills disc: farthest
-        // ring at d = maxDistanceCm/zoomScale coincides with the plot edge when zoom ≠ 1.
+        // ring at d = maxDistanceCm/zoomScale coincides with the scan area edge when zoom ≠ 1.
         var gridLine = this.visualizerSettings.RangeGrid.LineColor;
         this.gl.Color4(gridLine.R, gridLine.G, gridLine.B, gridLine.A);
         if (this.maxDistanceCm > 0f && this.zoomScale > 0f)
         {
+            // TODO: validate settings during loading instead of correcting invalid values here.
+            float rangeRingStepCm = Math.Max(InsideRingEpsilon, this.visualizerSettings.RangeGrid.RangeRingStepCm);
             float dMax = this.maxDistanceCm / this.zoomScale;
-            for (int i = 1; i * RangeRingStepCm <= dMax + InsideRingEpsilon; i++)
+            for (int i = 1; i * rangeRingStepCm <= dMax + InsideRingEpsilon; i++)
             {
-                float ringR = this.ScaledScanPointRadius(i * RangeRingStepCm);
+                float ringR = this.ScaledScanPointRadius(i * rangeRingStepCm);
                 if (ringR <= this.radius + InsideRingEpsilon)
                 {
                     this.glPrimitives.DrawCircle(this.cx, this.cy, ringR);
@@ -341,11 +345,18 @@ public class OpenGlScanDisplayRenderer : IZoomable
 
         if (this.maxDistanceCm > 0f)
         {
-            this.glPrimitives.DrawCircle(this.cx, this.cy, this.radius, lineWidthPx: 2f);
+            // TODO: validate settings during loading instead of correcting invalid values here.
+            this.glPrimitives.DrawCircle(
+                this.cx,
+                this.cy,
+                this.radius,
+                lineWidthPx: Math.Max(0.1f, this.visualizerSettings.RangeGrid.OuterRingLineWidthPx));
         }
 
         // Draw radial lines
-        for (int a = 0; a < 360; a += 30)
+        // TODO: validate settings during loading instead of correcting invalid values here.
+        int radialLineStepDeg = Math.Max(1, this.visualizerSettings.RangeGrid.RadialLineStepDeg);
+        for (int a = 0; a < 360; a += radialLineStepDeg)
         {
             this.gl.PushMatrix();
 
@@ -364,9 +375,14 @@ public class OpenGlScanDisplayRenderer : IZoomable
         var gridTickLabel = this.visualizerSettings.RangeGrid.RangeLabelColor;
         this.gl.Color4(gridTickLabel.R, gridTickLabel.G, gridTickLabel.B, gridTickLabel.A);
         this.gl.Begin(GLEnum.Lines);
-        for (int a = 0; a < 360; a += 5)
+        // TODO: validate settings during loading instead of correcting invalid values here.
+        int tickStepDeg = Math.Max(1, this.visualizerSettings.RangeGrid.TickStepDeg);
+        int majorTickStepDeg = Math.Max(1, this.visualizerSettings.RangeGrid.MajorTickStepDeg);
+        for (int a = 0; a < 360; a += tickStepDeg)
         {
-            float tickLength = a % 10 == 0 ? OuterTickLength10DegPx : OuterTickLength5DegPx;
+            float tickLength = a % majorTickStepDeg == 0
+                ? this.visualizerSettings.RangeGrid.MajorTickLengthPx
+                : this.visualizerSettings.RangeGrid.MinorTickLengthPx;
             double radians = a * Math.PI / 180.0;
             float cos = (float)Math.Cos(radians);
             float sin = (float)Math.Sin(radians);
@@ -385,7 +401,9 @@ public class OpenGlScanDisplayRenderer : IZoomable
         this.gl.Color4(gridLabel.R, gridLabel.G, gridLabel.B, gridLabel.A);
 
         // Draw compass-like degree labels around the largest circle
-        for (int a = 0; a < 360; a += 30)
+        // TODO: validate settings during loading instead of correcting invalid values here.
+        int bearingLabelStepDeg = Math.Max(1, this.visualizerSettings.RangeGrid.BearingLabelStepDeg);
+        for (int a = 0; a < 360; a += bearingLabelStepDeg)
         {
             string angleText = $"{a}°";
             
