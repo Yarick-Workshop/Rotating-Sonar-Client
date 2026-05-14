@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rotating.Sonar.Client.Conso
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rotating.Sonar.Client.Common", "Rotating.Sonar.Client.Common\Rotating.Sonar.Client.Common.csproj", "{F1A586B1-BE33-4D7E-B5F0-899FCBECC08D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rotating.Sonar.Client.Tests", "Rotating.Sonar.Client.Tests\Rotating.Sonar.Client.Tests.csproj", "{C03693F4-7007-43DA-A31E-4BEEFD92828A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{F1A586B1-BE33-4D7E-B5F0-899FCBECC08D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1A586B1-BE33-4D7E-B5F0-899FCBECC08D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1A586B1-BE33-4D7E-B5F0-899FCBECC08D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C03693F4-7007-43DA-A31E-4BEEFD92828A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C03693F4-7007-43DA-A31E-4BEEFD92828A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C03693F4-7007-43DA-A31E-4BEEFD92828A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C03693F4-7007-43DA-A31E-4BEEFD92828A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
