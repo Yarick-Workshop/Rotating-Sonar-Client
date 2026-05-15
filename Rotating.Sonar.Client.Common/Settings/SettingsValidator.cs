@@ -33,6 +33,13 @@ public static class SettingsValidator
                 "Settings types must use properties only; public fields are not supported.");
         }
 
+        foreach (PropertyInfo property in EnumerateCandidateProperties(settingsType))
+        {
+            object? nested = property.GetValue(settings);
+            string nestedPath = BuildMemberPath(path, property.Name);
+            ProcessNestedValue(nested, nestedPath, visited);
+        }
+
         var context = new ValidationContext(settings);
         var results = new List<ValidationResult>();
 
@@ -40,13 +47,6 @@ public static class SettingsValidator
         {
             IEnumerable<string> entries = results.SelectMany(r => FormatResult(r, basePath));
             throw new InvalidOperationException($"Settings validation failed: {string.Join("; ", entries)}");
-        }
-
-        foreach (PropertyInfo property in EnumerateCandidateProperties(settingsType))
-        {
-            object? nested = property.GetValue(settings);
-            string nestedPath = BuildMemberPath(path, property.Name);
-            ProcessNestedValue(nested, nestedPath, visited);
         }
     }
 

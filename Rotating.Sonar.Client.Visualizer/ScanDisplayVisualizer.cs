@@ -11,9 +11,10 @@ public class ScanDisplayVisualizer : IDisposable
     private readonly AppSettings appSettings;
     private bool _disposed = false;
 
-    public ScanDisplayVisualizer(AppSettings? appSettings = null)
+    public ScanDisplayVisualizer(AppSettings appSettings)
     {
-        this.appSettings = appSettings ?? new AppSettings();
+        ArgumentNullException.ThrowIfNull(appSettings);
+        this.appSettings = appSettings;
     }
 
     public void Start()

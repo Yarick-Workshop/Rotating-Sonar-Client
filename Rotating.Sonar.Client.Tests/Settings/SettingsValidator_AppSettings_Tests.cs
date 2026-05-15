@@ -27,6 +27,19 @@ public sealed class SettingsValidator_AppSettings_Tests
     }
 
     [Test]
+    public void ValidateRecursively_AppSettingsSerialFakeDataNull_ThrowsWithRequiredMessage()
+    {
+        var settings = new AppSettings();
+        settings.Serial.FakeData = null!;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
+
+        Assert.That(ex!.Message, Does.Contain(
+            "at 'AppSettings.Serial.FakeData': Serial fake data settings are required."));
+    }
+
+    [Test]
     public void ValidateRecursively_AppSettingsFakeDataMinAngleGreaterThanMax_ThrowsWithFakeDataPath()
     {
         var settings = new AppSettings();
@@ -160,5 +173,14 @@ public sealed class SettingsValidator_AppSettings_Tests
             SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
 
         Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Visualizer.ScanPoints.PointSizePx':"));
+    }
+
+    [Test]
+    public void Load_InvalidSettingsPath_ReturnsDefaultsPassingRecursiveValidation()
+    {
+        AppSettings settings = AppSettings.Load(" ");
+
+        Assert.DoesNotThrow(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
     }
 }

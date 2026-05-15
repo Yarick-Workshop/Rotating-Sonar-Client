@@ -11,6 +11,15 @@ public sealed class AppSettings
 
     public static AppSettings Load(string path)
     {
+        var settings = LoadInternal(path);
+
+        SettingsValidator.ValidateRecursively(settings, nameof(AppSettings));
+
+        return settings;
+    }
+
+    private static AppSettings LoadInternal(string path)
+    {
         try
         {
             string? directory = Path.GetDirectoryName(path);
@@ -35,7 +44,6 @@ public sealed class AppSettings
                 return new AppSettings();
             }
 
-            SettingsValidator.ValidateRecursively(appSettings, nameof(AppSettings));
             return appSettings;
         }
         catch (Exception ex)

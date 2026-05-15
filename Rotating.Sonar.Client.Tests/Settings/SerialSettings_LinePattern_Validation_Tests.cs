@@ -90,6 +90,19 @@ public sealed class SerialSettings_LinePattern_Validation_Tests
     }
 
     [Test]
+    public void ValidateRecursively_FakeDataNull_FailsRequiredValidation()
+    {
+        var serial = CreateValidSerial();
+        serial.FakeData = null!;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(serial, nameof(SerialSettings)));
+
+        Assert.That(ex!.Message, Does.Contain(
+            $"at '{nameof(SerialSettings)}.{nameof(SerialSettings.FakeData)}': Serial fake data settings are required."));
+    }
+
+    [Test]
     public void ValidateRecursively_FakeDataFakeSerialLineFormatNull_FailsRequiredValidation()
     {
         var serial = CreateValidSerial();

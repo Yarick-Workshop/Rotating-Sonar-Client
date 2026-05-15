@@ -19,6 +19,7 @@ public sealed class SerialSettings : IValidatableObject
     public string LinePattern { get; set; } =
         $"(?<{SerialLineParseConstants.AngleGroupName}>[+-]?\\d+):\\s*(?<{SerialLineParseConstants.DistanceGroupName}>\\d+)cm";
 
+    [Required(ErrorMessage = "Serial fake data settings are required.")]
     public FakeSerialDataSettings FakeData { get; set; } = new();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -54,39 +55,6 @@ public sealed class SerialSettings : IValidatableObject
                         new[] { nameof(this.LinePattern) }),
                 };
             }
-        }
-
-        // TODO: Move cross-validation between LinePattern and FakeData (fake serial line format) out of SerialSettings.Validate into a dedicated place.
-        if (this.FakeData is null)
-        {
-            return new[]
-            {
-                new ValidationResult(
-                    "Serial fake data settings are required for cross-validation between the line pattern and fake serial line format.",
-                    new[] { nameof(this.FakeData) }),
-            };
-        }
-
-        if (string.IsNullOrWhiteSpace(this.FakeData.FakeSerialLineFormat))
-        {
-            return new[]
-            {
-                new ValidationResult(
-                    "Fake serial line format is required.",
-                    new[] { nameof(this.FakeData) + "." + nameof(FakeSerialDataSettings.FakeSerialLineFormat) }),
-            };
-        }
-
-        ValidationResult[] fakeDataValidationFailures = this.FakeData
-            .Validate(new ValidationContext(this.FakeData))
-            .Select(r => new ValidationResult(
-                r.ErrorMessage ?? string.Empty,
-                r.MemberNames.Select(m => $"{nameof(this.FakeData)}.{m}").ToArray()))
-            .ToArray();
-
-        if (fakeDataValidationFailures.Length > 0)
-        {
-            return fakeDataValidationFailures;
         }
 
         var fakeLineFormatter = new FakeSerialLineFormatter(this.FakeData.FakeSerialLineFormat);
