@@ -5,7 +5,6 @@ using System;
 using Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 using Rotating.Sonar.Client.Common.SerialPorts;
 using Rotating.Sonar.ClientApp.Console.Extensions;
-using System.Text.RegularExpressions;
 using Rotating.Sonar.Client.Visualizer;
 using Serilog;
 using System.Diagnostics;
@@ -16,16 +15,15 @@ class Program
     {
         if (args.Length == 0 && Debugger.IsAttached)
         {
-            args = ["-fake", "-visualize"]; // For testing purposes, remove in production
+            args = ["-fake", "-visualize"];
 
             Log.Warning("No command line arguments provided, using default test arguments: -fake -visualize");
         }
 
         Log.Logger = new LoggerConfiguration()
-            // TODO, uncomment to see debug logs .MinimumLevel.Debug()
             .WriteTo.Async(a => a.Console())
             .CreateLogger();
-        
+
         Log.Information("Scan Display Client Console");
         Log.Information("=============================");
         Log.Information("Desktop client to visualize range/angle data from sonar or lidar-style sensors");
@@ -40,7 +38,6 @@ class Program
 
             bool visualizeMode = args.HasCommandFlag("visualize");
 
-            // Print visualization info if requested
             if (visualizeMode)
             {
                 Log.Information("Visualization mode enabled: range/angle data will be shown in the scan display window.");
@@ -48,7 +45,7 @@ class Program
 
             try
             {
-                var regex = new Regex(@"([+-]?\d+):\s*(\d+)cm", RegexOptions.Compiled);
+                var regex = appSettings.Serial.CreateLineRegex();
 
                 var comPortListener = CreateComPortListener(args, appSettings.Serial);
                 
@@ -68,8 +65,8 @@ class Program
                                 var match = regex.Match(line);
                                 if (match.Success)
                                 {
-                                    int angle = int.Parse(match.Groups[1].Value);
-                                    int distance = int.Parse(match.Groups[2].Value);
+                                    int angle = int.Parse(match.Groups[SerialLineParseConstants.AngleGroupName].Value);
+                                    int distance = int.Parse(match.Groups[SerialLineParseConstants.DistanceGroupName].Value);
                                     visualizer.FeedData(angle, distance);
                                 }
                             }))
@@ -113,7 +110,6 @@ class Program
 
     private static IComPortListener CreateComPortListener(string[] args, SerialSettings serialSettings)
     {
-        // Parse command line arguments
         string? targetPort = args.GetCommandOption("port");
         string? baudRateStr = args.GetCommandOption("rate");
         bool fakeDataMode = args.HasCommandFlag("fake");
@@ -133,7 +129,6 @@ class Program
         }
         else
         {
-            // Parse baud rate
             int baudRate = serialSettings.DefaultBaudRate;
             if (string.IsNullOrEmpty(baudRateStr))
             {
@@ -152,10 +147,8 @@ class Program
                 }
             }
 
-            // Fetch and display all available COM ports
             var portNames = SerialPortProvider.GetPortNames();
 
-            // Check if the specified port exists
             if (!portNames.Contains(targetPort))
             {
                 Log.Error("Port '{TargetPort}' not found.", targetPort);
@@ -166,7 +159,6 @@ class Program
             result = new ComPortListener(targetPort!, baudRate, serialSettings.ReadTimeoutMilliseconds);
         }
 
-        // Open the created port and read data
         Log.Information("Opened port: {PortName}.", result.PortName);
 
         return result;
@@ -191,9 +183,6 @@ class Program
         Log.Information("  dotnet run -- -fake -visualize");
     }
 
-    /// <summary>
-    /// Displays all available COM ports to the console
-    /// </summary>
     static void DisplayAvailablePorts()
     {
         var portNames = SerialPortProvider.GetPortNames();

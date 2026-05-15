@@ -20,6 +20,10 @@ public sealed class FakeSerialDataSettings : IValidatableObject
     [Range(0, int.MaxValue, ErrorMessage = "IntervalMilliseconds must be non-negative.")]
     public int IntervalMilliseconds { get; set; } = 100;
 
+    [Required(AllowEmptyStrings = false, ErrorMessage = "Fake serial line format is required.")]
+    public string FakeSerialLineFormat { get; set; } =
+        $"{{{SerialLineParseConstants.AngleGroupName}}}: {{{SerialLineParseConstants.DistanceGroupName}}}cm";
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (this.MinAngleDeg > this.MaxAngleDeg)
@@ -27,6 +31,13 @@ public sealed class FakeSerialDataSettings : IValidatableObject
             yield return new ValidationResult(
                 "MinAngleDeg must be less than or equal to MaxAngleDeg.",
                 [nameof(this.MinAngleDeg), nameof(this.MaxAngleDeg)]);
+        }
+
+        foreach (ValidationResult result in FakeSerialLineFormatter.ValidateNamedPlaceholderTemplate(
+            this.FakeSerialLineFormat,
+            nameof(this.FakeSerialLineFormat)))
+        {
+            yield return result;
         }
     }
 }

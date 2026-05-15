@@ -6,30 +6,32 @@ using Serilog;
 
 public class FakeComPortListener : IComPortListener
 {
-    private readonly FakeSerialDataSettings fakeDataSettings;
+    private readonly FakeSerialDataSettings fakeData;
 
     public string PortName => "FAKE";
 
-    public FakeComPortListener(FakeSerialDataSettings fakeDataSettings)
+    public FakeComPortListener(FakeSerialDataSettings fakeData)
     {
-        this.fakeDataSettings = fakeDataSettings;
+        this.fakeData = fakeData;
     }
 
     public void Listen(Func<bool> isCancelled, Action<string>? newLineCallBack = null)
     {
-        int min = this.fakeDataSettings.MinAngleDeg;
-        int max = this.fakeDataSettings.MaxAngleDeg;
+        int min = this.fakeData.MinAngleDeg;
+        int max = this.fakeData.MaxAngleDeg;
         int currentAngle = min;
-        int step = this.fakeDataSettings.AngleStepDeg;
-        int distance = this.fakeDataSettings.BaseDistanceCm;
-        int jitter = this.fakeDataSettings.DistanceJitterCm;
-        int intervalMilliseconds = this.fakeDataSettings.IntervalMilliseconds;
+        int step = this.fakeData.AngleStepDeg;
+        int distance = this.fakeData.BaseDistanceCm;
+        int jitter = this.fakeData.DistanceJitterCm;
+        int intervalMilliseconds = this.fakeData.IntervalMilliseconds;
 
         var rnd = new Random();
+        var lineFormatter = new FakeSerialLineFormatter(this.fakeData.FakeSerialLineFormat);
 
         while (!isCancelled())
         {
-            var line = $"{currentAngle}: {distance + rnd.Next(-jitter, jitter + 1)}cm";
+            int distanceCm = distance + rnd.Next(-jitter, jitter + 1);
+            var line = lineFormatter.CreateLine(currentAngle, distanceCm);
 
             Log.Debug("Received line: \"{Line}\".", line);
 

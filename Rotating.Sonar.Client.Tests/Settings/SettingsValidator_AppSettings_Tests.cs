@@ -52,6 +52,55 @@ public sealed class SettingsValidator_AppSettings_Tests
     }
 
     [Test]
+    public void ValidateRecursively_AppSettingsSerialLinePatternMatchTimeoutOutOfRange_ThrowsWithSerialPath()
+    {
+        var settings = new AppSettings();
+        settings.Serial.LinePatternMatchTimeoutMilliseconds = 0;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
+
+        Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Serial.LinePatternMatchTimeoutMilliseconds':"));
+    }
+
+    [Test]
+    public void ValidateRecursively_AppSettingsSerialLinePatternEmpty_ThrowsWithSerialPath()
+    {
+        var settings = new AppSettings();
+        settings.Serial.LinePattern = string.Empty;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
+
+        Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Serial.LinePattern':"));
+    }
+
+    [Test]
+    public void ValidateRecursively_AppSettingsSerialLinePatternInvalidRegex_ThrowsWithSerialPath()
+    {
+        var settings = new AppSettings();
+        settings.Serial.LinePattern = "(";
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
+
+        Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Serial.LinePattern':"));
+    }
+
+    [Test]
+    public void ValidateRecursively_AppSettingsSerialFakeFormatAndLinePatternMismatch_ThrowsWithSerialPaths()
+    {
+        var settings = new AppSettings();
+        settings.Serial.FakeData.FakeSerialLineFormat = "{angle};{distance}";
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
+
+        Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Serial.LinePattern':"));
+        Assert.That(ex.Message, Does.Contain("at 'AppSettings.Serial.FakeData.FakeSerialLineFormat':"));
+    }
+
+    [Test]
     public void ValidateRecursively_AppSettingsWindowInvalidTitle_ThrowsWithRequiredMessage()
     {
         var settings = new AppSettings();
