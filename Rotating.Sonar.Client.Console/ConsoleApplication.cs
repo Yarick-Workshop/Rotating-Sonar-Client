@@ -1,6 +1,8 @@
 namespace Rotating.Sonar.ClientApp.Console;
 
 using System;
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.SerialPorts;
@@ -143,14 +145,6 @@ public class ConsoleApplication
             fakeDataMode,
             visualizeMode);
 
-        if (string.Equals(targetPort, "help", StringComparison.OrdinalIgnoreCase))
-        {
-            this.logger.LogInformation("Help was requested (for example -port help).");
-            this.DisplayAvailablePorts();
-            this.LogHelp(serialSettings);
-            throw new ArgumentException("Help was requested.");
-        }
-
         if (!fakeDataMode && string.IsNullOrEmpty(targetPort))
         {
             this.logger.LogError("Required command line arguments are missing. Specify -port <name> or use -fake.");
@@ -211,21 +205,31 @@ public class ConsoleApplication
 
     private void LogHelp(SerialSettings serialSettings)
     {
-        this.logger.LogInformation("");
-        this.logger.LogInformation("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>] [-visualize]");
-        this.logger.LogInformation("Parameters:");
-        this.logger.LogInformation("  -port <port_name>    COM port to connect to (required)");
-        this.logger.LogInformation("  -rate <baud_rate>    Baud rate (optional, default: {DefaultBaudRate})", serialSettings.DefaultBaudRate);
-        this.logger.LogInformation("  -visualize           Enable scan display visualization (optional)");
-        this.logger.LogInformation("  -fake                Generate fake randomize COM port data. A fake com port (optional). If the parameter is set no real COM port configuration is needed");
-        this.logger.LogInformation("");
-        this.logger.LogInformation("Examples:");
-        this.logger.LogInformation("  dotnet run -- -port /dev/ttyUSB0");
-        this.logger.LogInformation("  dotnet run -- -port /dev/ttyUSB0 -rate 115200");
-        this.logger.LogInformation("  dotnet run -- -port /dev/ttyUSB0 -visualize");
-        this.logger.LogInformation("  dotnet run -- -port /dev/ttyUSB0 -rate 115200 -visualize");
-        this.logger.LogInformation("  dotnet run -- -fake");
-        this.logger.LogInformation("  dotnet run -- -fake -visualize");
+        this.logger.LogInformation("{HelpText}", FormatHelp(serialSettings));
+    }
+
+    private static string FormatHelp(SerialSettings serialSettings)
+    {
+        int defaultBaudRate = serialSettings.DefaultBaudRate;
+        var help = new StringBuilder()
+            .AppendLine()
+            .AppendLine("Usage: dotnet run -- -port <port_name> [-rate <baud_rate>] [-visualize]")
+            .AppendLine("Parameters:")
+            .AppendLine("  -port <port_name>    COM port to connect to (required)")
+            .Append(CultureInfo.InvariantCulture, $"  -rate <baud_rate>    Baud rate (optional, default: {defaultBaudRate})")
+            .AppendLine()
+            .AppendLine("  -visualize           Enable scan display visualization (optional)")
+            .AppendLine("  -fake                Generate fake randomize COM port data. A fake com port (optional). If the parameter is set no real COM port configuration is needed")
+            .AppendLine()
+            .AppendLine("Examples:")
+            .AppendLine("  dotnet run -- -port /dev/ttyUSB0")
+            .AppendLine("  dotnet run -- -port /dev/ttyUSB0 -rate 115200")
+            .AppendLine("  dotnet run -- -port /dev/ttyUSB0 -visualize")
+            .AppendLine("  dotnet run -- -port /dev/ttyUSB0 -rate 115200 -visualize")
+            .AppendLine("  dotnet run -- -fake")
+            .Append("  dotnet run -- -fake -visualize");
+
+        return help.ToString();
     }
 
     private void DisplayAvailablePorts()
@@ -238,11 +242,8 @@ public class ConsoleApplication
         }
         else
         {
-            this.logger.LogInformation("Available COM ports:");
-            foreach (var portName in portNames)
-            {
-                this.logger.LogInformation("- {PortName}", portName);
-            }
+            string portList = string.Join(Environment.NewLine, portNames.Select(portName => $"- {portName}"));
+            this.logger.LogInformation("Available COM ports:{NewLine}{PortList}", Environment.NewLine, portList);
         }
     }
 }

@@ -17,7 +17,7 @@ public sealed class FakeSerialDataSettings : IValidatableObject
     [Range(0, int.MaxValue, ErrorMessage = "DistanceJitterCm must be non-negative.")]
     public int DistanceJitterCm { get; set; } = 10;
 
-    [Range(0, int.MaxValue, ErrorMessage = "IntervalMilliseconds must be non-negative.")]
+    [Range(1, int.MaxValue, ErrorMessage = "IntervalMilliseconds must be at least 1.")]
     public int IntervalMilliseconds { get; set; } = 100;
 
     [Required(AllowEmptyStrings = false, ErrorMessage = "Fake serial line format is required.")]

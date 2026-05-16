@@ -9,7 +9,7 @@ public sealed class SerialSettings : IValidatableObject
     [Range(1, int.MaxValue, ErrorMessage = "DefaultBaudRate must be at least 1.")]
     public int DefaultBaudRate { get; set; } = 9600;
 
-    [Range(0, int.MaxValue, ErrorMessage = "ReadTimeoutMilliseconds must be non-negative.")]
+    [Range(1, int.MaxValue, ErrorMessage = "ReadTimeoutMilliseconds must be at least 1.")]
     public int ReadTimeoutMilliseconds { get; set; } = 250;
 
     [Range(1, SerialLineParseConstants.LinePatternMatchTimeoutMillisecondsMax, ErrorMessage = "LinePatternMatchTimeoutMilliseconds must be between 1 and 1000 milliseconds (1 second maximum).")]

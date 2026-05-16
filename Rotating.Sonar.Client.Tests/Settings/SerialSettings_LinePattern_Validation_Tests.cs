@@ -196,6 +196,30 @@ public sealed class SerialSettings_LinePattern_Validation_Tests
     }
 
     [Test]
+    public void ValidateRecursively_ReadTimeoutZero_FailsRangeValidation()
+    {
+        var serial = CreateValidSerial();
+        serial.ReadTimeoutMilliseconds = 0;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(serial, nameof(SerialSettings)));
+
+        Assert.That(ex!.Message, Does.Contain("at 'SerialSettings.ReadTimeoutMilliseconds':"));
+    }
+
+    [Test]
+    public void ValidateRecursively_FakeDataIntervalZero_FailsRangeValidation()
+    {
+        var serial = CreateValidSerial();
+        serial.FakeData.IntervalMilliseconds = 0;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(serial, nameof(SerialSettings)));
+
+        Assert.That(ex!.Message, Does.Contain("at 'SerialSettings.FakeData.IntervalMilliseconds':"));
+    }
+
+    [Test]
     public void ValidateRecursively_LinePatternMatchTimeoutAboveMax_FailsRangeValidation()
     {
         var serial = CreateValidSerial();
