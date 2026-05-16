@@ -41,7 +41,7 @@ public class ComPortListener : IComPortListener
                         .TrimEnd('\r');
 
                     Log.Debug("Received line: \"{Line}\".", line);
-                    
+
                     newLineCallBack?.Invoke(line);
                 }
                 catch (TimeoutException)

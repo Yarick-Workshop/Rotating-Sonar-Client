@@ -14,7 +14,7 @@ public static class CommandLineExtensions
     public static string? GetCommandOption(this string[] args, string optionName)
     {
         string optionFlag = $"-{optionName}";
-        
+
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == optionFlag && i + 1 < args.Length)
@@ -22,7 +22,7 @@ public static class CommandLineExtensions
                 return args[i + 1];
             }
         }
-        
+
         return null;
     }
 
@@ -67,4 +67,4 @@ public class ValidationResult
 {
     public bool IsValid { get; set; }
     public string ErrorMessage { get; set; } = string.Empty;
-} 
+}

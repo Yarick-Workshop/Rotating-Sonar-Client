@@ -1,13 +1,13 @@
 namespace Rotating.Sonar.ClientApp.Console;
 
-using Rotating.Sonar.Client.Common.Settings;
 using System;
-using Rotating.Sonar.Client.Common.SerialPorts.Listeners;
-using Rotating.Sonar.Client.Common.SerialPorts;
-using Rotating.Sonar.ClientApp.Console.Extensions;
-using Rotating.Sonar.Client.Visualizer;
-using Serilog;
 using System.Diagnostics;
+using Rotating.Sonar.Client.Common.SerialPorts;
+using Rotating.Sonar.Client.Common.SerialPorts.Listeners;
+using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Visualizer;
+using Rotating.Sonar.ClientApp.Console.Extensions;
+using Serilog;
 
 class Program
 {
@@ -48,12 +48,12 @@ class Program
                 var regex = appSettings.Serial.CreateLineRegex();
 
                 var comPortListener = CreateComPortListener(args, appSettings.Serial);
-                
+
                 if (visualizeMode)
                 {
                     using var visualizer = new ScanDisplayVisualizer(appSettings);
                     using var cancellationTokenSource = new CancellationTokenSource();
-                    
+
                     Log.Information("Reading data from port: {PortName}.", comPortListener.PortName);
                     Log.Information("----------------------------------------");
 
@@ -186,7 +186,7 @@ class Program
     static void DisplayAvailablePorts()
     {
         var portNames = SerialPortProvider.GetPortNames();
-        
+
         if (portNames.Length == 0)
         {
             Log.Warning("No COM ports found.");
@@ -200,4 +200,4 @@ class Program
             }
         }
     }
-} 
+}

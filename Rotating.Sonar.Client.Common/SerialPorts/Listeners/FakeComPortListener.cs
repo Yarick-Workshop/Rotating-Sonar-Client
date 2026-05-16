@@ -1,7 +1,7 @@
 namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 
-using Rotating.Sonar.Client.Common.Settings;
 using System;
+using Rotating.Sonar.Client.Common.Settings;
 using Serilog;
 
 public class FakeComPortListener : IComPortListener

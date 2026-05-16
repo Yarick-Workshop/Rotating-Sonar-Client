@@ -37,7 +37,7 @@ public class OpenGlPrimitives
         Span<float> previousWidth = stackalloc float[1];
         this.gl.GetFloat(GLEnum.LineWidth, previousWidth);
         this.gl.LineWidth(lineWidthPx);
-        
+
         this.gl.Begin(GLEnum.LineLoop);
         foreach (var (unitX, unitY) in this.unitCirclePoints)
         {

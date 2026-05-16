@@ -1,5 +1,9 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Rotating.Sonar.Client.Common.Settings;
 using Rotating.Sonar.Client.Common.Zoom;
 using Rotating.Sonar.Client.Visualizer.Text;
@@ -8,10 +12,6 @@ using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL.Legacy;
 using Silk.NET.Windowing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 internal class ScanDisplayWindow : IDisposable
 {
@@ -27,7 +27,7 @@ internal class ScanDisplayWindow : IDisposable
     private readonly Queue<double> fpsHistory = new();
 
     private Vector2D<int> previousSize;
-    
+
     private bool _disposed = false;
 
     public ScanDisplayWindow(
@@ -54,7 +54,7 @@ internal class ScanDisplayWindow : IDisposable
     }
 
     public void Run()
-    {        
+    {
         this.window!.Run();
     }
 
@@ -78,7 +78,7 @@ internal class ScanDisplayWindow : IDisposable
 
         Log.Information(
             "Toggling fullscreen: {OldState} -> {NewState}",
-            oldState, 
+            oldState,
             this.window.WindowState);
     }
 
@@ -142,7 +142,7 @@ internal class ScanDisplayWindow : IDisposable
     private void OnResize(Vector2D<int> newWindowSize)
     {
         Log.Information(
-            "Window resized: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}", 
+            "Window resized: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}",
             this.previousSize.X,
             this.previousSize.Y,
             newWindowSize.X,

@@ -1,12 +1,12 @@
 #pragma warning disable CS0618
 namespace Rotating.Sonar.Client.Visualizer.Text;
 
-using Rotating.Sonar.Client.Common.Settings;
-using Silk.NET.OpenGL.Legacy;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rotating.Sonar.Client.Common.Settings;
+using Silk.NET.OpenGL.Legacy;
+using SkiaSharp;
 
 record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, float Advance);
 

@@ -1,7 +1,7 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
-using Rotating.Sonar.Client.Common.Settings;
 using System;
+using Rotating.Sonar.Client.Common.Settings;
 using Serilog;
 
 public class ScanDisplayVisualizer : IDisposable

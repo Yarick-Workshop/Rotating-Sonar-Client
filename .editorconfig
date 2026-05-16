@@ -9,6 +9,11 @@ indent_size = 4
 trim_trailing_whitespace = true
 
 [*.cs]
+# Using directives: System.* first (alphabetically), then all other namespaces alphabetically
+dotnet_sort_system_directives_first = true:warning
+dotnet_separate_import_directive_groups = false:warning
+dotnet_diagnostic.IDE0055.severity = warning
+
 # Require this. qualifier for all non-static instance members
 dotnet_style_qualification_for_field = true:warning
 dotnet_style_qualification_for_property = true:warning
