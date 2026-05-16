@@ -1,18 +1,20 @@
 namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 
 using System;
+using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.Settings;
-using Serilog;
 
 public class FakeComPortListener : IComPortListener
 {
     private readonly FakeSerialDataSettings fakeData;
+    private readonly ILogger<FakeComPortListener> logger;
 
     public string PortName => "FAKE";
 
-    public FakeComPortListener(FakeSerialDataSettings fakeData)
+    public FakeComPortListener(FakeSerialDataSettings fakeData, ILogger<FakeComPortListener> logger)
     {
         this.fakeData = fakeData;
+        this.logger = logger;
     }
 
     public void Listen(Func<bool> isCancelled, Action<string>? newLineCallBack = null)
@@ -33,7 +35,7 @@ public class FakeComPortListener : IComPortListener
             int distanceCm = distance + rnd.Next(-jitter, jitter + 1);
             var line = lineFormatter.CreateLine(currentAngle, distanceCm);
 
-            Log.Debug("Received line: \"{Line}\".", line);
+            this.logger.LogDebug("Received line: \"{Line}\".", line);
 
             newLineCallBack?.Invoke(line);
 

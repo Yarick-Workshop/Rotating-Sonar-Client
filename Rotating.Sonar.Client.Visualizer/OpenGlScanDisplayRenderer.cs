@@ -1,9 +1,9 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
+using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.Settings;
 using Rotating.Sonar.Client.Common.Zoom;
 using Rotating.Sonar.Client.Visualizer.Text;
-using Serilog;
 using Silk.NET.OpenGL.Legacy;
 
 #pragma warning disable CS0618
@@ -24,6 +24,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
     private float width;
     private float height;
     private readonly OpenGlTextRenderer textRenderer;
+    private readonly ILogger<OpenGlScanDisplayRenderer> logger;
     private readonly VisualizerSettings visualizerSettings;
     private bool showFps;
     private bool showZoom;
@@ -44,9 +45,11 @@ public class OpenGlScanDisplayRenderer : IZoomable
         AppSettings appSettings,
         float viewportWidthPx,
         float viewportHeightPx,
-        OpenGlTextRenderer textRenderer)
+        OpenGlTextRenderer textRenderer,
+        ILogger<OpenGlScanDisplayRenderer> logger)
     {
         this.gl = gl;
+        this.logger = logger;
         this.glPrimitives = new OpenGlPrimitives(gl, appSettings.Visualizer);
         this.scanPointBuffer = scanPointBuffer;
         this.visualizerSettings = appSettings.Visualizer;
@@ -161,7 +164,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
 
         if (points.Count == 0)
         {
-            Log.Warning("No scan points to draw.");
+            this.logger.LogWarning("No scan points to draw.");
             return;
         }
 
