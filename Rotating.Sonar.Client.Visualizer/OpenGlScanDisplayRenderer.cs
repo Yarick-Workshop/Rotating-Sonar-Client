@@ -26,7 +26,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
     private readonly OpenGlTextRenderer textRenderer;
     private readonly VisualizerSettings visualizerSettings;
     private bool showFps;
-    private bool showZoom = true;
+    private bool showZoom;
     private bool showSweep = false;
     private ScanPointRenderStyle pointRenderStyle = ScanPointRenderStyle.SolidSquare;
 
@@ -57,7 +57,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
         // TODO, investigate why option this.UpdateViewport(width, height); does not work
         this.width = viewportWidthPx;
         this.height = viewportHeightPx;
-        
+
         this.cx = viewportWidthPx / 2f;
         this.cy = this.height / 2f;
         this.radius = MathF.Min(this.cx, this.cy) - this.visualizerSettings.ScanArea.OuterMarginPx;
@@ -164,7 +164,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
             Log.Warning("No scan points to draw.");
             return;
         }
-        
+
         // TODO refactor
         float distanceScale = this.radius * this.zoomScale / this.maxDistanceCm;
         OffScaleIndicatorSettings offScaleIndicator = this.visualizerSettings.ScanPoints.OffScaleIndicator;
@@ -354,24 +354,24 @@ public class OpenGlScanDisplayRenderer : IZoomable
 
             this.gl.Translate(this.cx, this.cy, 0f); // Move to center
             this.gl.Rotate(a, 0f, 0f, 1f); // Rotate to angle
-            
+
             this.gl.Begin(GLEnum.Lines);
-                this.gl.Vertex2(0, 0); // Start at center
-                this.gl.Vertex2(this.radius, 0); // End at outer ring along X-axis
+            this.gl.Vertex2(0, 0); // Start at center
+            this.gl.Vertex2(this.radius, 0); // End at outer ring along X-axis
             this.gl.End();
 
             this.gl.PopMatrix();
         }
 
-        // Draw short rim ticks every 5 degrees; longer marks every 10 degrees.
+        // Draw rim ticks every TickStepDeg; every MajorTickPerSteps-th tick uses MajorTickLengthPx.
         var gridTickLabel = this.visualizerSettings.RangeGrid.RangeLabelColor;
         this.gl.Color4(gridTickLabel.R, gridTickLabel.G, gridTickLabel.B, gridTickLabel.A);
         this.gl.Begin(GLEnum.Lines);
         int tickStepDeg = this.visualizerSettings.RangeGrid.TickStepDeg;
-        int majorTickStepDeg = this.visualizerSettings.RangeGrid.MajorTickStepDeg;
-        for (int a = 0; a < 360; a += tickStepDeg)
+        int majorTickPerSteps = this.visualizerSettings.RangeGrid.MajorTickPerSteps;
+        for (int tickIndex = 0, a = 0; a < 360; a += tickStepDeg, tickIndex++)
         {
-            float tickLength = a % majorTickStepDeg == 0
+            float tickLength = tickIndex % majorTickPerSteps == 0
                 ? this.visualizerSettings.RangeGrid.MajorTickLengthPx
                 : this.visualizerSettings.RangeGrid.MinorTickLengthPx;
             double radians = a * Math.PI / 180.0;
@@ -396,7 +396,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
         for (int a = 0; a < 360; a += bearingLabelStepDeg)
         {
             string angleText = $"{a}°";
-            
+
             this.gl.PushMatrix();
 
             this.gl.Translate(this.cx, this.cy, 0f); // Move to center

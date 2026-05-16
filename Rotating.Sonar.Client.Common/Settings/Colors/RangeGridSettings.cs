@@ -20,8 +20,8 @@ public sealed class RangeGridSettings
     [Range(1, 360, ErrorMessage = "TickStepDeg must be between 1 and 360.")]
     public int TickStepDeg { get; set; } = 5;
 
-    [Range(1, 360, ErrorMessage = "MajorTickStepDeg must be between 1 and 360.")]
-    public int MajorTickStepDeg { get; set; } = 10;
+    [Range(1, 360, ErrorMessage = "MajorTickPerSteps must be between 1 and 360.")]
+    public int MajorTickPerSteps { get; set; } = 2;
 
     [Range(0, float.MaxValue, ErrorMessage = "MajorTickLengthPx must be non-negative.")]
     public float MajorTickLengthPx { get; set; } = 12f;

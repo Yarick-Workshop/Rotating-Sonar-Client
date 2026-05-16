@@ -62,6 +62,7 @@ public sealed class SettingsValidator_AppSettings_Tests
             SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
 
         Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Serial.FakeData.AngleStepDeg':"));
+        Assert.That(ex.Message, Does.Contain("at least 1"));
     }
 
     [Test]
@@ -161,6 +162,18 @@ public sealed class SettingsValidator_AppSettings_Tests
             SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
 
         Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Visualizer.RangeGrid.TickStepDeg':"));
+    }
+
+    [Test]
+    public void ValidateRecursively_AppSettingsRangeGridMajorTickPerStepsOutOfRange_ThrowsWithRangeGridPath()
+    {
+        var settings = new AppSettings();
+        settings.Visualizer.RangeGrid.MajorTickPerSteps = 0;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
+
+        Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Visualizer.RangeGrid.MajorTickPerSteps':"));
     }
 
     [Test]

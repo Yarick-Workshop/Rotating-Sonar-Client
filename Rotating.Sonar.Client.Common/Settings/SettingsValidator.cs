@@ -139,6 +139,16 @@ public static class SettingsValidator
             return true;
         }
 
+        if (type == typeof(Uri) || type == typeof(Version))
+        {
+            return true;
+        }
+
+        if (type == typeof(FloatColor4))
+        {
+            return true;
+        }
+
         if (typeof(Delegate).IsAssignableFrom(type))
         {
             return true;

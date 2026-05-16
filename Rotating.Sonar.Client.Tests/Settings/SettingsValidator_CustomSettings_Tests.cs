@@ -206,4 +206,14 @@ public sealed class SettingsValidator_CustomSettings_Tests
         Assert.That(ex!.Message, Does.Contain(
             $"Settings validation failed at '{nameof(CustomGraphLoopRoot)}.{nameof(CustomGraphLoopRoot.Entry)}.{nameof(GraphLoopNodeA.B)}.{nameof(GraphLoopNodeB.A)}': Circular reference detected"));
     }
+
+    [Test]
+    public void ValidateRecursively_CustomSettingsWithFloatColor4ValidColor_DoesNotThrow()
+    {
+        var settings = new CustomSettingsWithFloatColor4();
+
+        Assert.DoesNotThrow(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(CustomSettingsWithFloatColor4)));
+    }
+
 }
