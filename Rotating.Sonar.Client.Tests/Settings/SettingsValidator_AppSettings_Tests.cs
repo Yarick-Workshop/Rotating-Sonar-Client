@@ -1,6 +1,8 @@
 namespace Rotating.Sonar.Client.Tests.Settings;
 
+using Microsoft.Extensions.Configuration;
 using Rotating.Sonar.Client.Common.Settings;
+using Serilog.Events;
 
 [TestFixture]
 public sealed class SettingsValidator_AppSettings_Tests
@@ -189,9 +191,23 @@ public sealed class SettingsValidator_AppSettings_Tests
     }
 
     [Test]
-    public void Load_InvalidSettingsPath_ReturnsDefaultsPassingRecursiveValidation()
+    public void ValidateRecursively_AppSettingsInvalidLoggingLevel_ThrowsWithLoggingPath()
     {
-        AppSettings settings = AppSettings.Load(" ");
+        var settings = new AppSettings();
+        settings.Logging.Visualization = (LogEventLevel)999;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));
+
+        Assert.That(ex!.Message, Does.Contain("at 'AppSettings.Logging.Visualization':"));
+        Assert.That(ex.Message, Does.Contain("Serilog log level"));
+    }
+
+    [Test]
+    public void BindAndValidate_EmptyConfiguration_ReturnsDefaultsPassingRecursiveValidation()
+    {
+        IConfiguration configuration = new ConfigurationBuilder().Build();
+        AppSettings settings = AppSettingsConfiguration.BindAndValidate(configuration);
 
         Assert.DoesNotThrow(() =>
             SettingsValidator.ValidateRecursively(settings, nameof(AppSettings)));

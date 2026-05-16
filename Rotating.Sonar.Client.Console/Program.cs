@@ -1,7 +1,7 @@
 namespace Rotating.Sonar.ClientApp.Console;
 
 using System;
-using System.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using Rotating.Sonar.Client.Common.SerialPorts;
 using Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 using Rotating.Sonar.Client.Common.Settings;
@@ -13,30 +13,71 @@ class Program
 {
     static void Main(string[] args)
     {
-        if (args.Length == 0 && Debugger.IsAttached)
-        {
-            args = ["-fake", "-visualize"];
+        string contentRoot = AppContext.BaseDirectory;
+        string configurationSource = Path.Combine(contentRoot, "appsettings.json");
 
-            Log.Warning("No command line arguments provided, using default test arguments: -fake -visualize");
-        }
+        IConfiguration configuration = new ConfigurationBuilder()
+            .SetBasePath(contentRoot)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .Build();
+
+        bool visualizeMode = args.HasCommandFlag("visualize");
+        LoggingSettings loggingSettings = configuration.GetSection(nameof(AppSettings.Logging)).Get<LoggingSettings>()
+            ?? new LoggingSettings();
+        var minimumLogLevel = visualizeMode ? loggingSettings.Visualization : loggingSettings.ConsoleOnly;
 
         Log.Logger = new LoggerConfiguration()
-            .WriteTo.Async(a => a.Console())
+            .ReadFrom.Configuration(configuration)
+            .MinimumLevel.Is(minimumLogLevel)
             .CreateLogger();
+
+        if (args.Length == 0)
+        {
+            Log.Information("No command line arguments were provided.");
+        }
+        else
+        {
+            Log.Information("Command line arguments ({Count}): {Arguments}", args.Length, string.Join(' ', args));
+        }
+
+        string loggingMode = visualizeMode ? "visualization" : "console-only";
+        var configuredLevel = visualizeMode ? loggingSettings.Visualization : loggingSettings.ConsoleOnly;
+        Log.Information("Loading logging configuration from {AppSettingsPath}", configurationSource);
+        Log.Information(
+            "Logging mode: {Mode}; configured level '{ConfiguredLevel}'; effective minimum level {MinimumLevel}",
+            loggingMode,
+            configuredLevel,
+            minimumLogLevel);
 
         Log.Information("Scan Display Client Console");
         Log.Information("=============================");
         Log.Information("Desktop client to visualize range/angle data from sonar or lidar-style sensors");
         Log.Information("");
 
-        var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
-        var appSettings = AppSettings.Load(appSettingsPath);
+        AppSettings appSettings;
+        try
+        {
+            Log.Information("Loading application settings from {AppSettingsPath}", configurationSource);
+            appSettings = AppSettingsConfiguration.BindAndValidate(configuration);
+            Log.Information("Application settings loaded and validated successfully from {AppSettingsPath}", configurationSource);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Application settings validation failed for {AppSettingsPath}", configurationSource);
+            throw;
+        }
 
         try
         {
-            args.ValidateCommandOptions();
-
-            bool visualizeMode = args.HasCommandFlag("visualize");
+            try
+            {
+                args.ValidateCommandOptions();
+            }
+            catch (ArgumentException ex)
+            {
+                Log.Error(ex, "Command line validation failed");
+                throw;
+            }
 
             if (visualizeMode)
             {
@@ -47,7 +88,7 @@ class Program
             {
                 var regex = appSettings.Serial.CreateLineRegex();
 
-                var comPortListener = CreateComPortListener(args, appSettings.Serial);
+                var comPortListener = CreateComPortListener(args, appSettings.Serial, visualizeMode);
 
                 if (visualizeMode)
                 {
@@ -93,12 +134,12 @@ class Program
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error: {ErrorMessage}", ex.Message);
+                Log.Error(ex, "Serial listener or visualizer failed");
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error: {ErrorMessage}", ex.Message);
+            Log.Error(ex, "Startup failed");
 
             LogHelp(appSettings.Serial);
         }
@@ -108,14 +149,30 @@ class Program
         }
     }
 
-    private static IComPortListener CreateComPortListener(string[] args, SerialSettings serialSettings)
+    private static IComPortListener CreateComPortListener(string[] args, SerialSettings serialSettings, bool visualizeMode)
     {
         string? targetPort = args.GetCommandOption("port");
         string? baudRateStr = args.GetCommandOption("rate");
         bool fakeDataMode = args.HasCommandFlag("fake");
 
-        if ((!fakeDataMode && string.IsNullOrEmpty(targetPort)) || targetPort?.ToLower() == "help")
+        Log.Information(
+            "Resolved connection options: port={Port}, rate={Rate}, fake={FakeData}, visualize={Visualize}",
+            targetPort ?? "(not set)",
+            baudRateStr ?? "(not set)",
+            fakeDataMode,
+            visualizeMode);
+
+        if (string.Equals(targetPort, "help", StringComparison.OrdinalIgnoreCase))
         {
+            Log.Information("Help was requested (for example -port help).");
+            DisplayAvailablePorts();
+            LogHelp(serialSettings);
+            throw new ArgumentException("Help was requested.");
+        }
+
+        if (!fakeDataMode && string.IsNullOrEmpty(targetPort))
+        {
+            Log.Error("Required command line arguments are missing. Specify -port <name> or use -fake.");
             DisplayAvailablePorts();
             LogHelp(serialSettings);
             throw new ArgumentException("Arguments are not specified.");
@@ -125,6 +182,7 @@ class Program
 
         if (fakeDataMode)
         {
+            Log.Information("Fake data mode enabled; using generated serial lines (no COM port required).");
             result = new FakeComPortListener(serialSettings.FakeData);
         }
         else
@@ -134,26 +192,26 @@ class Program
             {
                 Log.Information("Baud rate not specified, using default: {DefaultBaudRate}", serialSettings.DefaultBaudRate);
             }
+            else if (!int.TryParse(baudRateStr, out baudRate))
+            {
+                Log.Warning("Invalid baud rate '{BaudRate}'. Using default: {DefaultBaudRate}", baudRateStr, serialSettings.DefaultBaudRate);
+                baudRate = serialSettings.DefaultBaudRate;
+            }
             else
             {
-                if (!int.TryParse(baudRateStr, out baudRate))
-                {
-                    Log.Warning("Invalid baud rate '{BaudRate}'. Using default: {DefaultBaudRate}", baudRateStr, serialSettings.DefaultBaudRate);
-                    baudRate = serialSettings.DefaultBaudRate;
-                }
-                else
-                {
-                    Log.Information("Using baud rate: {BaudRate}", baudRate);
-                }
+                Log.Information("Using baud rate: {BaudRate}", baudRate);
             }
+
+            Log.Information("Connecting to COM port: {TargetPort}", targetPort);
 
             var portNames = SerialPortProvider.GetPortNames();
 
             if (!portNames.Contains(targetPort))
             {
-                Log.Error("Port '{TargetPort}' not found.", targetPort);
+                var portNotFound = new ArgumentException($"Port '{targetPort}' not found.");
+                Log.Error(portNotFound, "Port '{TargetPort}' not found.", targetPort);
                 DisplayAvailablePorts();
-                throw new ArgumentException($"Port '{targetPort}' not found.");
+                throw portNotFound;
             }
 
             result = new ComPortListener(targetPort!, baudRate, serialSettings.ReadTimeoutMilliseconds);
