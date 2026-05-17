@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.ClientApp.Console;
+namespace Rotating.Sonar.Client.Console;
 
 using System;
 using System.Globalization;
@@ -9,7 +9,7 @@ using Rotating.Sonar.Client.Common.SerialPorts;
 using Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 using Rotating.Sonar.Client.Common.Settings;
 using Rotating.Sonar.Client.Visualizer;
-using Rotating.Sonar.ClientApp.Console.Extensions;
+using Rotating.Sonar.Client.Console.Extensions;
 using Serilog.Events;
 
 public class ConsoleApplication

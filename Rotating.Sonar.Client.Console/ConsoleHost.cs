@@ -1,9 +1,9 @@
-namespace Rotating.Sonar.ClientApp.Console;
+namespace Rotating.Sonar.Client.Console;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.Settings;
-using Rotating.Sonar.ClientApp.Console.Extensions;
+using Rotating.Sonar.Client.Console.Extensions;
 using Serilog;
 
 internal class ConsoleHost

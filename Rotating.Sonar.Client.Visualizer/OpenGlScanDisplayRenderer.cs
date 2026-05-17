@@ -176,7 +176,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
         {
             float pointRadius = distance * distanceScale;
             float overflow = pointRadius - this.radius;
-            bool isArrow = overflow > InsideRingEpsilon && canDrawArrow;
+            bool isArrow = overflow > InsideRingEpsilon;
             if (!isArrow)
             {
                 pointItems.Add((angle, pointRadius));

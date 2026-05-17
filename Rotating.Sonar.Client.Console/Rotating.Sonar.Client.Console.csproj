@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Rotating.Sonar.Client.Console</AssemblyName>
     <RootNamespace>Rotating.Sonar.Client.Console</RootNamespace>
-    <StartupObject>Rotating.Sonar.ClientApp.Console.ConsoleHost</StartupObject>
+    <StartupObject>Rotating.Sonar.Client.Console.ConsoleHost</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
