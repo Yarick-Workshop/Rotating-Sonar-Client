@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations;
 
 public sealed class OffScaleIndicatorSettings
 {
+    public FloatColor4 Color { get; set; } = ChainColorParser.Instance.ParseOrThrow("#F2261F", nameof(Color));
+
     [Range(0, float.MaxValue, ErrorMessage = "ArrowHeadLengthPx must be non-negative.")]
     public float ArrowHeadLengthPx { get; set; } = 8f;
 

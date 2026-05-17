@@ -31,13 +31,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
     private bool showSweep = false;
     private ScanPointRenderStyle pointRenderStyle = ScanPointRenderStyle.SolidSquare;
 
-    public float ZoomScale
-    {
-        get
-        {
-            return this.zoomScale;
-        }
-    }
+    public float ZoomScale => this.zoomScale;
 
     public OpenGlScanDisplayRenderer(
         GL gl,
@@ -182,7 +176,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
         {
             float pointRadius = distance * distanceScale;
             float overflow = pointRadius - this.radius;
-            bool isArrow = overflow > InsideRingEpsilon && maxHeadBack > InsideRingEpsilon;
+            bool isArrow = overflow > InsideRingEpsilon && canDrawArrow;
             if (!isArrow)
             {
                 pointItems.Add((angle, pointRadius));
@@ -213,7 +207,7 @@ public class OpenGlScanDisplayRenderer : IZoomable
             this.DrawLatestSweep(latestPoint.angle, latestSweepRadius, sweepSettings);
         }
 
-        var overflowArrow = this.visualizerSettings.ScanPoints.OffScaleIndicatorColor;
+        var overflowArrow = offScaleIndicator.Color;
         this.gl.Color4(overflowArrow.R, overflowArrow.G, overflowArrow.B, overflowArrow.A);
         this.DrawPolarArrowsOnly(arrowAngles, tipRadius, arrowHeadBack, offScaleIndicator.ArrowHalfWidthPx);
         this.gl.PopMatrix();
