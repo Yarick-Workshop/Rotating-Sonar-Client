@@ -5,16 +5,16 @@ using System.Globalization;
 
 public sealed class FakeSerialLineFormatter
 {
-    private readonly string _compositeFormat;
+    private readonly string compositeFormat;
 
     public FakeSerialLineFormatter(string namedPlaceholderTemplate)
     {
         ArgumentNullException.ThrowIfNull(namedPlaceholderTemplate);
-        this._compositeFormat = BuildCompositeFormat(namedPlaceholderTemplate);
+        this.compositeFormat = BuildCompositeFormat(namedPlaceholderTemplate);
     }
 
     public string CreateLine(int angleDeg, int distanceCm) =>
-        string.Format(CultureInfo.InvariantCulture, this._compositeFormat, angleDeg, distanceCm);
+        string.Format(CultureInfo.InvariantCulture, this.compositeFormat, angleDeg, distanceCm);
 
     public static IEnumerable<ValidationResult> ValidateNamedPlaceholderTemplate(
         string namedPlaceholderTemplate,

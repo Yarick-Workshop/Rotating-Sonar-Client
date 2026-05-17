@@ -30,7 +30,7 @@ internal class ScanDisplayWindow : IDisposable
 
     private Vector2D<int> previousSize;
 
-    private bool _disposed = false;
+    private bool disposed = false;
 
     public ScanDisplayWindow(
         ScanPointBuffer scanPointBuffer,
@@ -90,12 +90,12 @@ internal class ScanDisplayWindow : IDisposable
 
     public void Dispose()
     {
-        if (this._disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        this._disposed = true;
+        this.disposed = true;
         this.ReleaseInput();
         this.window?.Dispose();
     }

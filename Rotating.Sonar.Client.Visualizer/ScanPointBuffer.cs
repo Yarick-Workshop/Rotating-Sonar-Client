@@ -11,12 +11,12 @@ public class ScanPointBuffer
     private readonly ILogger<ScanPointBuffer> logger;
     private volatile int latestAngle = UninitializedLatestAngle;
 
+    public int LatestAngle => this.latestAngle;
+
     public ScanPointBuffer(ILogger<ScanPointBuffer> logger)
     {
         this.logger = logger;
     }
-
-    public int LatestAngle => this.latestAngle;
 
     public void Update(int angleDeg, int distanceCm)
     {

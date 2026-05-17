@@ -11,7 +11,7 @@ public class ScanDisplayVisualizer : IDisposable
     private ScanDisplayWindow? window;
     private readonly AppSettings appSettings;
     private readonly ILogger<ScanDisplayVisualizer> logger;
-    private bool _disposed = false;
+    private bool disposed = false;
 
     public ScanDisplayVisualizer(
         AppSettings appSettings,
@@ -48,12 +48,12 @@ public class ScanDisplayVisualizer : IDisposable
 
     public void Dispose()
     {
-        if (this._disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        this._disposed = true;
+        this.disposed = true;
         this.window?.Dispose();
     }
 }
