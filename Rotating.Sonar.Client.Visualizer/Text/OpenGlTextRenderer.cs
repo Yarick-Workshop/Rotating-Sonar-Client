@@ -8,8 +8,6 @@ using Rotating.Sonar.Client.Common.Settings;
 using Silk.NET.OpenGL.Legacy;
 using SkiaSharp;
 
-record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, float Advance);
-
 // TODO, refactor
 public class OpenGlTextRenderer
 {
@@ -185,6 +183,8 @@ public class OpenGlTextRenderer
         }
         return asciiTable;
     }
+
+    private sealed record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, float Advance);
 }
 
 #pragma warning restore CS0618
