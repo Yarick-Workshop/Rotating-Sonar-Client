@@ -2,6 +2,7 @@ namespace Rotating.Sonar.Client.Visualizer;
 
 using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 using Rotating.Sonar.Client.Common.Zoom;
 using Rotating.Sonar.Client.Visualizer.Text;
 using Silk.NET.OpenGL.Legacy;

@@ -3,6 +3,7 @@ namespace Rotating.Sonar.Client.Console;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 using Rotating.Sonar.Client.Console.Extensions;
 using Serilog;
 

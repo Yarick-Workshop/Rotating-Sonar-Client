@@ -1,7 +1,8 @@
-namespace Rotating.Sonar.Client.Tests.Settings;
+namespace Rotating.Sonar.Client.Tests.Settings.Sections;
 
 using System.Globalization;
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 
 [TestFixture]
 public sealed class SerialSettings_LinePattern_Validation_Tests

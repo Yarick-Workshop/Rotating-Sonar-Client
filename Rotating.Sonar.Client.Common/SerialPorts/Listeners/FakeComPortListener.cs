@@ -3,6 +3,7 @@ namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 using System;
 using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 
 public class FakeComPortListener : IComPortListener
 {

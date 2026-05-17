@@ -1,7 +1,8 @@
-namespace Rotating.Sonar.Client.Tests.Settings;
+namespace Rotating.Sonar.Client.Tests.Settings.Sections;
 
 using Microsoft.Extensions.Configuration;
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 using Serilog.Events;
 
 [TestFixture]

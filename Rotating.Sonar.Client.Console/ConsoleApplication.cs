@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.SerialPorts;
 using Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 using Rotating.Sonar.Client.Visualizer;
 using Rotating.Sonar.Client.Console.Extensions;
 using Serilog.Events;

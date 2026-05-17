@@ -1,6 +1,7 @@
 namespace Rotating.Sonar.Client.Common.Settings;
 
 using System.Text.RegularExpressions;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 
 public static class SettingsExtensions
 {

@@ -3,6 +3,7 @@ namespace Rotating.Sonar.Client.Visualizer;
 using System;
 using Microsoft.Extensions.Logging;
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 
 public class ScanDisplayVisualizer : IDisposable
 {

@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.Client.Common.Settings;
+namespace Rotating.Sonar.Client.Common.Settings.Sections;
 
 using System.ComponentModel.DataAnnotations;
 using Serilog.Events;

@@ -1,6 +1,7 @@
 namespace Rotating.Sonar.Client.Tests.Zoom;
 
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 using Rotating.Sonar.Client.Common.Zoom;
 
 [TestFixture]

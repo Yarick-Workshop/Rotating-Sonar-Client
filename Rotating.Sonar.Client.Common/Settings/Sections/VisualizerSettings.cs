@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.Client.Common.Settings;
+namespace Rotating.Sonar.Client.Common.Settings.Sections;
 
 public sealed class VisualizerSettings
 {

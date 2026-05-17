@@ -1,6 +1,7 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
 using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
 using Silk.NET.OpenGL.Legacy;
 
 #pragma warning disable CS0618
