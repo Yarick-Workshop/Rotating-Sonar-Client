@@ -2,7 +2,6 @@ namespace Rotating.Sonar.Client.Tests.Settings;
 
 using Microsoft.Extensions.Configuration;
 using Rotating.Sonar.Client.Common.Settings;
-using Serilog.Events;
 
 [TestFixture]
 public sealed class AppSettingsConfiguration_Tests
