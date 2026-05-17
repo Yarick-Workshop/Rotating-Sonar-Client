@@ -164,11 +164,11 @@ public class OpenGlScanDisplayRenderer : IZoomable
 
         // TODO refactor
         float distanceScale = this.radius * this.zoomScale / this.maxDistanceCm;
-        OffScaleIndicatorSettings offScaleIndicator = this.visualizerSettings.ScanPoints.OffScaleIndicator;
-        float tipRadius = this.radius - offScaleIndicator.RimInsetPx;
-        float maxHeadBack = tipRadius - offScaleIndicator.MinTailRadiusPx;
+        OutOfRangeArrowSettings outOfRangeArrow = this.visualizerSettings.ScanPoints.OutOfRangeArrow;
+        float tipRadius = this.radius - outOfRangeArrow.RimInsetPx;
+        float maxHeadBack = tipRadius - outOfRangeArrow.MinTailRadiusPx;
         float arrowHeadBack = maxHeadBack > InsideRingEpsilon
-            ? Math.Clamp(offScaleIndicator.ArrowHeadLengthPx, offScaleIndicator.MinArrowHeadBackPx, maxHeadBack)
+            ? Math.Clamp(outOfRangeArrow.ArrowHeadLengthPx, outOfRangeArrow.MinArrowHeadBackPx, maxHeadBack)
             : 0f;
         var pointItems = new List<(float Angle, float Radius)>(points.Count);
         var arrowAngles = new List<float>(points.Count);
@@ -207,9 +207,9 @@ public class OpenGlScanDisplayRenderer : IZoomable
             this.DrawLatestSweep(latestPoint.angle, latestSweepRadius, sweepSettings);
         }
 
-        var overflowArrow = offScaleIndicator.Color;
-        this.gl.Color4(overflowArrow.R, overflowArrow.G, overflowArrow.B, overflowArrow.A);
-        this.DrawPolarArrowsOnly(arrowAngles, tipRadius, arrowHeadBack, offScaleIndicator.ArrowHalfWidthPx);
+        var arrowColor = outOfRangeArrow.Color;
+        this.gl.Color4(arrowColor.R, arrowColor.G, arrowColor.B, arrowColor.A);
+        this.DrawPolarArrowsOnly(arrowAngles, tipRadius, arrowHeadBack, outOfRangeArrow.ArrowHalfWidthPx);
         this.gl.PopMatrix();
 
         // Draw a white point at the center

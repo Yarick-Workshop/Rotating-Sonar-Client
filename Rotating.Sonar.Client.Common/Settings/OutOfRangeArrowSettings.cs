@@ -2,7 +2,7 @@ namespace Rotating.Sonar.Client.Common.Settings;
 
 using System.ComponentModel.DataAnnotations;
 
-public sealed class OffScaleIndicatorSettings
+public sealed class OutOfRangeArrowSettings
 {
     public FloatColor4 Color { get; set; } = ChainColorParser.Instance.ParseOrThrow("#F2261F", nameof(Color));
 

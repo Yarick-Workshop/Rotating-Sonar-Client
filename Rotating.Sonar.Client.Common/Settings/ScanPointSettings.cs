@@ -15,5 +15,5 @@ public sealed class ScanPointSettings
 
     public FloatColor4 ScanPointColor { get; set; } = ChainColorParser.Instance.ParseOrThrow("#FF3333", nameof(ScanPointColor));
     public FloatColor4 OriginMarkerColor { get; set; } = ChainColorParser.Instance.ParseOrThrow("#FFFFFF", nameof(OriginMarkerColor));
-    public OffScaleIndicatorSettings OffScaleIndicator { get; set; } = new();
+    public OutOfRangeArrowSettings OutOfRangeArrow { get; set; } = new();
 }
