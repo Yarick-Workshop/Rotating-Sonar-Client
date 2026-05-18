@@ -1,43 +1,40 @@
 #pragma warning disable CS0618
 namespace Rotating.Sonar.Client.Visualizer.Text;
 
-using Silk.NET.OpenGL.Legacy;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
-record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, float Advance);
+using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
+using Silk.NET.OpenGL.Legacy;
+using SkiaSharp;
 
 // TODO, refactor
 public class OpenGlTextRenderer
 {
-    private const int TileSize = 32;
-    private const int Columns = 16;
-
     private readonly GL gl;
     private uint atlasTexture;//TODO, temp
     private readonly Dictionary<char, GlyphInfo> glyphs;
+    private readonly TextRenderingSettings textRenderingSettings;
 
-    public OpenGlTextRenderer(GL gl, List<char> charTable)
+    public OpenGlTextRenderer(GL gl, TextRenderingSettings textRenderingSettings)
+        : this(gl, GetASCIITable().Union(textRenderingSettings.ExtraGlyphs).ToList(), textRenderingSettings)
+    {
+    }
+
+    public OpenGlTextRenderer(GL gl, List<char> charTable, TextRenderingSettings textRenderingSettings)
     {
         this.gl = gl;
+        this.textRenderingSettings = textRenderingSettings;
 
-        this.glyphs = this.GenerateFontAtlas(charTable, TileSize, Columns);
+        this.glyphs = this.GenerateFontAtlas(
+            charTable,
+            textRenderingSettings.GlyphTileSizePx,
+            textRenderingSettings.AtlasColumns);
 
         gl.Enable(GLEnum.Texture2D);// TODO, to think of it, where to initialize?
         gl.Enable(GLEnum.Blend);
         gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
-    }
-
-    public OpenGlTextRenderer(GL gl)
-        : this(gl, GetASCIITable())
-    {
-    }
-
-    public OpenGlTextRenderer(GL gl, string extraGlyphs)
-        : this(gl, GetASCIITable().Union(extraGlyphs).ToList())
-    {
     }
 
     public void DrawText(string text, float x, float y)
@@ -126,7 +123,7 @@ public class OpenGlTextRenderer
 
         using var paint = new SKPaint
         {
-            TextSize = glyphTileSizePx * 0.75f,
+            TextSize = glyphTileSizePx * (this.textRenderingSettings.TextSizePercentOfTile / 100f),
             Typeface = SKTypeface.Default,
             IsAntialias = true,
             Color = SKColors.White,
@@ -143,7 +140,7 @@ public class OpenGlTextRenderer
             float x = col * glyphTileSizePx;
             float y = row * glyphTileSizePx;
 
-            canvas.DrawText(c.ToString(), x, y + glyphTileSizePx * 0.75f, paint);
+            canvas.DrawText(c.ToString(), x, y + glyphTileSizePx * (this.textRenderingSettings.TextSizePercentOfTile / 100f), paint);
 
             float u1 = x / (float)atlasWidth;
             float v1 = y / (float)atlasHeight;
@@ -187,6 +184,8 @@ public class OpenGlTextRenderer
         }
         return asciiTable;
     }
+
+    private sealed record GlyphInfo(float U1, float V1, float U2, float V2, int Width, int Height, float Advance);
 }
 
 #pragma warning restore CS0618

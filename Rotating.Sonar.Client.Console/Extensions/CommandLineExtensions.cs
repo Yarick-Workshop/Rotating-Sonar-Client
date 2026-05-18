@@ -1,4 +1,4 @@
-namespace Rotating.Sonar.ClientApp.Console.Extensions;
+namespace Rotating.Sonar.Client.Console.Extensions;
 
 /// <summary>
 /// Extension methods for command-line argument processing
@@ -14,7 +14,7 @@ public static class CommandLineExtensions
     public static string? GetCommandOption(this string[] args, string optionName)
     {
         string optionFlag = $"-{optionName}";
-        
+
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == optionFlag && i + 1 < args.Length)
@@ -22,7 +22,7 @@ public static class CommandLineExtensions
                 return args[i + 1];
             }
         }
-        
+
         return null;
     }
 
@@ -59,12 +59,3 @@ public static class CommandLineExtensions
         return args.Contains(flag);
     }
 }
-
-/// <summary>
-/// Represents the result of command-line option validation
-/// </summary>
-public class ValidationResult
-{
-    public bool IsValid { get; set; }
-    public string ErrorMessage { get; set; } = string.Empty;
-} 

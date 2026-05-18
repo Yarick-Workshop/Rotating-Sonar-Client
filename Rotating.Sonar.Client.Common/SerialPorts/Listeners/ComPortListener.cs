@@ -2,19 +2,22 @@ namespace Rotating.Sonar.Client.Common.SerialPorts.Listeners;
 
 using System;
 using System.IO.Ports;
-using Serilog;
+using Microsoft.Extensions.Logging;
+
 public class ComPortListener : IComPortListener
 {
-    private const int ReadTimeoutMilliseconds = 250;
-
     private readonly int portBaudRate;
+    private readonly int readTimeoutMilliseconds;
+    private readonly ILogger<ComPortListener> logger;
 
     public string PortName { get; }
 
-    public ComPortListener(string portName, int portBaudRate)
+    public ComPortListener(string portName, int portBaudRate, int readTimeoutMilliseconds, ILogger<ComPortListener> logger)
     {
         this.PortName = portName;
         this.portBaudRate = portBaudRate;
+        this.readTimeoutMilliseconds = readTimeoutMilliseconds;
+        this.logger = logger;
     }
 
     public void Listen(Func<bool> isCancelled, Action<string>? newLineCallBack = null)
@@ -25,7 +28,7 @@ public class ComPortListener : IComPortListener
             DataBits = 8,
             Parity = Parity.None,
             StopBits = StopBits.One,
-            ReadTimeout = ReadTimeoutMilliseconds,
+            ReadTimeout = this.readTimeoutMilliseconds,
         };
 
         try
@@ -39,13 +42,13 @@ public class ComPortListener : IComPortListener
                     var line = serialPort.ReadLine()
                         .TrimEnd('\r');
 
-                    Log.Debug("Received line: \"{Line}\".", line);
-                    
+                    this.logger.LogDebug("Received line: \"{Line}\".", line);
+
                     newLineCallBack?.Invoke(line);
                 }
                 catch (TimeoutException)
                 {
-                    Log.Information("Serial port read timed out while waiting for data.");
+                    this.logger.LogInformation("Serial port read timed out while waiting for data.");
                 }
             }
         }

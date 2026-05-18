@@ -96,8 +96,7 @@ dotnet run -- -fake -visualize
 
 ## Configuration
 
-Color and rendering settings live in `Rotating.Sonar.Client.Console/appsettings.json` (copied to output).
-The main configuration groups are `Visualizer.ScanPoints`, `Visualizer.Sweep`, and `Visualizer.RangeGrid`.
+Serial, color, and rendering settings live in `Rotating.Sonar.Client.Console/appsettings.json` (copied to output).
 
 ### Supported Color Formats
 

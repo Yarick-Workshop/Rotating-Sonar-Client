@@ -1,43 +1,45 @@
 namespace Rotating.Sonar.Client.Visualizer;
 
-using Rotating.Sonar.Client.Common.Settings;
-using Rotating.Sonar.Client.Common.Zoom;
-using Rotating.Sonar.Client.Visualizer.Text;
-using Serilog;
-using Silk.NET.Input;
-using Silk.NET.Maths;
-using Silk.NET.OpenGL.Legacy;
-using Silk.NET.Windowing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
+using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Zoom;
+using Rotating.Sonar.Client.Visualizer.Text;
+using Silk.NET.Input;
+using Silk.NET.Maths;
+using Silk.NET.OpenGL.Legacy;
+using Silk.NET.Windowing;
 
 internal class ScanDisplayWindow : IDisposable
 {
-    private const int FpsWindowSize = 60;// TODO to config
-    private const float MaxDistanceCm = 200f;
-
     private readonly ScanPointBuffer scanPointBuffer;
     private readonly AppSettings appSettings;
+    private readonly ILogger<ScanDisplayWindow> logger;
+    private readonly ILogger<OpenGlScanDisplayRenderer> rendererLogger;
+    private readonly int fpsHistorySize;
     private IWindow window;
     private IInputContext? inputContext;
     private OpenGlScanDisplayRenderer? render;
     private RenderZoomControl? zoomControl;
     private OpenGlTextRenderer? textRenderer;
     private double latestFps = 0;
-    private readonly Queue<double> fpsHistory = new Queue<double>(FpsWindowSize);
+    private readonly Queue<double> fpsHistory = new();
 
     private Vector2D<int> previousSize;
-    
-    private bool _disposed = false;
+
+    private bool disposed = false;
 
     public ScanDisplayWindow(
         ScanPointBuffer scanPointBuffer,
         AppSettings appSettings,
         int windowWidthPx,
         int windowHeightPx,
-        string title)
+        string title,
+        ILogger<ScanDisplayWindow> logger,
+        ILogger<OpenGlScanDisplayRenderer> rendererLogger)
     {
         var options = WindowOptions.Default;
         options.Size = new Vector2D<int>(windowWidthPx, windowHeightPx);
@@ -52,10 +54,13 @@ internal class ScanDisplayWindow : IDisposable
 
         this.scanPointBuffer = scanPointBuffer;
         this.appSettings = appSettings;
+        this.logger = logger;
+        this.rendererLogger = rendererLogger;
+        this.fpsHistorySize = appSettings.Visualizer.Fps.HistorySize;
     }
 
     public void Run()
-    {        
+    {
         this.window!.Run();
     }
 
@@ -77,20 +82,20 @@ internal class ScanDisplayWindow : IDisposable
             this.window.WindowState = WindowState.Fullscreen;
         }
 
-        Log.Information(
+        this.logger.LogInformation(
             "Toggling fullscreen: {OldState} -> {NewState}",
-            oldState, 
+            oldState,
             this.window.WindowState);
     }
 
     public void Dispose()
     {
-        if (this._disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        this._disposed = true;
+        this.disposed = true;
         this.ReleaseInput();
         this.window?.Dispose();
     }
@@ -103,7 +108,7 @@ internal class ScanDisplayWindow : IDisposable
 
         this.previousSize = this.window.Size;
 
-        Log.Information("OpenGL scan display initialized with size {Width}x{Height}", width, height);
+        this.logger.LogInformation("OpenGL scan display initialized with size {Width}x{Height}", width, height);
 
         this.inputContext = this.window.CreateInput();
         for (int i = 0; i < this.inputContext.Keyboards.Count; i++)
@@ -116,11 +121,18 @@ internal class ScanDisplayWindow : IDisposable
             this.inputContext.Mice[i].Scroll += this.OnMouseScroll;
         }
 
-        this.textRenderer = new OpenGlTextRenderer(gl, "°");
-        this.render = new OpenGlScanDisplayRenderer(gl, this.scanPointBuffer, this.appSettings, this.window.Size.X, this.window.Size.Y, MaxDistanceCm, this.textRenderer);
-        this.zoomControl = new RenderZoomControl(this.render);
+        this.textRenderer = new OpenGlTextRenderer(gl, this.appSettings.Visualizer.TextRender);
+        this.render = new OpenGlScanDisplayRenderer(
+            gl,
+            this.scanPointBuffer,
+            this.appSettings,
+            this.window.Size.X,
+            this.window.Size.Y,
+            this.textRenderer,
+            this.rendererLogger);
+        this.zoomControl = new RenderZoomControl(this.render, this.appSettings.Visualizer.Zoom);
 
-        LogOpenGlDriverInfo(gl);
+        this.LogOpenGlDriverInfo(gl);
     }
 
     private void OnRender(double deltaSeconds)
@@ -129,7 +141,7 @@ internal class ScanDisplayWindow : IDisposable
         {
             // TODO, optimize
             double fps = 1.0 / deltaSeconds;
-            if (this.fpsHistory.Count == FpsWindowSize)
+            if (this.fpsHistory.Count == this.fpsHistorySize)
             {
                 this.fpsHistory.Dequeue();
             }
@@ -142,8 +154,8 @@ internal class ScanDisplayWindow : IDisposable
 
     private void OnResize(Vector2D<int> newWindowSize)
     {
-        Log.Information(
-            "Window resized: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}", 
+        this.logger.LogInformation(
+            "Window resized: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}",
             this.previousSize.X,
             this.previousSize.Y,
             newWindowSize.X,
@@ -188,20 +200,20 @@ internal class ScanDisplayWindow : IDisposable
                 break;
             case Key.P:
                 ScanPointRenderStyle pointStyle = this.render!.ToggleScanPointRenderStyle();
-                Log.Information("Point style toggled: {PointStyle}", pointStyle);
+                this.logger.LogInformation("Point style toggled: {PointStyle}", pointStyle);
                 break;
             case Key.F:
             case Key.F3:
                 bool showFps = this.render!.ToggleFpsDisplay();
-                Log.Information("FPS display toggled: {ShowFps}", showFps);
+                this.logger.LogInformation("FPS display toggled: {ShowFps}", showFps);
                 break;
             case Key.Z:
                 bool showZoom = this.render!.ToggleZoomDisplay();
-                Log.Information("Zoom display toggled: {ShowZoom}", showZoom);
+                this.logger.LogInformation("Zoom display toggled: {ShowZoom}", showZoom);
                 break;
             case Key.S:
                 bool showSweep = this.render!.ToggleSweepDisplay();
-                Log.Information("Sweep display toggled: {ShowSweep}", showSweep);
+                this.logger.LogInformation("Sweep display toggled: {ShowSweep}", showSweep);
                 break;
             case Key.F11:
                 this.ToggleFullscreen();
@@ -213,7 +225,7 @@ internal class ScanDisplayWindow : IDisposable
                 }
                 break;
             case Key.Escape:
-                Log.Information("Window closing requested via Escape key");
+                this.logger.LogInformation("Window closing requested via Escape key");
                 this.window?.Close();
                 break;
         }
@@ -268,9 +280,9 @@ internal class ScanDisplayWindow : IDisposable
         this.inputContext = null;
     }
 
-    private static void LogOpenGlDriverInfo(GL gl)
+    private void LogOpenGlDriverInfo(GL gl)
     {
-        Log.Information(
+        this.logger.LogInformation(
             "OpenGL version: {Version}; OpenGL vendor: {Vendor}; OpenGL renderer: {Renderer}",
             GlString(gl, StringName.Version),
             GlString(gl, StringName.Vendor),

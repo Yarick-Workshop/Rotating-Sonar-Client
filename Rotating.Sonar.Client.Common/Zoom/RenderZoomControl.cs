@@ -1,34 +1,32 @@
 namespace Rotating.Sonar.Client.Common.Zoom;
 
+using Rotating.Sonar.Client.Common.Settings;
+using Rotating.Sonar.Client.Common.Settings.Sections;
+
 public sealed class RenderZoomControl
 {
-    // TODO move hardcoded values to config
-    public const float MinScale = 0.25f;
-    public const float MaxScale = 4f;
-
-    private const float FactorPerStep = 1.12f;
-    private const float MaxWheelExponent = 5f;
-
     private readonly IZoomable zoomSubject;
+    private readonly ZoomSettings zoomSettings;
 
-    public RenderZoomControl(IZoomable zoomSubject)
+    public RenderZoomControl(IZoomable zoomSubject, ZoomSettings zoomSettings)
     {
         this.zoomSubject = zoomSubject;
+        this.zoomSettings = zoomSettings;
     }
 
     public void ZoomIn()
     {
-        this.zoomSubject.SetZoom(Math.Min(MaxScale, this.zoomSubject.ZoomScale * FactorPerStep));
+        this.zoomSubject.SetZoom(Math.Min(this.zoomSettings.MaxScale, this.zoomSubject.ZoomScale * this.zoomSettings.FactorPerStep));
     }
 
     public void ZoomOut()
     {
-        this.zoomSubject.SetZoom(Math.Max(MinScale, this.zoomSubject.ZoomScale / FactorPerStep));
+        this.zoomSubject.SetZoom(Math.Max(this.zoomSettings.MinScale, this.zoomSubject.ZoomScale / this.zoomSettings.FactorPerStep));
     }
 
     public void ResetZoom()
     {
-        this.zoomSubject.SetZoom(1f);
+        this.zoomSubject.SetZoom(this.zoomSettings.DefaultScale);
     }
 
     public void ZoomWheel(float deltaY)
@@ -38,8 +36,8 @@ public sealed class RenderZoomControl
             return;
         }
 
-        float signedMag = Math.Sign(deltaY) * Math.Min(Math.Abs(deltaY), MaxWheelExponent);
-        float newScale = this.zoomSubject.ZoomScale * MathF.Pow(FactorPerStep, signedMag);
+        float signedMag = Math.Sign(deltaY) * Math.Min(Math.Abs(deltaY), this.zoomSettings.MaxWheelExponent);
+        float newScale = this.zoomSubject.ZoomScale * MathF.Pow(this.zoomSettings.FactorPerStep, signedMag);
         this.zoomSubject.SetZoom(newScale);
     }
 }
